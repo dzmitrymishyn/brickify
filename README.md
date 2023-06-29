@@ -19,3 +19,9 @@ It's a [nextjs](https://nextjs.org/) project, so you can easily run the followin
 ```bash
 yarn && yarn dev
 ```
+
+## Specification
+
+* [Brick](https://github.com/jsbrick/brick/wiki/Brick)
+  * [Examples of bricks](https://github.com/jsbrick/brick/wiki/Brick#examples-of-bricks)
+  * [Problems](https://github.com/jsbrick/brick/wiki/Brick#problems)
