@@ -14,7 +14,7 @@ module.exports = {
     tsconfigRootDir: __dirname,
     project: './tsconfig.json',
   },
-  ignorePatterns: ['.eslintrc.js', 'build/', 'next.config.js'],
+  ignorePatterns: ['.eslintrc.js', 'build/', 'next.config.js', 'jest.*.js'],
   rules: {
     '@typescript-eslint/indent': 'warn',
     'sort-imports': ['warn', {
