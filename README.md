@@ -26,4 +26,4 @@ yarn && yarn dev
   * [Examples of bricks](https://github.com/jsbrick/brick/wiki/Brick#examples-of-bricks)
   * [Problems](https://github.com/jsbrick/brick/wiki/Brick#problems)
 * [Renderer](https://github.com/jsbrick/brick/wiki/Renderer)
- * [Problems](https://github.com/jsbrick/brick/wiki/Renderer#problems)
+  * [Problems](https://github.com/jsbrick/brick/wiki/Renderer#problems)
