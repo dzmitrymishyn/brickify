@@ -1,9 +1,9 @@
 import { capitalizeFirstLetter } from '@/shared/operators';
 import { Spread } from '@/shared/utils';
 
-import { Brick, BrickComponent } from './bricks';
+import { Brick, BrickComponent, BrickName } from './bricks';
 
-export const brick = <Comp extends React.FC<any> & Brick<any>, A extends object[]>(
+export const make = <Comp extends React.FC<any> & BrickName<any>, A extends object[]>(
   Component: Comp,
   ...parts: [...A]
 ) => {
@@ -19,7 +19,7 @@ export const component = <Name extends string, Comp extends React.FC<any>>(
     parseValue(html: string): unknown;
     is(node: Node): boolean;
   }>,
-): BrickComponent<Comp> & Brick<Name> =>
+): BrickComponent<Comp> & BrickName<Name> =>
     Object.assign(Component.bind(null) as Comp, {
       brick: name,
       parseValue: () => null,
@@ -27,3 +27,7 @@ export const component = <Name extends string, Comp extends React.FC<any>>(
     }, config || {});
 
 export const factory = <P extends (...props: any[]) => any>(of: P) => ({ of });
+
+export const childBricks = <B extends Brick>(bricks: B[]) => ({
+  allowedBricks: bricks,
+});

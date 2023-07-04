@@ -1,14 +1,22 @@
 'use client';
 
-import { brick, component, factory } from '@/shared/bricks';
+import { Brick, component, factory, make, useBricksBuilder } from '@/shared/bricks';
+
+type Props = {
+  value: unknown;
+  bricks?: Brick[];
+};
 
 function of<Name extends string>(name: Name) {
-  return brick(
+  return make(
     component(
       name,
-      () => (
-        <div>Editor</div>
-      ),
+      ({ value, bricks = [] }: Props) => {
+        const components = useBricksBuilder(value, bricks);
+        return (
+          <div data-brick={name}>{components}</div>
+        );
+      },
     ),
     factory(of),
   );

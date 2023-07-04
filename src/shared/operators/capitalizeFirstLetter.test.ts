@@ -1,6 +1,6 @@
 import { capitalizeFirstLetter } from './capitalizeFirstLetter';
 
-describe('capitalizeFirstLetter', () => {
+describe('capitalizeFirstLetter operator', () => {
   test('first letter should be uppercase', () => {
     expect(capitalizeFirstLetter('hello')).toBe('Hello');
   });

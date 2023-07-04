@@ -1,16 +1,35 @@
-import React from 'react';
+import { FC } from 'react';
 
-export type Brick<Name = string> = {
+export type BrickName<Name = string> = {
   brick: Name;
 };
 
-export type BrickComponent<Component extends React.FC<any>> =
+export type BrickComponent<Component extends FC<any>> =
   & Component
   & {
     is(node: Node): boolean;
     parseValue(html: string): unknown;
   };
 
-export type BrickFactory<Input, Output extends Brick<any>> = {
+export type Brick<Name = string, Component extends FC<any> = FC<any>> =
+  & BrickName<Name>
+  & BrickComponent<Component>;
+
+export type BrickFactory<Input, Output extends BrickName> = {
   of(...props: Input[]): Output;
 };
+
+export type BrickCustomChildren<T> = {
+  customChildren: ((value: T) => boolean)[];
+};
+
+export const isBrick = (brick: unknown): brick is Brick =>
+  !!brick
+  && typeof brick === 'function'
+  && 'brick' in brick
+  && typeof brick.brick === 'string';
+
+export const isBrickWithCustomChildren = (brick: unknown): brick is Brick & BrickCustomChildren<any> =>
+  isBrick(brick)
+  && 'customChildren' in brick
+  && Array.isArray(brick.customChildren);
