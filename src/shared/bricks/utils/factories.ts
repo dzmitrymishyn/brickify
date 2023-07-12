@@ -1,7 +1,7 @@
 import { capitalizeFirstLetter } from '@/shared/operators';
 import { Spread } from '@/shared/utils';
 
-import { Brick, BrickComponent, BrickName } from './bricks';
+import { BrickComponent, BrickName, Slot } from './bricks';
 
 export const make = <Comp extends React.FC<any> & BrickName<any>, A extends object[]>(
   Component: Comp,
@@ -28,6 +28,6 @@ export const component = <Name extends string, Comp extends React.FC<any>>(
 
 export const factory = <P extends (...props: any[]) => any>(of: P) => ({ of });
 
-export const childBricks = <B extends Brick>(bricks: B[]) => ({
-  allowedBricks: bricks,
+export const slots = (...slotsArray: Slot[]) => ({
+  slots: slotsArray,
 });

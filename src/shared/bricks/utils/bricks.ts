@@ -23,6 +23,12 @@ export type BrickCustomChildren<T> = {
   customChildren: ((value: T) => boolean)[];
 };
 
+export type Slot = [string, Brick[]?];
+
+export type BrickWithSlots = {
+  slots: Slot[];
+};
+
 export const isBrick = (brick: unknown): brick is Brick =>
   !!brick
   && typeof brick === 'function'
@@ -33,3 +39,6 @@ export const isBrickWithCustomChildren = (brick: unknown): brick is Brick & Bric
   isBrick(brick)
   && 'customChildren' in brick
   && Array.isArray(brick.customChildren);
+
+export const hasSlots = (brick: unknown): brick is Brick & BrickWithSlots =>
+  isBrick(brick) && 'slots' in brick && Array.isArray(brick.slots);

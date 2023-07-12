@@ -2,7 +2,7 @@
 
 import { ElementType } from 'react';
 
-import { addCustomChildren, Brick, childBricks, component, factory, make } from '@/shared/bricks';
+import { addCustomChildren, Brick, component, factory, make, slots } from '@/shared/bricks';
 import Text from '@/shared/components/Text';
 
 type Props = {
@@ -23,7 +23,7 @@ function of<Name extends string>(
         );
       },
     ),
-    childBricks(bricks),
+    slots(['children', bricks]),
     factory(of),
   );
 }

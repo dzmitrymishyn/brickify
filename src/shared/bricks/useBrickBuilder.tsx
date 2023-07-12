@@ -7,15 +7,40 @@ import React, { ReactNode, useMemo } from 'react';
 import { array } from '@/shared/operators';
 import { Cache, useCache } from '@/shared/utils/cache';
 
-import { Brick, BrickValue, isBrick, isBrickValue, isChildrenFitBrick } from './utils';
+import { Brick, BrickValue, hasSlots, isBrick, isBrickValue, isChildrenFitBrick, Slot } from './utils';
 
 type BuildResults = {
   dirty: boolean;
-  nodes: ReactNode[];
+  nodes?: ReactNode[] | null;
 };
 
 const generatedName = Symbol('generated');
 const makeGeneratedBrick = (value: unknown) => ({ brick: generatedName, children: value });
+
+const patchPropsWithSlots = (props: Record<string, unknown>) => ([key, info]: [string, BuildResults]) => {
+  if (info.dirty) {
+    props[key] = info.nodes;
+  } else {
+    Reflect.deleteProperty(props, key);
+  }
+};
+
+const makeSlot = (
+  cache: Cache<any, any>,
+  cached: any,
+  value: BrickValue<string | Symbol> & { children?: unknown },
+  uid: string,
+  [key, slots]: Slot,
+): BuildResults => {
+  if (key in value) {
+    const slotValue = (value as Record<string, unknown>)[key];
+    return cached?.value?.[key] === slotValue
+      ? { dirty: false }
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      : traverse(cache, slotValue, slots || [], `${uid}-${key}`);
+  }
+  return { dirty: false, nodes: null };
+};
 
 const render = (
   cache: Cache<any, any>,
@@ -27,34 +52,29 @@ const render = (
     () => pipe(
       cache.get(uid),
       (cached): BuildResults => {
-        let dirty = true;
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        const children = build(
-          cache,
-          value.children,
-          'allowedBricks' in Component
-            ? Component.allowedBricks as Brick[]
-            : [],
-          uid,
-        );
-        let node: ReactNode;
         const { brick, ...props } = value;
+        let dirty = true;
+
+        if (hasSlots(Component)) {
+          Component.slots
+            .map<[string, BuildResults]>((slot) => [slot[0], makeSlot(cache, cached, value, uid, slot)])
+            .forEach(patchPropsWithSlots(props));
+        }
+
+        let node: ReactNode;
 
         if (cached?.Component.brick === Component.brick) {
           if (value.brick === generatedName && value.children === cached.value.children) {
             node = cached.node;
             dirty = false;
-          } else if (!children.dirty) {
-            node = React.cloneElement(cached.node, props);
           } else {
-            node = React.cloneElement(cached.node, { ...props, children: children.nodes });
+            node = React.cloneElement(cached.node, props);
           }
         }
 
         node = node || (
           <Component
             {...props}
-            {...(children.nodes.length ? { children: children.nodes } : {})}
             key={uid}
           />
         );
@@ -69,7 +89,7 @@ const render = (
   ),
 );
 
-function build(
+function traverse(
   cache: Cache<any, any>,
   inputValue: unknown,
   bricks: Brick[] = [],
@@ -79,8 +99,8 @@ function build(
     inputValue,
     O.fromNullable,
     O.map(array),
-    O.map(A.reduceWithIndex<unknown, BuildResults>({ dirty: false, nodes: [] }, (key, acc, value) => {
-      const uid = `${prefix}-${key}`;
+    O.map(A.reduceWithIndex<unknown, BuildResults>({ dirty: false, nodes: [] }, (index, acc, value) => {
+      const uid = `${prefix}-${index}`;
 
       const isBrickVal = isBrickValue(value);
       const isNeededBrick = isBrickVal ? flow(
@@ -97,7 +117,7 @@ function build(
         O.map(render(cache, normalizedValue, uid)),
         O.map(({ dirty, nodes }) => {
           if (Array.isArray(nodes) && nodes.length) {
-            acc.nodes.push(...nodes);
+            acc.nodes?.push(...nodes);
             acc.dirty = acc.dirty || dirty;
           }
           return acc;
@@ -105,7 +125,7 @@ function build(
         O.getOrElseW(() => acc),
       );
     })),
-    O.getOrElse<BuildResults>(() => ({ dirty: false, nodes: [] })),
+    O.getOrElse<BuildResults>(() => ({ dirty: false, nodes: null })),
   );
 }
 
@@ -115,5 +135,8 @@ export const useBricksBuilder = (
 ): ReactNode => {
   const cache = useCache();
 
-  return useMemo(() => build(cache, value, bricks, '').nodes, [cache, bricks, value]);
+  return useMemo(
+    () => traverse(cache, value, bricks, '').nodes,
+    [cache, bricks, value],
+  );
 };
