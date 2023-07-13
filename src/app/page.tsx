@@ -21,9 +21,13 @@ export default function Home() {
       <button
         onClick={() => {
           setState((value: any) => [
-            `${value[0]}1`,
-            { ...value[1], children: value[1].children + 't' },
-            ...value.slice(2),
+            `${value[0]}`,
+            value[1],
+            // { ...value[1], children: value[1].children + 't' },
+            { ...value[2], children: [value[2].children[0] + '1', ...value[2].children.slice(1)] },
+            ...value.slice(3),
+            // { ...value[3], children: value[3].children + '2' },
+            // ['hello', value[4][1] + '3'],
           ]);
         }}
       >
