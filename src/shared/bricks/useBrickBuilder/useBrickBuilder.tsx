@@ -30,12 +30,12 @@ const handleSlot = ([key, bricks]: Slot) => pipe(
     if (key in value) {
       const slotValue = (value as Record<string, unknown>)[key];
       return cached?.value?.[key] === slotValue
-        ? { dirty: false, elements: cached?.element?.props?.[key] }
+        ? cached?.element?.props?.[key]
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        : traverse(cache, slotValue, bricks || [], `${uid}-${key}`);
+        : traverse(cache, slotValue, bricks || [], `${uid}-${key}`).elements;
     }
 
-    return { dirty: !!cached?.element?.props?.[key], elements: null };
+    return null;
   }),
 );
 
