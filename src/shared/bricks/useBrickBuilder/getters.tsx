@@ -15,7 +15,7 @@ type Deps = {
   uid: string;
 };
 
-const getGenericValue = (value: BrickValue<string | Symbol> & { children?: unknown }) =>
+const getCachedCustomElement = (value: BrickValue<string | Symbol> & { children?: unknown }) =>
   pipe(
     R.ask<Pick<Deps, 'Component' | 'cached'>>(),
     R.map(({ Component, cached }) => (
@@ -27,7 +27,7 @@ const getGenericValue = (value: BrickValue<string | Symbol> & { children?: unkno
     )),
   );
 
-const getCachedValue = pipe(
+const getCachedElement = pipe(
   R.ask<Pick<Deps, 'Component' | 'cached' | 'props'>>(),
   R.map(({ Component, cached, props }) => (
     cached?.Component.brick === Component.brick
@@ -36,7 +36,7 @@ const getCachedValue = pipe(
   )),
 );
 
-const getNewNode = pipe(
+const createElement = pipe(
   R.ask<Pick<Deps, 'Component' | 'props' | 'uid'>>(),
   R.map(({ Component, props, uid }) => ({
     element: (
@@ -52,8 +52,8 @@ const getNewNode = pipe(
 export const getOrCreateElement = (value: BrickValue<string | Symbol> & { children?: unknown }) => pipe(
   R.ask<Deps>(),
   R.map((deps) => pipe(
-    getGenericValue(value)(deps),
-    flow(O.fromNullable, O.getOrElse(() => getCachedValue(deps))),
-    flow(O.fromNullable, O.getOrElse(() => getNewNode(deps))),
+    getCachedCustomElement(value)(deps),
+    flow(O.fromNullable, O.getOrElse(() => getCachedElement(deps))),
+    flow(O.fromNullable, O.getOrElse(() => createElement(deps))),
   )),
 );
