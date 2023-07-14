@@ -46,7 +46,7 @@ const prepareSlotForProps = ([key, bricks]: Slot) => pipe(
       };
     }
 
-    return { key: null };
+    return { [key]: null };
   }),
 );
 
