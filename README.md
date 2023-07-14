@@ -20,6 +20,10 @@ It's a [nextjs](https://nextjs.org/) project, so you can easily run the followin
 yarn && yarn dev
 ```
 
+## Project diary
+
+If you're interested in my thoughts and want to help me deal with something I'm struggling with, you can read the [Project diary](https://github.com/jsbrick/brick/wiki/Project-diary).
+
 ## Specification
 
 * [Brick](https://github.com/jsbrick/brick/wiki/Brick)
