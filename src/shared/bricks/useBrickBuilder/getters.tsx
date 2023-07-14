@@ -10,7 +10,7 @@ import { Brick, BrickValue } from '../utils';
 type Deps = {
   Component: Brick;
   cached?: BrickCacheValue;
-  cache: Cache<BrickCacheValue>;
+  cache: Cache;
   props: Record<string, unknown>;
   uid: string;
 };
@@ -22,7 +22,7 @@ const getCachedCustomElement = (value: BrickValue<string | Symbol> & { children?
       cached?.Component.brick === Component.brick
       && value.brick === generatedName
       && value.children === cached.value.children
-      && ({ element: cached.element, dirty: false })
+      && cached.element
       || null
     )),
   );
@@ -31,25 +31,22 @@ const getCachedElement = pipe(
   R.ask<Pick<Deps, 'Component' | 'cached' | 'props'>>(),
   R.map(({ Component, cached, props }) => (
     cached?.Component.brick === Component.brick
-    && ({ element: cloneElement(cached.element, props), dirty: true })
+    && cloneElement(cached.element, props)
     || null
   )),
 );
 
 const createElement = pipe(
   R.ask<Pick<Deps, 'Component' | 'props' | 'uid'>>(),
-  R.map(({ Component, props, uid }) => ({
-    element: (
-      <Component
-        {...props}
-        key={uid}
-      />
-    ),
-    dirty: true,
-  })),
+  R.map(({ Component, props, uid }) => (
+    <Component
+      {...props}
+      key={uid}
+    />
+  )),
 );
 
-export const getOrCreateElement = (value: BrickValue<string | Symbol> & { children?: unknown }) => pipe(
+export const fromCacheOrCreate = (value: BrickValue<string | Symbol> & { children?: unknown }) => pipe(
   R.ask<Deps>(),
   R.map((deps) => pipe(
     getCachedCustomElement(value)(deps),

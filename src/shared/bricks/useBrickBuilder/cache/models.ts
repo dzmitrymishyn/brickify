@@ -6,4 +6,5 @@ export type BrickCacheValue = {
   element: ReactElement;
   Component: Brick;
   value: BrickValue<string | Symbol> & Record<string, unknown>;
+  iteractionUid: Symbol;
 };
