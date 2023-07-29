@@ -1,131 +1,143 @@
 import * as A from 'fp-ts/lib/Array';
-import { flow, pipe } from 'fp-ts/lib/function';
+import { pipe } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
 import * as R from 'fp-ts/lib/Reader';
-import { ReactElement, ReactNode, useMemo } from 'react';
+import { cloneElement, ReactElement, ReactNode, useMemo } from 'react';
 
 import { array, tap } from '@/shared/operators';
 
-import { BrickCacheValue, Cache, useCache } from './cache';
-import { fromCacheOrCreate } from './getters';
-import { makeGeneratedBrick } from './utils';
-import {
-  Brick,
-  BrickValue,
-  hasSlots,
-  isBrick,
-  isBrickValue,
-  isChildrenFitBrick,
-  Slot,
-} from '../utils';
+import { Cache, useCache } from './cache';
+import { Brick, hasSlots, isBrickValue, isChildrenFitBrick, Slot } from '../utils';
 
-type Deps = {
-  cache: Cache;
-  iteractionUid: Symbol;
-};
+let i = 0;
+const newKey = () => `${++i}`;
 
-type Results = ReactElement[] | null;
-
-const prepareSlotForProps = ([key, bricks]: Slot) => pipe(
-  R.ask<Deps & {
-    cached?: BrickCacheValue;
-    value: BrickValue<string | Symbol>;
-    uid: string;
+const prepareSlotForProps = ([slotKey, bricks]: Slot, value: object, parent?: ReactElement) => pipe(
+  R.ask<{
+    cache: Cache;
   }>(),
-  R.map(({ iteractionUid, cache, cached, value, uid }) => {
-    if (key in value) {
-      const slotValue = (value as Record<string, unknown>)[key];
-      const children = cached?.value?.[key] === slotValue
-        ? cached?.element?.props?.[key] as Results
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        : traverse(slotValue, bricks || [], `${uid}-${key}`)({ iteractionUid, cache });
+  R.map(({ cache }) => {
+    if (slotKey in value) {
+      const slotValue = (value as Record<string, unknown>)[slotKey];
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      const children = build(slotValue, bricks || [])({
+        cache,
+        slot: parent && { element: parent, name: slotKey },
+      });
       return {
-        [key]: Array.isArray(children) && children.length
+        [slotKey]: Array.isArray(children) && children.length
           ? children
           : null,
       };
     }
 
-    return { [key]: null };
+    return { [slotKey]: null };
   }),
 );
 
-const render = (
-  value: BrickValue<string | Symbol> & { children?: unknown },
-  Component: Brick,
-  uid: string,
-) => pipe(
-  R.ask<Deps>(),
-  R.map(({ cache, iteractionUid }) => pipe(
-    O.fromNullable(cache.get(value)),
-    O.map(({ element }) => [element]),
-    O.getOrElse(() => pipe(
-      cache.get(uid),
-      (cached) => {
-        const { brick, ...props } = value;
-        return { cache, uid, Component, props, cached, value, iteractionUid };
-      },
-      (deps): Results => pipe(
-        hasSlots(Component) ? Component.slots : null,
-        O.fromNullable,
-        O.map(A.reduce(deps.props || {}, (acc, slot) => ({
-          ...acc,
-          ...prepareSlotForProps(slot)(deps),
-        }))),
-        O.fold(
-          () => deps,
-          (newProps) => ({ ...deps, props: newProps }),
-        ),
-        fromCacheOrCreate(value),
-        tap((element) => {
-          cache.add(uid, { element, Component, value, iteractionUid });
-          cache.add(value, { element, Component, value: { brick: 'test' }, iteractionUid });
-        }),
-        (element) => [element],
-      ),
-    )),
-  )),
-);
-
-function traverse(
+function build(
   inputValue: unknown,
   bricks: Brick[] = [],
-  prefix: string = '',
 ) {
+  let inserted = 0;
   return pipe(
-    R.ask<Deps>(),
-    R.map((deps): Results => pipe(
+    R.ask<{ cache: Cache; slot?: { name: string; element: ReactElement } }>(),
+    R.map(({ cache, slot }): ReactElement[] | null => pipe(
       O.fromNullable(inputValue),
       O.map(array),
-      O.map(A.reduceWithIndex<unknown, ReactElement[]>(
-        [],
-        (index, acc, value) => {
-          const isBrickVal = isBrickValue(value);
-          const isNeededBrick = isBrickVal ? flow(
-            O.fromPredicate(isBrick),
-            O.map(({ brick }) => brick === value.brick),
-            O.getOrElse(() => false),
-          ) : isChildrenFitBrick(value);
+      O.map(A.reduceWithIndex<unknown, ReactElement[]>([], (index, acc, value) => pipe(
+        O.fromNullable(value && typeof value === 'object'
+          ? cache.get(value)
+          : slot?.element?.props[slot.name]?.[index - inserted]?.props?.value === value
+            ? slot?.element.props[slot.name]?.[index - inserted]
+            : null),
+        O.fold(
+          () => {
+            const oldElementInParent: ReactElement = slot?.element.props[slot.name]?.[index - inserted];
+            const oldValueInParent = oldElementInParent?.props?.value;
+            const parentIsBrick = isBrickValue(oldValueInParent);
 
-          return pipe(
-            bricks,
-            A.findFirst(isNeededBrick),
-            O.map((Component) => render(
-              isBrickVal ? value : makeGeneratedBrick(value),
-              Component,
-              `${prefix}-${index}`,
-            )),
-            O.ap(O.some(deps)),
-            O.chain(O.fromNullable),
-            O.map((elements) => {
-              acc.push(...elements);
-              return acc;
-            }),
-            O.getOrElse(() => acc),
-          );
-        },
-      )),
-      O.getOrElse<Results>(() => null),
+            if (isBrickValue(value)) {
+              const { id: removedId, brick: removedBrick, ...rest } = value;
+              return pipe(
+                bricks,
+                A.findFirst((brick) => brick.brick === value.brick),
+                O.map((Component) => pipe(
+                  parentIsBrick && value.id === oldValueInParent.id && oldElementInParent?.props || {},
+                  (props) => ({ ...props, ...rest, value }),
+                  (props) => pipe(
+                    hasSlots(Component) ? Component.slots : null,
+                    O.fromNullable,
+                    O.map(A.reduce({}, (slotAcc, currentSlot) => ({
+                      ...slotAcc,
+                      ...prepareSlotForProps(currentSlot, value, oldElementInParent)({ cache }),
+                    }))),
+                    O.getOrElse(() => ({})),
+                    (slotProps) => ({ ...props, slotProps }),
+                  ),
+                  (props) => pipe(
+                    parentIsBrick && value.id === oldValueInParent.id && cloneElement(oldElementInParent, props) || null,
+                    O.fromNullable,
+                    O.getOrElse(() => {
+                      inserted += 1;
+                      return <Component key={newKey()} {...props} />;
+                    }),
+                  ),
+                  tap((element) => cache.add(value, element)),
+                  tap((element) => acc.push(element)),
+                  () => acc,
+                )),
+                O.getOrElseW(() => acc),
+              );
+            }
+
+            return pipe(
+              bricks,
+              A.findFirst(isChildrenFitBrick(value)),
+              O.map((ComponentNew) => {
+                const ComponentOld = pipe(
+                  bricks,
+                  A.findFirst(isChildrenFitBrick(oldValueInParent)),
+                  O.getOrElseW(() => null),
+                );
+
+                const currentSlot = hasSlots(ComponentNew)
+                  && ComponentNew.slots.find(([name]) => name === 'children');
+                const newProps = {
+                  ...oldElementInParent?.props || {},
+                  value,
+                  ...currentSlot
+                    ? prepareSlotForProps(currentSlot, { children: value }, oldValueInParent)
+                    : { children: value },
+                };
+
+                if (ComponentOld?.brick !== ComponentNew.brick) {
+                  inserted += 1;
+                }
+
+                const element = ComponentOld?.brick === ComponentNew.brick
+                  ? cloneElement(oldElementInParent, newProps)
+                  : (
+                    <ComponentNew key={newKey()} {...newProps} />
+                  );
+
+                if (value && typeof value === 'object') {
+                  cache.add(value, element);
+                }
+
+                acc.push(element);
+                return acc;
+              }),
+              O.getOrElse(() => acc),
+            );
+          },
+          (element: ReactElement) => {
+            acc.push(element);
+            return acc;
+          },
+        ),
+      ))),
+      O.getOrElseW(() => null),
     )),
   );
 }
@@ -134,13 +146,24 @@ export const useBricksBuilder = (
   value: unknown,
   bricks: Brick[] = [],
 ): ReactNode => {
+  const editorValue = useMemo(() => ({
+    brick: Symbol('builder'),
+  }), []);
   const cache = useCache();
 
   return useMemo(
-    () => traverse(value, bricks, '')({
-      iteractionUid: Symbol('Render iteration unique object'),
-      cache,
-    }),
-    [cache, bricks, value],
+    () => pipe(
+      cache.get(editorValue),
+      (element) => build(value, bricks)({
+        cache,
+        slot: element && { name: 'children', element },
+      }),
+      tap((elements) => cache.add(editorValue, (
+        <>
+          {elements}
+        </>
+      ))),
+    ),
+    [cache, editorValue, value, bricks],
   );
 };

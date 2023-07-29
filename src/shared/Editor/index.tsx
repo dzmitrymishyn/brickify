@@ -1,6 +1,11 @@
 'use client';
 
-import { Brick, component, factory, make, useBricksBuilder } from '@/shared/bricks';
+import {
+  Brick,
+  component,
+  make,
+  useBricksBuilder,
+} from '@/shared/bricks';
 
 type Props = {
   value: unknown;
@@ -18,7 +23,6 @@ function of<Name extends string>(name: Name) {
         );
       },
     ),
-    factory(of),
   );
 }
 
