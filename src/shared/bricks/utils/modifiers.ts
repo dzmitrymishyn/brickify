@@ -2,7 +2,7 @@ import * as A from 'fp-ts/lib/Array';
 import { flow } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
 
-import { BrickComponent, BrickCustomChildren, isBrickWithCustomChildren } from './bricks';
+import { BrickComponent, BrickCustomChildren, hasCustomChildren } from './bricks';
 
 export const addCustomChildren = <B extends BrickComponent<any>, T>(
   brick: B,
@@ -18,7 +18,7 @@ export const addCustomChildren = <B extends BrickComponent<any>, T>(
 
 
 export const isChildrenFitBrick = (children: unknown) => flow(
-  O.fromPredicate(isBrickWithCustomChildren),
+  O.fromPredicate(hasCustomChildren),
   O.map(({ customChildren }) => customChildren),
   O.chain(A.findFirst((matcher) => typeof matcher === 'function' && matcher(children))),
   O.map(Boolean),

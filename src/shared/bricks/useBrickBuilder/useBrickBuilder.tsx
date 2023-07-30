@@ -12,7 +12,12 @@ import { Brick, hasSlots, isBrickValue, isChildrenFitBrick, Slot } from '../util
 let i = 0;
 const newKey = () => `${++i}`;
 
-const prepareSlotForProps = ([slotKey, bricks]: Slot, value: object, parent?: ReactElement) => pipe(
+const prepareSlotForProps = (
+  [slotKey, bricks]: Slot,
+  value: object,
+  parent?: ReactElement,
+  parentBricks: Record<string, Brick> = {},
+) => pipe(
   R.ask<{
     cache: Cache;
   }>(),
@@ -20,7 +25,7 @@ const prepareSlotForProps = ([slotKey, bricks]: Slot, value: object, parent?: Re
     if (slotKey in value) {
       const slotValue = (value as Record<string, unknown>)[slotKey];
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
-      const children = build(slotValue, bricks || [])({
+      const children = build(slotValue, bricks ?? parentBricks)({
         cache,
         slot: parent && { element: parent, name: slotKey },
       });
@@ -37,7 +42,7 @@ const prepareSlotForProps = ([slotKey, bricks]: Slot, value: object, parent?: Re
 
 function build(
   inputValue: unknown,
-  bricks: Brick[] = [],
+  bricks: Record<string, Brick> = {},
 ) {
   let inserted = 0;
   return pipe(
@@ -60,15 +65,16 @@ function build(
             if (isBrickValue(value)) {
               const { id: removedId, brick: removedBrick, ...rest } = value;
               return pipe(
-                bricks,
-                A.findFirst((brick) => brick.brick === value.brick),
+                bricks[value.brick],
+                O.fromNullable,
                 O.map((Component) => pipe(
                   parentIsBrick && value.id === oldValueInParent.id && oldElementInParent?.props || {},
                   (props) => ({ ...props, ...rest, value }),
                   (props) => pipe(
                     hasSlots(Component) ? Component.slots : null,
                     O.fromNullable,
-                    O.map(A.reduce({}, (slotAcc, currentSlot) => ({
+                    O.map(Object.entries),
+                    O.map(A.reduce({}, (slotAcc, currentSlot: Slot) => ({
                       ...slotAcc,
                       ...prepareSlotForProps(currentSlot, value, oldElementInParent)({ cache }),
                     }))),
@@ -91,23 +97,23 @@ function build(
               );
             }
 
+            const bricksArray = Object.values(bricks);
             return pipe(
-              bricks,
+              bricksArray,
               A.findFirst(isChildrenFitBrick(value)),
               O.map((ComponentNew) => {
                 const ComponentOld = pipe(
-                  bricks,
+                  bricksArray,
                   A.findFirst(isChildrenFitBrick(oldValueInParent)),
                   O.getOrElseW(() => null),
                 );
 
-                const currentSlot = hasSlots(ComponentNew)
-                  && ComponentNew.slots.find(([name]) => name === 'children');
+                const currentSlot = hasSlots(ComponentNew) && ComponentNew.slots.children;
                 const newProps = {
                   ...oldElementInParent?.props || {},
                   value,
                   ...currentSlot
-                    ? prepareSlotForProps(currentSlot, { children: value }, oldValueInParent)
+                    ? prepareSlotForProps(['children', currentSlot], { children: value }, oldValueInParent)
                     : { children: value },
                 };
 
@@ -144,7 +150,7 @@ function build(
 
 export const useBricksBuilder = (
   value: unknown,
-  bricks: Brick[] = [],
+  bricks: Record<string, Brick> = {},
 ): ReactNode => {
   const editorValue = useMemo(() => ({
     brick: Symbol('builder'),

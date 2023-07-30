@@ -1,7 +1,8 @@
 import { capitalizeFirstLetter } from '@/shared/operators';
 import { Spread } from '@/shared/utils';
 
-import { BrickComponent, BrickName, Slot } from './bricks';
+import { Brick, BrickComponent, BrickName, BrickWithSlots } from './bricks';
+import { formatBricksArray } from './fns';
 
 export const make = <Comp extends React.FC<any> & BrickName<any>, A extends object[]>(
   Component: Comp,
@@ -28,6 +29,9 @@ export const component = <Name extends string, Comp extends React.FC<any>>(
 
 export const factory = <P extends (...props: any[]) => any>(of: P) => ({ of });
 
-export const slots = (...slotsArray: Slot[]) => ({
-  slots: slotsArray,
+export const slots = (...slotsArray: [string, Brick[]?][]): BrickWithSlots => ({
+  slots: slotsArray.reduce((acc, [key, bricks]) => ({
+    ...acc,
+    [key]: formatBricksArray(bricks),
+  }), {}),
 });

@@ -23,10 +23,10 @@ export type BrickCustomChildren<T> = {
   customChildren: ((value: T) => boolean)[];
 };
 
-export type Slot = [string, Brick[]?];
+export type Slot = [string, Record<string, Brick>?];
 
 export type BrickWithSlots = {
-  slots: Slot[];
+  slots: Record<Slot[0], Slot[1]>;
 };
 
 export const isBrick = (brick: unknown): brick is Brick =>
@@ -35,10 +35,10 @@ export const isBrick = (brick: unknown): brick is Brick =>
   && 'brick' in brick
   && typeof brick.brick === 'string';
 
-export const isBrickWithCustomChildren = (brick: unknown): brick is Brick & BrickCustomChildren<any> =>
+export const hasCustomChildren = (brick: unknown): brick is Brick & BrickCustomChildren<any> =>
   isBrick(brick)
   && 'customChildren' in brick
   && Array.isArray(brick.customChildren);
 
 export const hasSlots = (brick: unknown): brick is Brick & BrickWithSlots =>
-  isBrick(brick) && 'slots' in brick && Array.isArray(brick.slots);
+  isBrick(brick) && 'slots' in brick && !!brick.slots && typeof brick.slots === 'object';
