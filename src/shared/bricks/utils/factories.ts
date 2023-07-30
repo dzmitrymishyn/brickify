@@ -3,6 +3,7 @@ import { Spread } from '@/shared/utils';
 
 import { Brick, BrickComponent, BrickName, BrickWithSlots } from './bricks';
 import { formatBricksArray } from './fns';
+import { BrickValue } from './values';
 
 export const make = <Comp extends React.FC<any> & BrickName<any>, A extends object[]>(
   Component: Comp,
@@ -32,6 +33,10 @@ export const factory = <P extends (...props: any[]) => any>(of: P) => ({ of });
 export const slots = (...slotsArray: [string, Brick[]?][]): BrickWithSlots => ({
   slots: slotsArray.reduce((acc, [key, bricks]) => ({
     ...acc,
-    [key]: formatBricksArray(bricks),
+    [key]: bricks ? formatBricksArray(bricks) : null,
   }), {}),
+});
+
+export const customChildren = (...handlers: ((value: unknown) => null | BrickValue)[]) => ({
+  customChildren: handlers,
 });

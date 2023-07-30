@@ -2,7 +2,7 @@
 
 import { ElementType } from 'react';
 
-import { addCustomChildren, Brick, component, factory, make, slots } from '@/shared/bricks';
+import { Brick, component, customChildren, factory, make, slots } from '@/shared/bricks';
 import Text from '@/shared/components/Text';
 
 type Props = {
@@ -25,10 +25,10 @@ function of<Name extends string>(
     ),
     slots(['children', bricks]),
     factory(of),
+    customChildren(
+      (value: unknown) => (typeof value === 'string' ? { brick: 'text', children: value } : null),
+    ),
   );
 }
 
-export default addCustomChildren(
-  of('paragraph'),
-  (value: string) => typeof value === 'string',
-);
+export default of('paragraph');

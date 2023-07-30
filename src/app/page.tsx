@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import Container from '@/shared/components/Container';
 import List from '@/shared/components/List';
 import Editor from '@/shared/Editor';
 import Paragraph from '@/shared/Paragraph';
@@ -16,6 +17,14 @@ export default function Home() {
     { brick: 'paragraph', id: newKey(), children: '2hello world' },
     { brick: 'paragraph', id: newKey(), children: ['3one child', ' ', 'another child'] },
     { brick: 'paragraph', id: newKey(), children: '4hello world with attributes', attributes: { test: true } },
+    {
+      brick: 'container',
+      children: [
+        { brick: 'paragraph', id: newKey(), children: '1Lorem ipsum dolar sit amet' },
+        { brick: 'paragraph', id: newKey(), children: '2hello world' },
+        { brick: 'paragraph', id: newKey(), children: ['3one child', ' ', 'another child'] },
+      ],
+    },
   ]);
 
   return (
@@ -37,7 +46,7 @@ export default function Home() {
       </button>
       <Editor
         value={state}
-        bricks={[Paragraph, List]}
+        bricks={[Paragraph, List, Container]}
       />
     </main>
   );

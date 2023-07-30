@@ -3,10 +3,11 @@
 import { useMemo } from 'react';
 
 import {
+  addCustomChildren,
   Brick,
   component,
-  formatBricksArray,
   make,
+  slots,
   useBricksBuilder,
 } from '@/shared/bricks';
 
@@ -15,19 +16,22 @@ type Props = {
   bricks?: Brick[];
 };
 
-function of<Name extends string>(name: Name) {
+function of<Name extends string>(name: Name, inputBricks: Brick[] = []) {
   return make(
     component(
       name,
-      ({ value, bricks: bricksArray = [] }: Props) => {
-        const bricks = useMemo(() => formatBricksArray(bricksArray), [bricksArray]);
-        const components = useBricksBuilder(value, bricks);
+      ({ value, bricks: bricksArray }: Props) => {
+        const Component = useMemo(() => addCustomChildren(
+          of(name, bricksArray ?? inputBricks),
+        ), [bricksArray]);
+        const components = useBricksBuilder(value, Component);
 
         return (
           <div data-brick={name}>{components}</div>
         );
       },
     ),
+    slots(['children', inputBricks]),
   );
 }
 

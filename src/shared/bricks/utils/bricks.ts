@@ -1,5 +1,7 @@
 import { FC } from 'react';
 
+import { BrickValue } from './values';
+
 export type BrickName<Name = string> = {
   brick: Name;
 };
@@ -20,7 +22,7 @@ export type BrickFactory<Input, Output extends BrickName> = {
 };
 
 export type BrickCustomChildren<T> = {
-  customChildren: ((value: T) => boolean)[];
+  customChildren: ((value: T) => BrickValue)[];
 };
 
 export type Slot = [string, Record<string, Brick>?];
