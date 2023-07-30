@@ -63,7 +63,6 @@ function buildSlot(
             : null),
         O.fold(
           () => {
-            debugger;
             const oldElementInParent: ReactElement = parentElement?.props[slotName]?.[index - inserted];
             const oldValueInParent = oldElementInParent?.props?.value;
             const oldValueInParentIsBrick = isBrickValue(oldValueInParent);
