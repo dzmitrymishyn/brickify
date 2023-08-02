@@ -2,15 +2,15 @@ import * as A from 'fp-ts/lib/Array';
 import { pipe } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
 import * as R from 'fp-ts/lib/Reader';
-import { cloneElement, ReactElement, ReactNode, useMemo } from 'react';
+import { cloneElement, ReactElement, ReactNode, useMemo, useRef } from 'react';
 
 import { array, tap } from '@/shared/operators';
 
-import { Cache, useCache } from './cache';
-import { Brick, BrickValue, hasCustomChildren, hasSlots, isBrickValue, Slot } from '../utils';
+import { Brick, BrickValue, hasCustomChildren, hasSlots, isBrickValue, Slot } from './utils';
 
 let i = 0;
 const newKey = () => `${++i}`;
+type CacheMap = WeakMap<object, ReactElement>;
 
 const prepareSlotForProps = (
   [slotName, bricks]: Slot,
@@ -18,7 +18,7 @@ const prepareSlotForProps = (
   parentElement?: ReactElement,
 ) => pipe(
   R.ask<{
-    cache: Cache;
+    cache: CacheMap;
     Component: Brick;
   }>(),
   R.map(({ cache, Component }) => {
@@ -48,7 +48,7 @@ function buildSlot(
   let inserted = 0;
   return pipe(
     R.ask<{
-      cache: Cache;
+      cache: CacheMap;
       parentElement?: ReactElement;
       parentBrick: Brick;
     }>(),
@@ -106,7 +106,7 @@ function buildSlot(
                     return <Component key={newKey()} {...props} />;
                   }),
                 ),
-                tap((element) => cache.add(formattedValue, element)),
+                tap((element) => cache.set(formattedValue, element)),
                 tap((element) => acc.push(element)),
                 () => acc,
               )),
@@ -131,21 +131,21 @@ export const useBricksBuilder = (
   const editorValue = useMemo(() => ({
     brick: Symbol('builder'),
   }), []);
-  const cache = useCache();
+  const cacheRef = useRef<CacheMap>(new WeakMap());
 
   return useMemo(
     () => pipe(
-      cache.get(editorValue),
+      cacheRef.current.get(editorValue),
       (parentElement) => buildSlot(
         value,
         ['children', hasSlots(parentBrick) ? parentBrick.slots.children : {}],
-      )({ cache, parentElement, parentBrick }),
-      tap((elements) => cache.add(editorValue, (
+      )({ cache: cacheRef.current, parentElement, parentBrick }),
+      tap((elements) => cacheRef.current.set(editorValue, (
         <>
           {elements}
         </>
       ))),
     ),
-    [cache, editorValue, value, parentBrick],
+    [editorValue, value, parentBrick],
   );
 };
