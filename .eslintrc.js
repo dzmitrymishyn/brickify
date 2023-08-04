@@ -1,17 +1,10 @@
 module.exports = {
   extends: [
     'next/core-web-vitals',
-    'eslint-config-airbnb-typescript',
     'plugin:import/typescript',
+    'airbnb-typescript',
   ],
-  parser: '@typescript-eslint/parser',
   parserOptions: {
-    ecmaFeatures: {
-      jsx: true,
-    },
-    sourceType: 'module',
-    ecmaVersion: 12,
-    tsconfigRootDir: __dirname,
     project: './tsconfig.json',
   },
   ignorePatterns: ['.eslintrc.js', 'build/', 'next.config.js', 'jest.*.js'],
