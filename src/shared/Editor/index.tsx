@@ -1,16 +1,34 @@
 'use client';
 
-import { brick, component, factory } from '@/shared/bricks';
+import { useMemo } from 'react';
 
-function of<Name extends string>(name: Name) {
-  return brick(
+import {
+  addSlots,
+  Brick,
+  component,
+  make,
+  useBricksBuilder,
+} from '@/shared/bricks';
+
+type Props = {
+  value: unknown;
+  bricks?: Brick[];
+};
+
+function of<Name extends string>(name: Name, inputBricks: Brick[] = []) {
+  return make(
     component(
       name,
-      () => (
-        <div>Editor</div>
-      ),
+      ({ value, bricks: bricksArray }: Props) => {
+        const Component = useMemo(() => of(name, bricksArray ?? inputBricks), [bricksArray]);
+        const components = useBricksBuilder(value, Component);
+
+        return (
+          <div data-brick={name}>{components}</div>
+        );
+      },
     ),
-    factory(of),
+    addSlots({ children: inputBricks }),
   );
 }
 
