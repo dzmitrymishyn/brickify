@@ -91,7 +91,7 @@ function buildSlot(
               O.fromNullable,
               O.map((Component) => pipe(
                 oldValueInParentIsBrick && id === oldValueInParent?.id && oldElementInParent?.props || {},
-                (props) => ({ ...props, ...rest, value }),
+                (props: object) => ({ ...props, ...rest, value }),
                 (props) => pipe(
                   hasSlots(Component) ? Component.slots : null,
                   O.fromNullable,
@@ -112,7 +112,7 @@ function buildSlot(
                   O.map(() => cloneElement(oldElementInParent, props)),
                   O.getOrElse(() => {
                     inserted += 1;
-                    return <Component key={newKey()} {...props} />;
+                    return <Component key={formattedValue.id ?? newKey()} {...props} />;
                   }),
                 ),
                 tap((element) => value && typeof value === 'object' && cache.set(value, element)),

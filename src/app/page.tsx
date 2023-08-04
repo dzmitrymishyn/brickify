@@ -7,7 +7,7 @@ import Editor from '@/shared/Editor';
 import Paragraph from '@/shared/Paragraph';
 
 let startArr = 1;
-let i = 0;
+let i = 1000;
 const newKey = () => `${++i}`;
 
 export default function Home() {
