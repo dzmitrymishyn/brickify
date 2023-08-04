@@ -1,6 +1,6 @@
 import { PropsWithChildren } from 'react';
 
-import { component, make, slots } from '@/shared/bricks';
+import { addSlots, component, make } from '@/shared/bricks';
 
 export default make(
   component('container', ({ children }: PropsWithChildren) => (
@@ -8,5 +8,5 @@ export default make(
       {children}
     </div>
   )),
-  slots(['children']),
+  addSlots({ children: 'inherit' }),
 );

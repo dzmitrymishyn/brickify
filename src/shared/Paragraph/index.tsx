@@ -2,8 +2,7 @@
 
 import { ElementType } from 'react';
 
-import { Brick, component, customChildren, factory, make, slots } from '@/shared/bricks';
-import Text from '@/shared/components/Text';
+import { addFactory, component, make } from '@/shared/bricks';
 
 type Props = {
   children: string | number;
@@ -12,7 +11,6 @@ type Props = {
 function of<Name extends string>(
   name: Name,
   Component: ElementType = 'div',
-  bricks: Brick[] = [Text],
 ) {
   return make(
     component(
@@ -23,11 +21,7 @@ function of<Name extends string>(
         );
       },
     ),
-    slots(['children', bricks]),
-    factory(of),
-    customChildren(
-      (value: unknown) => (typeof value === 'string' ? { brick: 'text', children: value } : null),
-    ),
+    addFactory(of),
   );
 }
 
