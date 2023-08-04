@@ -9,6 +9,7 @@ export type BrickComponent<Component extends FC<any>> =
   & {
     is(node: Node): boolean;
     parseValue(html: string): unknown;
+    displayName?: string;
   };
 
 export type Brick<Name = string, Component extends FC<any> = FC<any>> =
@@ -19,6 +20,6 @@ export const isBrick = (brick: unknown): brick is Brick =>
   !!brick
   && typeof brick === 'function'
   && 'brick' in brick
-  && typeof brick.brick === 'string';
+  && (typeof brick.brick === 'string' || typeof brick.brick === 'symbol');
 
 

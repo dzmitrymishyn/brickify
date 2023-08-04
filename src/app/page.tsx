@@ -3,7 +3,6 @@
 import { useState } from 'react';
 
 import Container from '@/shared/components/Container';
-import List from '@/shared/components/List';
 import Editor from '@/shared/Editor';
 import Paragraph from '@/shared/Paragraph';
 
@@ -46,7 +45,7 @@ export default function Home() {
       </button>
       <Editor
         value={state}
-        bricks={[Paragraph, List, Container]}
+        bricks={[Paragraph, Container]}
       />
     </main>
   );
