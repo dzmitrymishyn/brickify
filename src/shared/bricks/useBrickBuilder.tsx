@@ -2,7 +2,13 @@ import * as A from 'fp-ts/lib/Array';
 import { pipe } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
 import * as R from 'fp-ts/lib/Reader';
-import { cloneElement, ReactElement, ReactNode, useMemo, useRef } from 'react';
+import {
+  cloneElement,
+  ReactElement,
+  ReactNode,
+  useMemo,
+  useRef,
+} from 'react';
 
 import { array, tap } from '@/shared/operators';
 
@@ -10,7 +16,10 @@ import { hasCustomChildren, hasSlots, Slot } from './builder';
 import { Brick, BrickValue, isBrickValue } from './utils';
 
 let i = 0;
-const newKey = () => `${++i}`;
+const newKey = () => {
+  i += 1;
+  return `${i}`;
+};
 type CacheMap = WeakMap<object, ReactElement>;
 
 const prepareSlotForProps = (
@@ -64,6 +73,7 @@ function buildSlot(
       O.fromNullable(inputValue),
       O.map(array),
       O.map(A.reduceWithIndex<unknown, ReactElement[]>([], (index, acc, value) => pipe(
+        // eslint-disable-next-line no-nested-ternary
         value && typeof value === 'object'
           ? cache.get(value)
           : parentElement?.props[slotName]?.[index - inserted]?.props?.value === value
@@ -72,7 +82,8 @@ function buildSlot(
         O.fromNullable,
         O.fold(
           () => {
-            const oldElementInParent: ReactElement = parentElement?.props[slotName]?.[index - inserted];
+            const oldElementInParent: ReactElement = parentElement
+              ?.props[slotName]?.[index - inserted];
             const oldValueInParent = oldElementInParent?.props?.value;
             const oldValueInParentIsBrick = isBrickValue(oldValueInParent);
 
@@ -90,7 +101,11 @@ function buildSlot(
               bricks?.[brick],
               O.fromNullable,
               O.map((Component) => pipe(
-                oldValueInParentIsBrick && id === oldValueInParent?.id && oldElementInParent?.props || {},
+                (
+                  oldValueInParentIsBrick
+                  && id === oldValueInParent?.id
+                  && oldElementInParent?.props
+                ) || {},
                 (props: object) => ({ ...props, ...rest, value }),
                 (props) => pipe(
                   hasSlots(Component) ? Component.slots : null,
@@ -148,11 +163,13 @@ export const useBricksBuilder = (
         ['children', hasSlots(parentBrick) ? parentBrick.slots.children : {}],
         value,
       )({ cache: cacheRef.current, parentElement, parentBrick }),
-      tap((elements) => cacheRef.current.set(editorValue, (
-        <>
-          {elements}
-        </>
-      ))),
+      tap((elements) => cacheRef.current.set(
+        editorValue, (
+          <div>
+            {elements}
+          </div>
+        ),
+      )),
     ),
     [editorValue, value, parentBrick],
   );

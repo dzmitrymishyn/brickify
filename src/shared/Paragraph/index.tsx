@@ -15,11 +15,9 @@ function of<Name extends string>(
   return make(
     component(
       name,
-      ({ children }: Props) => {
-        return (
-          <Component data-brick={name}>{children}</Component>
-        );
-      },
+      ({ children }: Props) => (
+        <Component data-brick={name}>{children}</Component>
+      ),
     ),
     addFactory(of),
   );

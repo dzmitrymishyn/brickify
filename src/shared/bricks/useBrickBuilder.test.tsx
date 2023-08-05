@@ -18,7 +18,7 @@ it('should generate right DOM', () => {
     { brick: 'test', children: 'test3' },
   ], brick));
 
-  render(<>{result.current}</>);
+  render(<div>{result.current}</div>);
 
   expect(screen.getByText(/test1/)).toBeInTheDocument();
   expect(screen.queryByText(/test2/)).not.toBeInTheDocument();

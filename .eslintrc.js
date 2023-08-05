@@ -2,6 +2,7 @@ module.exports = {
   extends: [
     'next/core-web-vitals',
     'plugin:import/typescript',
+    'airbnb',
     'airbnb-typescript',
   ],
   parserOptions: {
@@ -9,7 +10,7 @@ module.exports = {
   },
   ignorePatterns: ['.eslintrc.js', 'build/', 'next.config.js', 'jest.*.js'],
   rules: {
-    '@typescript-eslint/indent': 'warn',
+    'import/prefer-default-export': 'off',
     'sort-imports': ['warn', {
       ignoreCase: true,
       ignoreDeclarationSort: true,
@@ -29,5 +30,14 @@ module.exports = {
         },
       ].flat(),
     }],
+
+    // React
+    'react/react-in-jsx-scope': 'off',
+    'react/jsx-indent': 'warn',
+    'react/jsx-indent-props': 'warn',
+    'react/jsx-first-prop-new-line': 'warn',
+    'react/jsx-closing-bracket-location': 'warn',
+    'react/function-component-definition': 'off',
+    'react/jsx-props-no-spreading': 'off',
   },
 };

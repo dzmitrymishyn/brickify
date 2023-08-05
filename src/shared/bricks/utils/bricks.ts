@@ -16,10 +16,7 @@ export type Brick<Name = string, Component extends FC<any> = FC<any>> =
   & BrickName<Name>
   & BrickComponent<Component>;
 
-export const isBrick = (brick: unknown): brick is Brick =>
-  !!brick
+export const isBrick = (brick: unknown): brick is Brick => !!brick
   && typeof brick === 'function'
   && 'brick' in brick
   && (typeof brick.brick === 'string' || typeof brick.brick === 'symbol');
-
-

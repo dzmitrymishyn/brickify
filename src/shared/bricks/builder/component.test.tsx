@@ -6,7 +6,7 @@ it('should generate brick with appropriate data', () => {
   const Component = component('test', (props: { data: string }) => (
     <div data-testid="1">
       Hello world
-      <button>{props.data}</button>
+      <button type="button">{props.data}</button>
     </div>
   ));
 
@@ -29,7 +29,6 @@ it('should create a new component', () => {
 
   expect(ComponentOld).not.toBe(ComponentBase);
 });
-
 
 it('should create unnamed component', () => {
   const Component = component('', () => null);

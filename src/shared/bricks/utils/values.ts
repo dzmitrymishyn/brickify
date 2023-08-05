@@ -3,5 +3,7 @@ export type BrickValue<Name = string> = {
   id?: unknown;
 };
 
-export const isBrickValue = (value: unknown): value is BrickValue =>
-  !!value && typeof value === 'object' && 'brick' in value && typeof value.brick === 'string';
+export const isBrickValue = (value: unknown): value is BrickValue => !!value
+  && typeof value === 'object'
+  && 'brick' in value
+  && typeof value.brick === 'string';

@@ -21,5 +21,7 @@ export const addSlots = <Slots extends Record<string, Brick[] | 'inherit'>>(
     },
   });
 
-export const hasSlots = (brick: unknown): brick is Brick & BrickWithSlots =>
-  isBrick(brick) && 'slots' in brick && !!brick.slots && typeof brick.slots === 'object';
+export const hasSlots = (brick: unknown): brick is Brick & BrickWithSlots => isBrick(brick)
+  && 'slots' in brick
+  && !!brick.slots
+  && typeof brick.slots === 'object';

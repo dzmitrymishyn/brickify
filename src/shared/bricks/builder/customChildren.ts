@@ -8,7 +8,8 @@ export const addCustomChildren = (...handlers: ((value: unknown) => null | Brick
   customChildren: handlers,
 });
 
-export const hasCustomChildren = (brick: unknown): brick is Brick & BrickCustomChildren<any> =>
-  isBrick(brick)
+export const hasCustomChildren = (
+  brick: unknown,
+): brick is Brick & BrickCustomChildren<any> => isBrick(brick)
   && 'customChildren' in brick
   && Array.isArray(brick.customChildren);
