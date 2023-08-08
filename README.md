@@ -1,4 +1,4 @@
-# Brick
+# React Editor
 
 It's a project prototype. It's a kind of editor (wysiwyg) where each component is a brick. Also the project is an example of functional patterns. I'm not good at them, but this project will be a good start to understand functional paradigms.
 
@@ -22,12 +22,12 @@ yarn && yarn dev
 
 ## Project diary
 
-If you're interested in my thoughts and want to help me deal with something I'm struggling with, you can read the [Project diary](https://github.com/jsbrick/brick/wiki/Project-diary).
+If you're interested in my thoughts and want to help me deal with something I'm struggling with, you can read the [Project diary](https://github.com/brickifyio/editor/wiki/Project-diary).
 
 ## Specification
 
-* [Brick](https://github.com/jsbrick/brick/wiki/Brick)
-  * [Examples of bricks](https://github.com/jsbrick/brick/wiki/Brick#examples-of-bricks)
-  * [Problems](https://github.com/jsbrick/brick/wiki/Brick#problems)
-* [Renderer](https://github.com/jsbrick/brick/wiki/Renderer)
-  * [Problems](https://github.com/jsbrick/brick/wiki/Renderer#problems)
+* [Brick](https://github.com/brickifyio/editor/wiki/Brick)
+  * [Examples of bricks](https://github.com/brickifyio/editor/wiki/Brick#examples-of-bricks)
+  * [Problems](https://github.com/brickifyio/editor/wiki/Brick#problems)
+* [Renderer](https://github.com/brickifyio/editor/wiki/Renderer)
+  * [Problems](https://github.com/brickifyio/editor/wiki/Renderer#problems)
