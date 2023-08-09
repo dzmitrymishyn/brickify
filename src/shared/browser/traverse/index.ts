@@ -1,2 +1,2 @@
-export * from './ancestors';
-export * from './siblings';
+export * from './closestUntilChildOfParent';
+export * from './getSibling';

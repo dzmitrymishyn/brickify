@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/dom';
 
-import { getSibling } from './siblings';
+import { getSibling } from './getSibling';
 
 const createDom = () => {
   document.body.innerHTML = `
