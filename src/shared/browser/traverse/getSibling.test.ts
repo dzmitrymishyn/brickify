@@ -24,7 +24,7 @@ it('should get next sibling', () => {
   current = getSibling(current, true);
   expect(current).toHaveProperty('tagName', 'I');
   current = getSibling(current, true);
-  expect(current).toBe(null);
+  expect(current).toBeNull();
 });
 
 it('should get previous sibling', () => {
@@ -39,7 +39,7 @@ it('should get previous sibling', () => {
   current = getSibling(current, false);
   expect(current).toHaveProperty('nodeType', Node.TEXT_NODE);
   current = getSibling(current, false);
-  expect(current).toBe(null);
+  expect(current).toBeNull();
 });
 
 it('should get null on null', () => {
