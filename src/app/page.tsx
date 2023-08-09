@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { surround } from '@/shared/browser/manipulations';
 import Container from '@/shared/components/Container';
 import Editor from '@/shared/Editor';
 import Paragraph from '@/shared/Paragraph';
@@ -32,7 +33,19 @@ export default function Home() {
   ]);
 
   return (
-    <main>
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+    <main
+      onKeyDown={(event) => {
+        if (event.code === 'Escape') {
+          surround(
+            { create: () => document.createElement('b'), selector: 'b' },
+            window.getSelection()!.getRangeAt(0)!,
+          );
+        }
+      }}
+      contentEditable
+      suppressContentEditableWarning
+    >
       <button
         type="button"
         onClick={() => {
