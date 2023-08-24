@@ -71,7 +71,7 @@ describe('splitBoundaryText', () => {
     createDocument();
 
     const div = screen.getByTestId('text').childNodes[0];
-    const range = document.createRange();
+    const range = new Range();
     range.setStart(div, 6);
     range.setEnd(div, div.textContent!.length - 5);
 
@@ -84,7 +84,7 @@ describe('splitBoundaryText', () => {
     const node1 = screen.getByTestId('heading').childNodes[0];
     const node2 = screen.getByTestId('text').childNodes[0];
 
-    const range = document.createRange();
+    const range = new Range();
     range.setStart(node1, 6);
     range.setEnd(node2, 5);
     const resultRange = splitBoundaryText(range);
@@ -99,7 +99,7 @@ describe('splitBoundaryText', () => {
     const node1 = screen.getByTestId('heading');
     const node2 = screen.getByTestId('text');
 
-    const range = document.createRange();
+    const range = new Range();
     range.setStart(node1, 0);
     range.setEnd(node2, 0);
     const resultRange = splitBoundaryText(range);
@@ -114,7 +114,7 @@ describe('splitBoundaryText', () => {
     const node1 = screen.getByTestId('heading').childNodes[0];
     const node2 = screen.getByTestId('text');
 
-    const range = document.createRange();
+    const range = new Range();
     range.setStart(node1, 6);
     range.setEnd(node2, 0);
     const resultRange = splitBoundaryText(range);
@@ -129,7 +129,7 @@ describe('splitBoundaryText', () => {
     const node1 = screen.getByTestId('heading');
     const node2 = screen.getByTestId('text').childNodes[0];
 
-    const range = document.createRange();
+    const range = new Range();
     range.setStart(node1, 0);
     range.setEnd(node2, 5);
     const resultRange = splitBoundaryText(range);
