@@ -26,17 +26,11 @@ export const clearNodes = (root: DocumentFragment | Node, selector: string, clea
       continue;
     }
 
-    if (current.hasChildNodes()) {
-      ancestors.push(current);
-      current = current.firstChild;
-    } else {
-      current = current.nextSibling;
-    }
+    ancestors.push(current);
+    current = current.firstChild;
   }
 
   if (clearRoot && isElement(root) && root.matches(selector)) {
     root.replaceWith(...Array.from(root.childNodes));
   }
-
-  return root;
 };
