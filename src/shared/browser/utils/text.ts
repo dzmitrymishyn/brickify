@@ -11,8 +11,10 @@ export const splitIfText = (node: Node, offset: number) => {
 };
 
 export const splitBoundaryText = (range: Range) => {
-  const newRange = range.cloneRange();
-  newRange.setStart(splitIfText(newRange.startContainer, newRange.startOffset), 0);
-  splitIfText(newRange.endContainer, newRange.endOffset);
-  return newRange;
+  const clonedRange = range.cloneRange();
+
+  clonedRange.setStart(splitIfText(clonedRange.startContainer, clonedRange.startOffset), 0);
+  splitIfText(clonedRange.endContainer, clonedRange.endOffset);
+
+  return clonedRange;
 };

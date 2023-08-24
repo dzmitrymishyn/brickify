@@ -3,7 +3,7 @@ import { closestUntilChildOfParent, getSibling } from '../traverse';
 export const wrapToNode = (
   wrapper: Element,
   start: Node,
-  end: Node | null,
+  end: Node | null = null,
   ltr: boolean = true,
 ) => {
   let child: Node | null = start;
