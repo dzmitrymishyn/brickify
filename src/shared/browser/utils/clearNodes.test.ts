@@ -10,7 +10,7 @@ const createDocument = () => {
         <li>
           <div>Lorem ipsum</div>
           <div>dolar <strong>sit</strong> amet.</div>
-        <li>
+        </li>
       </ul>
       <div><!-- empty div --></div>
       <div><i>Lorem</i> ipsum dolar <strong>sit</strong> amet.</div>

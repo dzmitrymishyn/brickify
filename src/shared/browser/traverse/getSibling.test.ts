@@ -17,13 +17,13 @@ it('should get next sibling', () => {
 
   let current: Node | null = container.childNodes[0];
 
-  current = getSibling(current, true);
+  current = getSibling(current);
   expect(current).toHaveProperty('tagName', 'BR');
-  current = getSibling(current, true);
+  current = getSibling(current);
   expect(current).toHaveProperty('nodeType', Node.TEXT_NODE);
-  current = getSibling(current, true);
+  current = getSibling(current);
   expect(current).toHaveProperty('tagName', 'I');
-  current = getSibling(current, true);
+  current = getSibling(current);
   expect(current).toBeNull();
 });
 
