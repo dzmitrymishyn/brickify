@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { surround } from '@/shared/browser/manipulations';
+import { expose, surround } from '@/shared/browser/manipulations';
 import Container from '@/shared/components/Container';
 import Editor from '@/shared/Editor';
 import Paragraph from '@/shared/Paragraph';
@@ -36,10 +36,24 @@ export default function Home() {
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <main
       onKeyDown={(event) => {
+        event.preventDefault();
         if (event.code === 'Escape') {
           surround(
             { create: () => document.createElement('b'), selector: 'b' },
             window.getSelection()!.getRangeAt(0)!,
+          );
+        }
+        if (event.code === 'Tab') {
+          surround(
+            { create: () => document.createElement('i'), selector: 'i' },
+            window.getSelection()!.getRangeAt(0)!,
+          );
+        }
+        if (event.code === 'Space') {
+          expose(
+            { create: () => document.createElement('b'), selector: 'b' },
+            window.getSelection()!.getRangeAt(0)!,
+            document.body,
           );
         }
       }}

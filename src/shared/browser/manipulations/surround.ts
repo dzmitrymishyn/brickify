@@ -2,6 +2,7 @@ import { pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
 
 import { Component } from './models';
+import { createRange } from '../selection';
 import { getSibling } from '../traverse';
 import { clearNodes, splitBoundaryText, wrapToNode } from '../utils';
 
@@ -70,4 +71,5 @@ export const surround = (
       return { startContainer, endContainer };
     },
   ),
+  ({ startContainer, endContainer }) => createRange(startContainer, endContainer),
 );
