@@ -1,28 +1,17 @@
 import { pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
 
-import {
-  reduce,
-  tap,
-} from '@/shared/operators';
+import { tap } from '@/shared/operators';
 
+import { clearSiblings } from './clearSiblings';
 import { Component } from './models';
 import { wrapToNode } from './wrapToNode';
 import { createRange } from '../selection';
 import { getSibling } from '../traverse';
 import {
-  clearNodes,
+  createPath,
   splitBoundaryText,
 } from '../utils';
-
-const createPath = (start: Node, container: Node) => pipe(
-  start,
-  reduce([] as (Node | null)[], (acc, current) => [
-    [...acc, current],
-    current.parentNode === container ? null : current.parentNode,
-  ]),
-  (arr) => arr.reverse(),
-);
 
 const exposeSiblings = (
   component: Component,
@@ -90,15 +79,6 @@ const exposeSiblings = (
   }
 
   return parentMatched ? 'parent-removed' : 'parent-replaced';
-};
-
-const clearSiblings = (selector: string, start?: Node | null, end?: Node | null) => {
-  let current: Node | null = start ?? null;
-  while (current && current !== end) {
-    const { nextSibling } = current;
-    clearNodes(current, selector, true);
-    current = nextSibling;
-  }
 };
 
 export const expose = (

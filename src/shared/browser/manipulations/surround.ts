@@ -1,13 +1,12 @@
 import { pipe } from 'fp-ts/lib/function';
-// import * as E from 'fp-ts/lib/Either';
 import * as I from 'fp-ts/lib/Identity';
-// import * as O from 'fp-ts/lib/Option';
 
-import { wrapToNode } from '../manipulations';
+import { clearNodes } from './clearNodes';
 import { Component } from './models';
+import { wrapToNode } from './wrapToNode';
 import { createRange } from '../selection';
 import { getSibling } from '../traverse';
-import { clearNodes, splitBoundaryText } from '../utils';
+import { splitBoundaryText } from '../utils';
 
 const surroundAscendedUntilPath = (
   startNode: Node,
