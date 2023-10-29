@@ -1,3 +1,5 @@
+// TODO: Rename the method. It's not actually only "loop"
+// It's smth like find method too.
 export const loopUntil = <T>(
   cb: (current: T, index: number) => boolean | null | undefined,
   next: (current: T, index?: number) => T | null | undefined | false,

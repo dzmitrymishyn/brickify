@@ -31,6 +31,10 @@ export const clearNodes = (root: DocumentFragment | Node, selector: string, clea
   }
 
   if (clearRoot && isElement(root) && root.matches(selector)) {
+    const { firstChild } = root;
     root.replaceWith(...Array.from(root.childNodes));
+    return firstChild;
   }
+
+  return root;
 };

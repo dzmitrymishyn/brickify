@@ -1,20 +1,28 @@
-import { flow, pipe } from 'fp-ts/lib/function';
+import { pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
-import * as R from 'fp-ts/lib/Reader';
 
 import {
-  loopUntil,
+  reduce,
   tap,
 } from '@/shared/operators';
 
 import { Component } from './models';
+import { wrapToNode } from './wrapToNode';
 import { createRange } from '../selection';
 import { getSibling } from '../traverse';
 import {
   clearNodes,
-  isElement,
   splitBoundaryText,
 } from '../utils';
+
+const createPath = (start: Node, container: Node) => pipe(
+  start,
+  reduce([] as (Node | null)[], (acc, current) => [
+    [...acc, current],
+    current.parentNode === container ? null : current.parentNode,
+  ]),
+  (arr) => arr.reverse(),
+);
 
 const exposeSiblings = (
   component: Component,
@@ -27,10 +35,10 @@ const exposeSiblings = (
 
   if (
     !parentContainer
-    || end?.parentElement !== parentContainer
+    || (end && end.parentElement !== parentContainer)
     || (!forceExpose && !parentMatched)
   ) {
-    return;
+    return false;
   }
 
   const afterEnd: Node | null = end?.nextSibling ?? null;
@@ -80,88 +88,68 @@ const exposeSiblings = (
   if (!nextContainer?.childNodes.length) {
     nextContainer?.remove();
   }
+
+  return parentMatched ? 'parent-removed' : 'parent-replaced';
 };
 
-const exposeUntilCommonContainer = (
-  node: Node,
-  container: Node,
-  component: Component,
-  ltr = true,
-): Node | null | undefined => loopUntil(
-  (current: Node) => {
-    const { parentElement } = current;
-    const start: Node | null = (ltr ? current : parentElement?.firstChild) || null;
-    const end: Node | null = (ltr ? parentElement?.lastChild : current) || null;
-
-    exposeSiblings(component, start, end);
-
-    return container === current || container === current.parentElement;
-  },
-  (current) => current.parentElement,
-)(node);
-
-const exposeRangeUntilCommonContainer = pipe(
-  R.ask<{ component: Component }>(),
-  R.map(({ component }) => flow(
-    ({ startContainer, endContainer, commonAncestorContainer }: Range) => ({
-      startContainer, endContainer, commonAncestorContainer,
-    }),
-    I.bind('start', ({ startContainer, commonAncestorContainer }) => exposeUntilCommonContainer(
-      startContainer,
-      commonAncestorContainer,
-      component,
-    )),
-    I.bind('end', ({ endContainer, commonAncestorContainer }) => exposeUntilCommonContainer(
-      endContainer,
-      commonAncestorContainer,
-      component,
-      false,
-    )),
-    tap(({ start, end }) => pipe(
-      start,
-      loopUntil(
-        (current) => {
-          clearNodes(current, component.selector, true);
-          return current === end;
-        },
-        (current) => getSibling(current),
-      ),
-    )),
-  )),
-);
+const clearSiblings = (selector: string, start?: Node | null, end?: Node | null) => {
+  let current: Node | null = start ?? null;
+  while (current && current !== end) {
+    const { nextSibling } = current;
+    clearNodes(current, selector, true);
+    current = nextSibling;
+  }
+};
 
 export const expose = (
   component: Component,
   inputRange: Range,
   container: HTMLElement,
-) => pipe(
+) => (inputRange.collapsed ? inputRange : pipe(
   splitBoundaryText(inputRange),
-  exposeRangeUntilCommonContainer({ component }),
-  tap(flow(
-    ({ start, end }) => ({ start, end }),
-    loopUntil(
-      flow(
-        I.bind('forceExpose', ({ start }) => !!pipe(
-          start,
-          loopUntil(
-            (current) => isElement(current) && current.matches(component.selector),
-            (current) => current?.parentElement !== container && current.parentElement,
-          ),
-        )),
-        tap(({ start, end, forceExpose }) => exposeSiblings(component, start, end, forceExpose)),
-        ({ start, end }) => container
-          && [start, start?.parentElement, end, end?.parentElement].includes(container),
-      ),
-      ({ start, end }) => {
-        if (!start || !end) {
-          return null;
-        }
+  ({ startContainer, endContainer }) => ({ startContainer, endContainer }),
+  I.bind('leftPath', ({ startContainer }) => createPath(startContainer, container)),
+  I.bind('rightPath', ({ endContainer }) => createPath(endContainer, container)),
+  tap(({ leftPath, rightPath }) => {
+    let leftMatched = false;
+    let rightMatched = false;
 
-        return start?.parentElement?.matches(component.selector)
-          ? { start, end }
-          : { start: start?.parentElement, end: end?.parentElement };
-      },
-    ),
-  )),
+    for (let i = 1; i < Math.max(leftPath.length, rightPath.length); i += 1) {
+      const leftParent = leftPath.at(i);
+      const leftChild = leftPath.at(i + 1);
+      const rightParent = rightPath.at(i);
+      const rightChild = rightPath.at(i + 1);
+
+      if (leftMatched && leftParent && leftChild !== leftParent.firstChild && leftChild) {
+        wrapToNode(component.create(), leftParent.firstChild!, leftChild.previousSibling);
+      }
+
+      if (rightMatched && rightParent && rightChild && rightChild !== rightParent.lastChild) {
+        wrapToNode(component.create(), rightChild.nextSibling!);
+      }
+
+      if (leftParent === rightParent) {
+        if (leftChild && leftChild !== rightChild && leftChild?.nextSibling !== rightChild) {
+          clearSiblings(component.selector, leftChild.nextSibling, rightChild);
+        }
+        if (exposeSiblings(component, leftChild, rightChild)) {
+          leftMatched = true;
+          rightMatched = true;
+        }
+        continue;
+      }
+
+      if (leftParent) {
+        clearSiblings(component.selector, leftChild?.nextSibling);
+        leftMatched = !!exposeSiblings(component, leftChild) || leftMatched;
+      }
+
+      if (rightParent) {
+        clearSiblings(component.selector, rightParent.firstChild, rightChild);
+        rightMatched = !!exposeSiblings(component, rightParent.firstChild, rightChild)
+          || rightMatched;
+      }
+    }
+  }),
   ({ startContainer, endContainer }) => createRange(startContainer, endContainer),
-);
+));

@@ -37,30 +37,70 @@ export default function Home() {
     <main
       onKeyDown={(event) => {
         event.preventDefault();
-        if (event.code === 'Escape') {
-          surround(
-            { create: () => document.createElement('b'), selector: 'b' },
-            window.getSelection()!.getRangeAt(0)!,
-          );
-        }
-        if (event.code === 'Tab') {
-          surround(
-            { create: () => document.createElement('i'), selector: 'i' },
-            window.getSelection()!.getRangeAt(0)!,
-          );
-        }
-        if (event.code === 'Space') {
-          expose(
-            { create: () => document.createElement('b'), selector: 'b' },
-            window.getSelection()!.getRangeAt(0)!,
-            document.body,
-          );
+        const tick = () => {
+          if (event.code === 'Escape') {
+            return surround(
+              { create: () => document.createElement('strong'), selector: 'strong' },
+              window.getSelection()!.getRangeAt(0)!,
+            );
+          }
+
+          if (event.code === 'Tab') {
+            return surround(
+              { create: () => document.createElement('i'), selector: 'i' },
+              window.getSelection()!.getRangeAt(0)!,
+            );
+          }
+
+          if (event.code === 'Space') {
+            return expose(
+              { create: () => document.createElement('strong'), selector: 'strong' },
+              window.getSelection()!.getRangeAt(0)!,
+              document.body,
+            );
+          }
+
+          return null;
+        };
+
+        const newRange = tick();
+
+        if (newRange) {
+          window.getSelection()!.removeAllRanges();
+          window.getSelection()!.addRange(newRange);
         }
       }}
       contentEditable
       suppressContentEditableWarning
     >
-      <button
+      <div>
+        <strong>
+          test
+          {' '}
+          <em>
+            <strong>
+              hello
+              {' '}
+              <em>
+                world<strong>!</strong>
+              </em>
+            </strong>
+
+            <strong>
+              <em>
+                This is
+                <strong>Dima!</strong>
+              </em>
+            </strong>
+          </em>
+
+          <strong>
+            <em>And</em>
+            <strong>this is my project</strong>
+          </strong>
+        </strong>
+      </div>
+      {/* <button
         type="button"
         onClick={() => {
           const newId = newKey();
@@ -79,7 +119,7 @@ export default function Home() {
       <Editor
         value={state}
         bricks={[Paragraph, Container]}
-      />
+      /> */}
     </main>
   );
 }

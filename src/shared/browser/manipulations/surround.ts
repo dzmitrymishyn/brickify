@@ -1,10 +1,13 @@
 import { pipe } from 'fp-ts/lib/function';
+// import * as E from 'fp-ts/lib/Either';
 import * as I from 'fp-ts/lib/Identity';
+// import * as O from 'fp-ts/lib/Option';
 
+import { wrapToNode } from '../manipulations';
 import { Component } from './models';
 import { createRange } from '../selection';
 import { getSibling } from '../traverse';
-import { clearNodes, splitBoundaryText, wrapToNode } from '../utils';
+import { clearNodes, splitBoundaryText } from '../utils';
 
 const surroundAscendedUntilPath = (
   startNode: Node,
@@ -48,7 +51,7 @@ const surroundAscendedUntilPath = (
 export const surround = (
   component: Component,
   inputRange: Range,
-) => pipe(
+) => (inputRange.collapsed ? inputRange : pipe(
   splitBoundaryText(inputRange),
   ({ startContainer, endContainer, commonAncestorContainer }) => pipe(
     I.Do,
@@ -72,4 +75,4 @@ export const surround = (
     },
   ),
   ({ startContainer, endContainer }) => createRange(startContainer, endContainer),
-);
+));
