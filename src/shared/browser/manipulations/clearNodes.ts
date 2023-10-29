@@ -1,5 +1,4 @@
-import { isElement } from './element';
-import { isText } from './text';
+import { isElement, isText } from '../utils';
 
 export const clearNodes = (root: DocumentFragment | Node, selector: string, clearRoot = false) => {
   const ancestors: ChildNode[] = [];
