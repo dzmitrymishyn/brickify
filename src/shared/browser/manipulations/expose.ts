@@ -136,6 +136,7 @@ export const expose = (
           leftMatched = true;
           rightMatched = true;
         }
+        // eslint-disable-next-line no-continue
         continue;
       }
 
