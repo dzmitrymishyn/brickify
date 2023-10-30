@@ -1,5 +1,8 @@
 'use client';
 
+/* eslint-disable max-len */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { useState } from 'react';
 
 import { expose, surround } from '@/shared/browser/manipulations';
@@ -7,7 +10,6 @@ import Container from '@/shared/components/Container';
 import Editor from '@/shared/Editor';
 import Paragraph from '@/shared/Paragraph';
 
-let startArr = 1;
 let i = 1000;
 const newKey = () => {
   i += 1;
@@ -82,7 +84,7 @@ export default function Home() {
               hello
               {' '}
               <em>
-                world<strong>!</strong>
+                world
               </em>
             </strong>
 

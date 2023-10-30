@@ -94,7 +94,7 @@ export const expose = (
     let leftMatched = false;
     let rightMatched = false;
 
-    for (let i = 1; i < Math.max(leftPath.length, rightPath.length); i += 1) {
+    for (let i = 0; i < Math.max(leftPath.length, rightPath.length); i += 1) {
       const leftParent = leftPath.at(i);
       const leftChild = leftPath.at(i + 1);
       const rightParent = rightPath.at(i);
