@@ -5,7 +5,6 @@
 
 import { useState } from 'react';
 
-import { expose, reshape, surround } from '@/shared/browser/manipulations';
 import Container from '@/shared/components/Container';
 import Editor from '@/shared/Editor';
 import Paragraph from '@/shared/Paragraph';
@@ -15,6 +14,8 @@ const newKey = () => {
   i += 1;
   return `${i}`;
 };
+
+let startArr = 0;
 
 export default function Home() {
   const [state, setState] = useState([
@@ -37,66 +38,10 @@ export default function Home() {
   return (
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <main
-      onKeyDown={(event) => {
-        event.preventDefault();
-        const tick = () => {
-          if (event.code === 'Escape') {
-            return reshape(
-              { create: () => document.createElement('strong'), selector: 'strong' },
-              window.getSelection()!.getRangeAt(0)!,
-              document.body,
-            );
-          }
-
-          if (event.code === 'Tab') {
-            return reshape(
-              { create: () => document.createElement('em'), selector: 'em' },
-              window.getSelection()!.getRangeAt(0)!,
-              document.body,
-            );
-          }
-
-          return null;
-        };
-
-        const newRange = tick();
-
-        if (newRange) {
-          window.getSelection()!.removeAllRanges();
-          window.getSelection()!.addRange(newRange);
-        }
-      }}
       contentEditable
       suppressContentEditableWarning
     >
-      <div>
-        <strong>
-          test
-          {' '}
-          <em>
-            <strong>
-              hello
-              {' '}
-              <em>
-                world
-              </em>
-            </strong>
-
-            <strong>
-              <em>
-                This is
-                <strong>Dima!</strong>
-              </em>
-            </strong>
-          </em>
-          <br />
-          <strong>
-            <em>And</em>
-            <strong>this is my project</strong>
-          </strong>
-        </strong>
-      </div>
-      {/* <button
+      <button
         type="button"
         onClick={() => {
           const newId = newKey();
@@ -115,7 +60,7 @@ export default function Home() {
       <Editor
         value={state}
         bricks={[Paragraph, Container]}
-      /> */}
+      />
     </main>
   );
 }
