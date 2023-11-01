@@ -60,3 +60,21 @@ it('should NOT replace parent main with children', () => {
 
   expect(screen.getByRole('main')).toBeInTheDocument();
 });
+
+it('should leave right html code', () => {
+  document.body.innerHTML = '<div>Hello <strong>stranger</strong>!</div>';
+
+  clearNodes(document.body, 'strong');
+
+  expect(document.body).toContainHTML('<div>Hello stranger!</div>');
+});
+
+it('should remove only strong node', () => {
+  document.body.innerHTML = '<div><em>Hello</em> <u><strong>stranger</strong></u>! <span>Your <u>profile</u> is <em>ready</em></div>';
+
+  clearNodes(document.body, 'strong');
+
+  expect(document.body).toContainHTML(
+    '<div><em>Hello</em> <u>stranger</u>! <span>Your <u>profile</u> is <em>ready</em></div>',
+  );
+});
