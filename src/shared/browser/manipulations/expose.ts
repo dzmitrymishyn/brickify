@@ -84,7 +84,7 @@ const exposeSiblings = (
 export const expose = (
   component: Component,
   inputRange: Range,
-  container: HTMLElement,
+  container?: HTMLElement | null,
 ) => (inputRange.collapsed ? inputRange : pipe(
   splitBoundaryText(inputRange),
   ({ startContainer, endContainer }) => ({ startContainer, endContainer }),
