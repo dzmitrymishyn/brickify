@@ -1,17 +1,21 @@
 'use client';
 
+/* eslint-disable max-len */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { useState } from 'react';
 
 import Container from '@/shared/components/Container';
 import Editor from '@/shared/Editor';
 import Paragraph from '@/shared/Paragraph';
 
-let startArr = 1;
 let i = 1000;
 const newKey = () => {
   i += 1;
   return `${i}`;
 };
+
+let startArr = 0;
 
 export default function Home() {
   const [state, setState] = useState([
@@ -32,7 +36,11 @@ export default function Home() {
   ]);
 
   return (
-    <main>
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+    <main
+      contentEditable
+      suppressContentEditableWarning
+    >
       <button
         type="button"
         onClick={() => {
