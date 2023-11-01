@@ -5,13 +5,11 @@ import { tap } from '@/shared/operators';
 
 import { clearSiblings } from './clearSiblings';
 import { Component } from './models';
+import { prepareRange } from './prepareRange';
 import { wrapToNode } from './wrapToNode';
 import { createRange } from '../selection';
 import { getSibling } from '../traverse';
-import {
-  createPath,
-  splitBoundaryText,
-} from '../utils';
+import { createPath } from '../utils';
 
 const exposeSiblings = (
   component: Component,
@@ -86,7 +84,7 @@ export const expose = (
   inputRange: Range,
   container?: HTMLElement | null,
 ) => (inputRange.collapsed ? inputRange : pipe(
-  splitBoundaryText(inputRange),
+  prepareRange(inputRange),
   ({ startContainer, endContainer }) => ({ startContainer, endContainer }),
   I.bind('leftPath', ({ startContainer }) => createPath(startContainer, container)),
   I.bind('rightPath', ({ endContainer }) => createPath(endContainer, container)),

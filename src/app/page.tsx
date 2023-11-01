@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 
-import { expose, surround } from '@/shared/browser/manipulations';
+import { expose, reshape, surround } from '@/shared/browser/manipulations';
 import Container from '@/shared/components/Container';
 import Editor from '@/shared/Editor';
 import Paragraph from '@/shared/Paragraph';
@@ -41,22 +41,16 @@ export default function Home() {
         event.preventDefault();
         const tick = () => {
           if (event.code === 'Escape') {
-            return surround(
+            return reshape(
               { create: () => document.createElement('strong'), selector: 'strong' },
               window.getSelection()!.getRangeAt(0)!,
+              document.body,
             );
           }
 
           if (event.code === 'Tab') {
-            return surround(
-              { create: () => document.createElement('i'), selector: 'i' },
-              window.getSelection()!.getRangeAt(0)!,
-            );
-          }
-
-          if (event.code === 'Space') {
-            return expose(
-              { create: () => document.createElement('strong'), selector: 'strong' },
+            return reshape(
+              { create: () => document.createElement('em'), selector: 'em' },
               window.getSelection()!.getRangeAt(0)!,
               document.body,
             );
@@ -95,7 +89,7 @@ export default function Home() {
               </em>
             </strong>
           </em>
-
+          <br />
           <strong>
             <em>And</em>
             <strong>this is my project</strong>

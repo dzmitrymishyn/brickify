@@ -3,10 +3,10 @@ import * as I from 'fp-ts/lib/Identity';
 
 import { clearNodes } from './clearNodes';
 import { Component } from './models';
+import { prepareRange } from './prepareRange';
 import { wrapToNode } from './wrapToNode';
 import { createRange } from '../selection';
 import { getSibling } from '../traverse';
-import { splitBoundaryText } from '../utils';
 
 const surroundAscendedUntilPath = (
   startNode: Node,
@@ -51,7 +51,7 @@ export const surround = (
   component: Component,
   inputRange: Range,
 ) => (inputRange.collapsed ? inputRange : pipe(
-  splitBoundaryText(inputRange),
+  prepareRange(inputRange),
   ({ startContainer, endContainer, commonAncestorContainer }) => pipe(
     I.Do,
     I.bind('start', () => surroundAscendedUntilPath(

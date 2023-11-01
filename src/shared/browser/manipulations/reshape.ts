@@ -5,10 +5,10 @@ import { closest } from '../traverse';
 
 export const reshape = (
   component: Component,
-  inputRange: Range,
+  range: Range,
   container?: HTMLElement | null,
 ) => (
-  closest(inputRange.startContainer, component.selector, container)
-    ? expose(component, inputRange, container)
-    : surround(component, inputRange)
+  closest(range.startContainer, component.selector, container)
+    ? expose(component, range, container)
+    : surround(component, range)
 );

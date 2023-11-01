@@ -3,7 +3,7 @@ import { isElement } from '../utils';
 export const closest = (node: Node, selector: string, container?: Node | null) => {
   let current: Node | null = node?.parentNode;
 
-  while (node && node !== container) {
+  while (current && current !== container) {
     if (isElement(current) && current.matches(selector)) {
       return current;
     }
