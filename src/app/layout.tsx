@@ -1,7 +1,7 @@
 import { PropsWithChildren } from 'react';
 
 export const metadata = {
-  title: 'BrickJS',
+  title: '@brickifyio/editor',
 };
 
 type Props = PropsWithChildren;
