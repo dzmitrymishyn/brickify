@@ -1,3 +1,4 @@
+import { Node as DomHandlerNode } from 'domhandler';
 import { FC } from 'react';
 
 export type BrickName<Name = string> = {
@@ -7,7 +8,7 @@ export type BrickName<Name = string> = {
 export type BrickComponent<Component extends FC<any>> =
   & Component
   & {
-    is(node: Node): boolean;
+    is(node: Node | DomHandlerNode): boolean;
     parseValue(html: string): unknown;
     displayName?: string;
   };

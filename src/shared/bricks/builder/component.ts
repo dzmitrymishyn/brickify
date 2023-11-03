@@ -1,3 +1,5 @@
+import { Node as DomHandlerNode } from 'domhandler';
+
 import { capitalizeFirstLetter } from '@/shared/operators';
 
 import { Brick } from '../utils';
@@ -7,7 +9,7 @@ export const component = <Name extends string, Comp extends React.FC<any>>(
   Component: Comp,
   config?: Partial<{
     parseValue(html: string): unknown;
-    is(node: Node): boolean;
+    is(node: Node | DomHandlerNode): boolean;
   }>,
 ): Brick<Name, Comp> => {
   const newBrick = Component.bind(null);

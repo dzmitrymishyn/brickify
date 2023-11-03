@@ -19,7 +19,7 @@ let startArr = 0;
 
 export default function Home() {
   const [state, setState] = useState([
-    { brick: 'paragraph', id: newKey(), children: '1Lorem ipsum dolar sit amet' },
+    { brick: 'paragraph', id: newKey(), children: '1Lorem <strong style="color: red"><strong>i<em>ps</em>um</strong></strong> dolar sit <strong>amet</strong>' },
     { brick: 'paragraph', id: newKey(), children: '2hello world' },
     { brick: 'paragraph', id: newKey(), children: ['3one child', ' ', 'another child'] },
     {
@@ -27,7 +27,12 @@ export default function Home() {
     },
     {
       brick: 'container',
+      id: newKey(),
       children: [
+        'test',
+        'test',
+        'test',
+        { brick: 'paragraph', id: newKey(), children: '1Lorem ipsum dolar sit amet' },
         { brick: 'paragraph', id: newKey(), children: '1Lorem ipsum dolar sit amet' },
         { brick: 'paragraph', id: newKey(), children: '2hello world' },
         { brick: 'paragraph', id: newKey(), children: ['3one child', ' ', 'another child'] },
@@ -49,9 +54,17 @@ export default function Home() {
           startArr += 1;
           setState((value: any) => [
             newValue,
-            ...value.slice(0, startArr),
-            { ...value[startArr], children: [`${value[startArr].children[0]} ${value.length + 1} `, ...value[startArr].children.slice(1)] },
-            ...value.slice(startArr + 1),
+            ...value.slice(0, -1),
+            {
+              ...value[value.length - 1],
+              children: [
+                't<strong>es</strong>t',
+                'test',
+                'test',
+                { ...value[value.length - 1].children[3], children: `${Math.random()}` },
+                ...value[value.length - 1].children.slice(4),
+              ],
+            },
           ]);
         }}
       >
