@@ -8,27 +8,35 @@ import {
   useRef,
 } from 'react';
 
-import { addFactory, component, make } from '@/shared/bricks';
-import Em from '@/shared/components/Em';
-import Strong from '@/shared/components/Strong';
+import {
+  addFactory,
+  Brick,
+  component,
+  make,
+} from '@/shared/bricks';
 
 import { domToReactFactory } from './domToReactFactory';
 
 type Props = {
   children: string | number;
+  bricks?: Brick[],
 };
 
 function of<Name extends string>(
   name: Name,
   Component: ElementType = 'div',
+  initialBricks: Brick[] = [],
 ) {
   return make(
     component(
       name,
-      ({ children }: Props) => {
+      ({ children, bricks }: Props) => {
         const oldComponents = useRef<ReactNode>();
 
-        const domToReact = useMemo(() => domToReactFactory([Strong, Em], oldComponents), []);
+        const domToReact = useMemo(() => domToReactFactory(
+          bricks || initialBricks,
+          oldComponents,
+        ), [bricks]);
         const components = useMemo(
           () => domToReact(parseDocument(`${children}`), 0),
           [children, domToReact],

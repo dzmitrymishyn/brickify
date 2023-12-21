@@ -6,6 +6,8 @@
 import { useState } from 'react';
 
 import Container from '@/shared/components/Container';
+import Em from '@/shared/components/Em';
+import Strong from '@/shared/components/Strong';
 import Editor from '@/shared/Editor';
 import Paragraph from '@/shared/Paragraph';
 
@@ -20,7 +22,7 @@ let startArr = 0;
 export default function Home() {
   const [state, setState] = useState([
     { brick: 'paragraph', id: newKey(), children: '1Lorem <strong style="color: red"><strong>i<em>ps</em>um</strong></strong> dolar sit <strong>amet</strong>' },
-    { brick: 'paragraph', id: newKey(), children: '2hello world' },
+    { brick: 'paragraph', id: newKey(), children: '<strong>2hello</strong> world' },
     { brick: 'paragraph', id: newKey(), children: ['3one child', ' ', 'another child'] },
     {
       brick: 'paragraph', id: newKey(), children: '4hello world with attributes', attributes: { test: true },
@@ -72,7 +74,10 @@ export default function Home() {
       </button>
       <Editor
         value={state}
-        bricks={[Paragraph, Container]}
+        bricks={[
+          Paragraph.of('paragraph', 'div', [Em, Strong]),
+          Container,
+        ]}
       />
     </main>
   );
