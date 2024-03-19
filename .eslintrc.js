@@ -8,7 +8,7 @@ module.exports = {
   parserOptions: {
     project: './tsconfig.json',
   },
-  ignorePatterns: ['.eslintrc.js', 'build/', 'next.config.js', 'jest.*.js'],
+  ignorePatterns: ['.eslintrc.js', 'build/', 'next.config.mjs', 'jest.*.js'],
   rules: {
     'import/prefer-default-export': 'off',
     'sort-imports': ['warn', {
