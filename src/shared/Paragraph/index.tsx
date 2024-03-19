@@ -14,6 +14,8 @@ import {
 } from '@/shared/bricks/brick';
 
 import { domToReactFactory } from './domToReactFactory';
+import useMergedRefs from '../Editor/useMergedRef';
+import { useMutation } from '../Editor/useMutation';
 
 type Component = {
   bricks: Brick[];
@@ -28,7 +30,7 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
   children,
   bricks = [],
   component: Component = 'div',
-}, ref) => {
+}, refProp) => {
   const oldComponents = useRef<ReactNode>();
 
   const domToReact = useMemo(() => domToReactFactory(
@@ -39,6 +41,12 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
     () => domToReact(parseDocument(`${children}`), 0),
     [children, domToReact],
   );
+
+  const mutationRef = useMutation({
+    characterData: console.log,
+  });
+
+  const ref = useMergedRefs(mutationRef, refProp);
 
   // eslint-disable-next-line react/jsx-no-useless-fragment
   oldComponents.current = <>{components}</>;

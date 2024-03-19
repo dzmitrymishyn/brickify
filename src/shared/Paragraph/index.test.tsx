@@ -10,4 +10,3 @@ it('should render Paragraph', () => {
   expect(container).toBeInTheDocument();
   expect(container).toHaveAttribute('data-brick', 'paragraph');
 });
-

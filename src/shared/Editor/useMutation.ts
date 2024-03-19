@@ -1,15 +1,21 @@
-import { useCallback, useEffect, useRef } from 'react';
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+} from 'react';
 
-type Options = Partial<Record<MutationRecordType, (mutation: MutationRecord) => boolean>>;
+import { MutationHandler, MutationsContext } from './withMutations';
 
-const register = (
-  element: Element,
-  mutate: (mutation: MutationRecord) => boolean,
-) => {
-  // console.log(element, mutate);
-};
+type Options = Partial<Record<MutationRecordType, MutationHandler>>;
 
 export const useMutation = <Element extends HTMLElement>(mutations: Options) => {
+  const { subscribe } = useContext(MutationsContext) || {};
+
+  if (!subscribe) {
+    console.error('You cannot subscribe on new mutations without the context');
+  }
+
   const mutationsRef = useRef(mutations);
   const ref = useRef<Element>(null);
 
@@ -21,8 +27,13 @@ export const useMutation = <Element extends HTMLElement>(mutations: Options) => 
   );
 
   useEffect(() => {
-    register(ref.current!, mutate);
-  }, [mutate]);
+    if (!subscribe) {
+      return;
+    }
+
+    // eslint-disable-next-line consistent-return
+    return subscribe(ref.current!, mutate);
+  }, [mutate, subscribe]);
 
   return ref;
 };
