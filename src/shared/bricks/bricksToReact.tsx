@@ -1,6 +1,5 @@
 import * as A from 'fp-ts/lib/Array';
 import { flow } from 'fp-ts/lib/function';
-import * as I from 'fp-ts/lib/Identity';
 import {
   ReactElement,
   ReactNode,
@@ -8,41 +7,28 @@ import {
 
 import { array } from '@/shared/operators';
 
-import { hasCustomChildren, hasSlots, Slot } from './builder';
-import { Brick, isBrickValue } from './utils';
-
-const buildCustomValue = (brick: Brick, value: unknown) => {
-  if (hasCustomChildren(brick)) {
-    return brick.customChildren.find((matcher) => matcher(value))?.(value) || null;
-  }
-  return null;
-};
+import { Brick } from './brick';
+import { hasSlots, isBrickValue } from './utils';
 
 export const bricksToReact = (
   cache: WeakMap<object, ReactElement>,
-  parent: { Component: Brick; slot: Slot },
+  slot: [string, Record<string, Brick>],
 ) => flow(
   array<unknown>,
   A.mapWithIndex(flow(
-    (index, value) => ({ value, index }),
-    I.bind('formattedValue', ({ value }) => (
-      !isBrickValue(value)
-        ? buildCustomValue(parent.Component, value)
-        : value
-    )),
-    ({ formattedValue, index, value }) => {
-      if (!formattedValue) {
+    (index, value) => {
+      if (!isBrickValue(value)) {
         return null;
       }
 
-      const { brick, id, ...rest } = formattedValue;
-      const cachedElement = cache.get(formattedValue);
+      const { brick, id, ...rest } = value;
+      const cachedElement = cache.get(value);
 
       if (cachedElement) {
         return cachedElement;
       }
 
-      const Component = parent.slot[1]?.[brick];
+      const Component = slot[1]?.[brick];
 
       if (!Component) {
         return null;
@@ -50,19 +36,24 @@ export const bricksToReact = (
 
       const slots = hasSlots(Component) ? Component.slots : {};
       const slotProps = Object.entries(slots).reduce((acc, [name, slotBricks]) => {
-        const childValue = (rest as any)[name];
-        acc[name] = bricksToReact(cache, {
-          slot: [name, slotBricks ?? parent.slot[1]],
-          Component,
-        })(childValue);
+        const childValue = rest[name as keyof typeof rest];
+        acc[name] = bricksToReact(
+          cache,
+          [name, (slotBricks === 'inherit' ? slot[1] : slotBricks) || {}],
+        )(childValue);
         return acc;
       }, {} as Record<string, ReactNode[]>);
 
       const component = (
-        <Component {...rest} {...slotProps} brickValue={value} key={id || index} />
+        <Component
+          {...rest}
+          {...slotProps}
+          brickValue={value}
+          key={id || index}
+        />
       );
 
-      cache.set(formattedValue, component);
+      cache.set(value, component);
 
       return component;
     },

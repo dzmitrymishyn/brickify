@@ -1,25 +1,14 @@
-import { PropsWithChildren } from 'react';
+import React, { PropsWithChildren } from 'react';
 
-import {
-  addCustomChildren,
-  addSlots,
-  component,
-  make,
-} from '@/shared/bricks';
+import { extend, slots } from '@/shared/bricks';
 
-export default make(
-  component('container', ({ children }: PropsWithChildren) => (
-    <div style={{ margin: '0 auto', maxWidth: 600 }}>
-      {children}
-    </div>
-  )),
-  addSlots({ children: 'inherit' }),
-  addCustomChildren(
-    (value) => (
-      typeof value === 'string' ? {
-        brick: 'paragraph',
-        children: value,
-      } : null
-    ),
-  ),
+const Container: React.FC<PropsWithChildren> = ({ children }) => (
+  <div style={{ margin: '0 auto', maxWidth: 600 }}>
+    {children}
+  </div>
+);
+
+export default extend(
+  Container,
+  slots({ children: 'inherit' }),
 );

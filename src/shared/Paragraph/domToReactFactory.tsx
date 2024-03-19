@@ -11,8 +11,15 @@ import {
   RefObject,
 } from 'react';
 
-import { Brick } from '@/shared/bricks';
+import { Brick } from '@/shared/bricks/brick';
 import { array } from '@/shared/operators';
+
+const hasIs = (value: unknown): value is { is: any } => (
+  (typeof value === 'function' || typeof value === 'object')
+  && !!value
+  && 'is' in value
+  && typeof value.is === 'function'
+);
 
 export const domToReactFactory = (bricks: Brick[], oldDocumentRef: RefObject<ReactNode>) => {
   const domToReact = (
@@ -20,7 +27,7 @@ export const domToReactFactory = (bricks: Brick[], oldDocumentRef: RefObject<Rea
     index: number,
     oldDocument: ReactNode = oldDocumentRef.current,
   ): ReactNode[] => {
-    const Component = bricks.find(({ is }) => is(node));
+    const Component: any = bricks.find((brick) => hasIs(brick) && brick.is(node));
     const oldChildNodes = isValidElement(oldDocument)
       ? array(oldDocument.props.children) || []
       : [];

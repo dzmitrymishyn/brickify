@@ -5,20 +5,20 @@ import {
   useRef,
 } from 'react';
 
+import { Brick } from './brick';
 import { bricksToReact } from './bricksToReact';
-import { hasSlots } from './builder';
-import { Brick } from './utils';
+import { bricksToMap } from './utils';
 
 export const useBricksBuilder = (
   value: unknown,
-  parentBrick: Brick,
+  bricks: Brick[],
 ): ReactNode => {
   const cacheRef = useRef<WeakMap<object, ReactElement>>(new WeakMap());
 
-  const element = useMemo(() => bricksToReact(cacheRef.current, {
-    Component: parentBrick,
-    slot: ['children', hasSlots(parentBrick) ? parentBrick.slots.children : {}],
-  })(value), [parentBrick, value]);
+  const element = useMemo(() => bricksToReact(
+    cacheRef.current,
+    ['children', bricksToMap(bricks) as Record<string, Brick>],
+  )(value), [bricks, value]);
 
   return element;
 };

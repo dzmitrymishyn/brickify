@@ -1,6 +1,6 @@
-import { Brick } from './bricks';
+import { Brick } from '../brick';
 
 export const formatBricksArray = (bricks: Brick[] = []) => bricks.reduce((acc, brick) => ({
   ...acc,
-  [brick.brick]: brick,
+  [brick.displayName || brick.name]: brick,
 }), {});

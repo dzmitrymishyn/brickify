@@ -1,57 +1,55 @@
 'use client';
 
 import { parseDocument } from 'htmlparser2';
-import {
+import React, {
   ElementType,
+  forwardRef,
   ReactNode,
   useMemo,
   useRef,
 } from 'react';
 
 import {
-  addFactory,
   Brick,
-  component,
-  make,
-} from '@/shared/bricks';
+} from '@/shared/bricks/brick';
 
 import { domToReactFactory } from './domToReactFactory';
 
-type Props = {
-  children: string | number;
-  bricks?: Brick[],
+type Component = {
+  bricks: Brick[];
+  component: ElementType;
 };
 
-function of<Name extends string>(
-  name: Name,
-  Component: ElementType = 'div',
-  initialBricks: Brick[] = [],
-) {
-  return make(
-    component(
-      name,
-      ({ children, bricks }: Props) => {
-        const oldComponents = useRef<ReactNode>();
+type Props = Partial<Component> & {
+  children: string | number;
+};
 
-        const domToReact = useMemo(() => domToReactFactory(
-          bricks || initialBricks,
-          oldComponents,
-        ), [bricks]);
-        const components = useMemo(
-          () => domToReact(parseDocument(`${children}`), 0),
-          [children, domToReact],
-        );
+const Paragraph = forwardRef<HTMLElement, Props>(({
+  children,
+  bricks = [],
+  component: Component = 'div',
+}, ref) => {
+  const oldComponents = useRef<ReactNode>();
 
-        // eslint-disable-next-line react/jsx-no-useless-fragment
-        oldComponents.current = <>{components}</>;
-
-        return (
-          <Component data-brick={name}>{components}</Component>
-        );
-      },
-    ),
-    addFactory(of),
+  const domToReact = useMemo(() => domToReactFactory(
+    bricks,
+    oldComponents,
+  ), [bricks]);
+  const components = useMemo(
+    () => domToReact(parseDocument(`${children}`), 0),
+    [children, domToReact],
   );
-}
 
-export default of('paragraph');
+  // eslint-disable-next-line react/jsx-no-useless-fragment
+  oldComponents.current = <>{components}</>;
+
+  return (
+    <Component data-brick="paragraph" ref={ref}>
+      {components}
+    </Component>
+  );
+});
+
+Paragraph.displayName = 'Paragraph';
+
+export default Paragraph;

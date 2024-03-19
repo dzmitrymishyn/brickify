@@ -1,13 +1,10 @@
 import { compile } from 'css-select';
-import { PropsWithChildren } from 'react';
+import React, { PropsWithChildren } from 'react';
 
-import { addShortcuts, component, make } from '@/shared/bricks';
+import { extend } from '@/shared/bricks';
 
-export default make(
-  component('strong', ({ children }: PropsWithChildren) => (
-    <strong>{children}</strong>
-  ), {
-    is: compile('strong'),
-  }),
-  addShortcuts({}),
+const Strong: React.FC<PropsWithChildren> = ({ children }) => (
+  <strong>{children}</strong>
 );
+
+export default extend(Strong, { is: compile('strong') });
