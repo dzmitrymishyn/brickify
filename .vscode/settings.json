@@ -1,0 +1,12 @@
+{
+  "eslint.workingDirectories": [
+    { "mode": "auto" },
+  ],
+  "editor.tabSize": 2,
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "editor.overviewRulerBorder": false,
+  "editor.rulers": [
+    90
+  ],
+}

@@ -1,26 +1,63 @@
 'use client';
 
-import { ElementType } from 'react';
+import { parseDocument } from 'htmlparser2';
+import React, {
+  ElementType,
+  forwardRef,
+  ReactNode,
+  useMemo,
+  useRef,
+} from 'react';
 
-import { addFactory, component, make } from '@/shared/bricks';
+import {
+  Brick,
+} from '@/shared/bricks/brick';
 
-type Props = {
+import { domToReactFactory } from './domToReactFactory';
+import useMergedRefs from '../Editor/useMergedRef';
+import { useMutation } from '../Editor/useMutation';
+
+type Component = {
+  bricks: Brick[];
+  component: ElementType;
+};
+
+type Props = Partial<Component> & {
   children: string | number;
 };
 
-function of<Name extends string>(
-  name: Name,
-  Component: ElementType = 'div',
-) {
-  return make(
-    component(
-      name,
-      ({ children }: Props) => (
-        <Component data-brick={name}>{children}</Component>
-      ),
-    ),
-    addFactory(of),
-  );
-}
+const Paragraph = forwardRef<HTMLElement, Props>(({
+  children,
+  bricks = [],
+  component: Component = 'div',
+}, refProp) => {
+  const oldComponents = useRef<ReactNode>();
 
-export default of('paragraph');
+  const domToReact = useMemo(() => domToReactFactory(
+    bricks,
+    oldComponents,
+  ), [bricks]);
+  const components = useMemo(
+    () => domToReact(parseDocument(`${children}`), 0),
+    [children, domToReact],
+  );
+
+  const mutationRef = useMutation({
+    characterData: console.log,
+  });
+
+  const ref = useMergedRefs(mutationRef, refProp);
+
+  // eslint-disable-next-line react/jsx-no-useless-fragment
+  oldComponents.current = <>{components}</>;
+
+  return (
+    <Component data-brick="paragraph" ref={ref}>
+      {components}
+    </Component>
+  );
+});
+
+Paragraph.displayName = 'Paragraph';
+
+export default Paragraph;

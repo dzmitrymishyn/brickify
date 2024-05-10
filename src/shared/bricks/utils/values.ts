@@ -1,9 +1,11 @@
 export type BrickValue<Name = string> = {
   brick: Name;
-  id?: unknown;
+  id?: string;
 };
 
-export const isBrickValue = (value: unknown): value is BrickValue => !!value
+export const isBrickValue = (value: unknown): value is BrickValue => (
+  !!value
   && typeof value === 'object'
   && 'brick' in value
-  && typeof value.brick === 'string';
+  && typeof value.brick === 'string'
+);

@@ -1,35 +1,42 @@
 'use client';
 
-import { useMemo } from 'react';
+import React, { forwardRef } from 'react';
 
-import {
-  addSlots,
-  Brick,
-  component,
-  make,
-  useBricksBuilder,
-} from '@/shared/bricks';
+import { Brick, useBricksBuilder } from '@/shared/bricks';
+
+import useMergedRefs from './useMergedRef';
+import { useMutation } from './useMutation';
 
 type Props = {
   value: unknown;
-  bricks?: Brick[];
+  // eslint-disable-next-line react/require-default-props
+  bricks?: Brick<any>[];
 };
 
-function of<Name extends string>(name: Name, inputBricks: Brick[] = []) {
-  return make(
-    component(
-      name,
-      ({ value, bricks: bricksArray }: Props) => {
-        const Component = useMemo(() => of(name, bricksArray ?? inputBricks), [bricksArray]);
-        const components = useBricksBuilder(value, Component);
+const Editor = forwardRef<HTMLDivElement, Props>(({
+  value,
+  bricks = [],
+}, refProp) => {
+  const components = useBricksBuilder(value, bricks);
 
-        return (
-          <div data-brick={name}>{components}</div>
-        );
-      },
-    ),
-    addSlots({ children: inputBricks }),
+  const mutationRef = useMutation({
+    characterData: console.log,
+  });
+
+  const ref = useMergedRefs(mutationRef, refProp);
+
+  return (
+    <div
+      ref={ref}
+      data-brick="editor"
+      contentEditable
+      suppressContentEditableWarning
+    >
+      {components}
+    </div>
   );
-}
+});
 
-export default of('editor');
+Editor.displayName = 'Editor';
+
+export default Editor;
