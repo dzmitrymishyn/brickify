@@ -1,3 +1,9 @@
+/**
+ * TODO: Convert it into flat config when airbnb and nextjs are ready to it
+ * Support libraries for the flat config you can find here:
+ * https://github.com/eslint/eslint/issues/18093
+ */
+
 module.exports = {
   extends: [
     'next/core-web-vitals',
@@ -39,5 +45,6 @@ module.exports = {
     'react/jsx-closing-bracket-location': 'warn',
     'react/function-component-definition': 'off',
     'react/jsx-props-no-spreading': 'off',
+    'react/prop-types': 'off',
   },
 };

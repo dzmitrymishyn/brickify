@@ -17,12 +17,6 @@ import Paragraph from '@/shared/Paragraph';
 
 let startArr = 0;
 
-const E = withMutations(Editor);
-// const NewParagraph = extend(
-//   Paragraph,
-//   defaultProps({ component: 'article', bricks: [Em, Strong] }),
-// );
-
 export default function Home() {
   const newKey = useMemo(() => {
     let i = 1000;
@@ -87,7 +81,7 @@ export default function Home() {
       >
         Update
       </button>
-      <E
+      <Editor
         value={state}
         bricks={[
           extend(Paragraph, defaultProps({ component: 'article', bricks: [Em, Strong] })),

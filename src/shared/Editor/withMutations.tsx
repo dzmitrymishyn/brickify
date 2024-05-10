@@ -26,10 +26,12 @@ export type MutationsContextType = {
 
 export const MutationsContext = createContext<MutationsContextType | null>(null);
 
+MutationsContext.displayName = 'MutationsContext';
+
 export function withMutations<P, T extends Element>(
   Component: ForwardRefExoticComponent<PropsWithoutRef<P> & RefAttributes<T>>,
 ) {
-  return (props: PropsWithoutRef<P>) => {
+  const WithMutations = (props: PropsWithoutRef<P>) => {
     const ref = useRef<T>(null);
 
     const subscribers = useRef(
@@ -89,4 +91,8 @@ export function withMutations<P, T extends Element>(
       </MutationsContext.Provider>
     );
   };
+
+  WithMutations.displayName = `WithMutations(${Component.displayName})`;
+
+  return WithMutations;
 }

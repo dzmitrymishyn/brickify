@@ -6,6 +6,7 @@ import { Brick, useBricksBuilder } from '@/shared/bricks';
 
 import useMergedRefs from './useMergedRef';
 import { useMutation } from './useMutation';
+import { withMutations } from './withMutations';
 
 type Props = {
   value: unknown;
@@ -39,4 +40,4 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
 
 Editor.displayName = 'Editor';
 
-export default Editor;
+export default withMutations(Editor);
