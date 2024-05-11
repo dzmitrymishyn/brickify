@@ -1,4 +1,5 @@
 import {
+  RefObject,
   useCallback,
   useContext,
   useEffect,
@@ -9,7 +10,9 @@ import { MutationHandler, MutationsContext } from './withMutations';
 
 type Options = Partial<Record<MutationRecordType, MutationHandler>>;
 
-export const useMutation = <Element extends HTMLElement>(mutations: Options) => {
+export const useMutation = <Element extends HTMLElement>(
+  mutations: Options,
+): RefObject<Element> => {
   const { subscribe } = useContext(MutationsContext) || {};
 
   if (!subscribe) {
@@ -22,7 +25,7 @@ export const useMutation = <Element extends HTMLElement>(mutations: Options) => 
   mutationsRef.current = mutations;
 
   const mutate = useCallback(
-    (mutation: MutationRecord) => !!mutationsRef.current[mutation.type]?.(mutation),
+    (mutation: MutationRecord) => mutationsRef.current[mutation.type]?.(mutation),
     [],
   );
 

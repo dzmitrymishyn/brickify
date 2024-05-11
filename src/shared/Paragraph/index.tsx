@@ -5,6 +5,7 @@ import React, {
   ElementType,
   forwardRef,
   ReactNode,
+  RefObject,
   useMemo,
   useRef,
 } from 'react';
@@ -24,12 +25,15 @@ type Component = {
 
 type Props = Partial<Component> & {
   children: string | number;
+  // TODO: Create default BrickProps
+  brickValue?: any;
 };
 
 const Paragraph = forwardRef<HTMLElement, Props>(({
   children,
   bricks = [],
   component: Component = 'div',
+  brickValue,
 }, refProp) => {
   const oldComponents = useRef<ReactNode>();
 
@@ -42,8 +46,11 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
     [children, domToReact],
   );
 
-  const mutationRef = useMutation({
-    characterData: console.log,
+  const mutationRef: RefObject<HTMLElement> = useMutation({
+    characterData: () => ({
+      ...brickValue,
+      children: mutationRef.current?.innerHTML ?? '',
+    }),
   });
 
   const ref = useMergedRefs(mutationRef, refProp);

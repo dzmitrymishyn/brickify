@@ -12,7 +12,6 @@ import Container from '@/shared/components/Container';
 import Em from '@/shared/components/Em';
 import Strong from '@/shared/components/Strong';
 import Editor from '@/shared/Editor';
-import { withMutations } from '@/shared/Editor/withMutations';
 import Paragraph from '@/shared/Paragraph';
 
 let startArr = 0;
@@ -83,6 +82,12 @@ export default function Home() {
       </button>
       <Editor
         value={state}
+        onChange={(changes) => {
+          setState((oldState) => oldState.map((value) => {
+            const newState = changes.find((a: any) => a.id === value.id);
+            return newState || value as any;
+          }));
+        }}
         bricks={[
           extend(Paragraph, defaultProps({ component: 'article', bricks: [Em, Strong] })),
           extend(Container, slots({ children: 'inherit' })),

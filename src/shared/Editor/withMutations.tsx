@@ -11,7 +11,8 @@ import {
 
 import { revertDomByMutations } from './revertDomByMutations';
 
-export type MutationHandler = (mutation: MutationRecord) => boolean | undefined | null | void;
+// TODO: any...
+export type MutationHandler = (mutation: MutationRecord) => any;
 
 type Unsubscribe = () => void;
 
@@ -20,8 +21,12 @@ type Subscribe = (
   mutate: MutationHandler,
 ) => Unsubscribe;
 
+type HandleResults = (updatedValues: unknown[]) => void;
 export type MutationsContextType = {
   subscribe: Subscribe;
+  // TODO: Come up with fine name
+  clear: () => void;
+  setHandleResults: (fn: HandleResults) => void;
 };
 
 export const MutationsContext = createContext<MutationsContextType | null>(null);
@@ -33,6 +38,12 @@ export function withMutations<P, T extends Element>(
 ) {
   const WithMutations = (props: PropsWithoutRef<P>) => {
     const ref = useRef<T>(null);
+    const observerRef = useRef<MutationObserver>();
+
+    const handleResultsRef = useRef<null | HandleResults>(null);
+    const setHandleResults = useCallback((fn: HandleResults) => {
+      handleResultsRef.current = fn;
+    }, []);
 
     const subscribers = useRef(
       new Map<HTMLElement, MutationHandler>(),
@@ -40,11 +51,13 @@ export function withMutations<P, T extends Element>(
 
     useEffect(() => {
       const observer = new MutationObserver((mutations) => {
+        const results: any[] = [];
         mutations.forEach((mutation) => {
           let { target } = mutation;
-          let handled = false;
+          const noValue = Symbol('no value');
+          let result: any = noValue;
 
-          while (!handled && target) {
+          while (result === noValue && target) {
             while (target && !subscribers.current.has(target as HTMLElement)) {
               target = target.parentNode as HTMLElement;
             }
@@ -53,13 +66,20 @@ export function withMutations<P, T extends Element>(
               return;
             }
 
-            handled = !!subscribers.current.get(target as HTMLElement)?.(mutation);
+            result = subscribers.current.get(target as HTMLElement)?.(mutation) ?? noValue;
             target = target.parentNode as HTMLElement;
+          }
+
+          if (result !== noValue) {
+            results.push(result);
           }
         });
 
         revertDomByMutations(mutations);
         observer?.takeRecords();
+
+        // TODO: As I said in the Editor it's bad to handle the changes in such way
+        handleResultsRef.current?.(results);
       });
 
       observer.observe(ref.current!, {
@@ -71,6 +91,8 @@ export function withMutations<P, T extends Element>(
         characterDataOldValue: true,
       });
 
+      observerRef.current = observer;
+
       return () => observer.disconnect();
     }, []);
 
@@ -80,9 +102,13 @@ export function withMutations<P, T extends Element>(
       return () => subscribers.current.delete(element);
     }, []);
 
+    const clear = useCallback(() => {
+      observerRef.current?.takeRecords();
+    }, []);
+
     const contextValue = useMemo(
-      () => ({ subscribe }),
-      [subscribe],
+      () => ({ subscribe, setHandleResults, clear }),
+      [subscribe, setHandleResults, clear],
     );
 
     return (
