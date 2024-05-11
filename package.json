@@ -16,6 +16,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@vercel/speed-insights": "^1.0.10",
     "css-select": "^5.1.0",
     "domhandler": "^5.0.3",
     "fp-ts": "^2.16.4",
