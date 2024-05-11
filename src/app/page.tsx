@@ -10,11 +10,10 @@ import {
 import { defaultProps, extend, slots } from '@/shared/bricks';
 import Container from '@/shared/components/Container';
 import Em from '@/shared/components/Em';
+import Profile from '@/shared/components/Profile';
 import Strong from '@/shared/components/Strong';
 import Editor from '@/shared/Editor';
 import Paragraph from '@/shared/Paragraph';
-
-let startArr = 0;
 
 export default function Home() {
   const newKey = useMemo(() => {
@@ -44,6 +43,13 @@ export default function Home() {
         { brick: 'Paragraph', id: newKey(), children: ['3one child', ' ', 'another child'] },
       ],
     },
+    {
+      brick: 'Profile',
+      id: newKey(),
+      children: [
+        { brick: 'Paragraph', id: newKey(), children: 'Hi <strong>everyone</strong>!' },
+      ],
+    },
     // ...Array.from({ length: 10000 }, () => ({
     //   brick: 'Paragraph', id: newKey(), children: `${newKey()} hello world`,
     // })),
@@ -51,48 +57,19 @@ export default function Home() {
 
   return (
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
-    <main>
-      <ul>
-        <li>1</li>
-        <li>2</li>
-      </ul>
-      <button
-        type="button"
-        onClick={() => {
-          const newId = newKey();
-          const newValue = { brick: 'paragraph', children: `${state.length + 1} - ${Math.random()}`, id: newId };
-          startArr += 1;
-          setState((value: any) => [
-            newValue,
-            ...value.slice(0, -1),
-            {
-              ...value[value.length - 1],
-              children: [
-                't<strong>es</strong>t',
-                'test',
-                'test',
-                { ...value[value.length - 1].children[3], children: `${Math.random()}` },
-                ...value[value.length - 1].children.slice(4),
-              ],
-            },
-          ]);
-        }}
-      >
-        Update
-      </button>
-      <Editor
-        value={state}
-        onChange={(changes) => {
-          setState((oldState) => oldState.map((value) => {
-            const newState = changes.find((a: any) => a.id === value.id);
-            return newState || value as any;
-          }));
-        }}
-        bricks={[
-          extend(Paragraph, defaultProps({ component: 'article', bricks: [Em, Strong] })),
-          extend(Container, slots({ children: 'inherit' })),
-        ]}
-      />
-    </main>
+    <Editor
+      value={state}
+      onChange={(changes) => {
+        setState((oldState) => oldState.map((value) => {
+          const newState = changes.find((a: any) => a.id === value.id);
+          return newState || value as any;
+        }));
+      }}
+      bricks={[
+        extend(Paragraph, defaultProps({ component: 'article', bricks: [Em, Strong] })),
+        extend(Container, slots({ children: 'inherit' })),
+        Profile,
+      ]}
+    />
   );
 }

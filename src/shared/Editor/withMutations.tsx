@@ -74,11 +74,13 @@ export function withMutations<P, T extends Element>(
           }
         });
 
-        revertDomByMutations(mutations);
-        observer?.takeRecords();
+        if (results.length) {
+          revertDomByMutations(mutations);
+          // TODO: As I said in the Editor it's bad to handle the changes in such way
+          handleResultsRef.current?.(results);
+        }
 
-        // TODO: As I said in the Editor it's bad to handle the changes in such way
-        handleResultsRef.current?.(results);
+        observer?.takeRecords();
       });
 
       observer.observe(ref.current!, {

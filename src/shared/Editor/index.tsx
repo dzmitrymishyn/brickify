@@ -39,7 +39,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   const mutationRef: RefObject<HTMLElement> = useMutation({
     // TODO: it's probably not required. This about the situations we're going to handle
     // characterData into Editor
-    characterData: () => mutationRef.current?.innerHTML ?? '',
+    // characterData: () => mutationRef.current?.innerHTML ?? '',
   });
 
   const ref = useMergedRefs(mutationRef, refProp);
