@@ -1,6 +1,11 @@
 'use client';
 
-import React, { RefObject, forwardRef, useContext, useEffect } from 'react';
+import React, {
+  forwardRef,
+  RefObject,
+  useContext,
+  useEffect,
+} from 'react';
 
 import { Brick, useBricksBuilder } from '@/shared/bricks';
 
