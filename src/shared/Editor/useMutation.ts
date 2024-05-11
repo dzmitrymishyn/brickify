@@ -16,6 +16,8 @@ export const useMutation = <Element extends HTMLElement>(
   const { subscribe } = useContext(MutationsContext) || {};
 
   if (!subscribe) {
+    // TODO: Add logger execution
+    // eslint-disable-next-line no-console
     console.error('You cannot subscribe on new mutations without the context');
   }
 

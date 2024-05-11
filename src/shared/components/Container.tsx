@@ -8,6 +8,8 @@ const Container: React.FC<PropsWithChildren> = ({ children }) => (
   </div>
 );
 
+Container.displayName = 'Container';
+
 export default extend(
   Container,
   slots({ children: 'inherit' }),

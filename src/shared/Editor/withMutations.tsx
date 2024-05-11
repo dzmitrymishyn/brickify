@@ -45,17 +45,15 @@ export function withMutations<P, T extends Element>(
       handleResultsRef.current = fn;
     }, []);
 
-    const subscribers = useRef(
-      new Map<HTMLElement, MutationHandler>(),
-    );
+    const subscribers = useRef(new Map<HTMLElement, MutationHandler>());
 
     useEffect(() => {
       const observer = new MutationObserver((mutations) => {
-        const results: any[] = [];
+        const results: unknown[] = [];
         mutations.forEach((mutation) => {
           let { target } = mutation;
           const noValue = Symbol('no value');
-          let result: any = noValue;
+          let result: unknown = noValue;
 
           while (result === noValue && target) {
             while (target && !subscribers.current.has(target as HTMLElement)) {
@@ -66,7 +64,8 @@ export function withMutations<P, T extends Element>(
               return;
             }
 
-            result = subscribers.current.get(target as HTMLElement)?.(mutation) ?? noValue;
+            result = subscribers.current.get(target as HTMLElement)?.(mutation)
+              ?? noValue;
             target = target.parentNode as HTMLElement;
           }
 
@@ -96,11 +95,14 @@ export function withMutations<P, T extends Element>(
       return () => observer.disconnect();
     }, []);
 
-    const subscribe = useCallback<MutationsContextType['subscribe']>((element, mutate) => {
-      subscribers.current.set(element, mutate);
+    const subscribe = useCallback<MutationsContextType['subscribe']>(
+      (element, mutate) => {
+        subscribers.current.set(element, mutate);
 
-      return () => subscribers.current.delete(element);
-    }, []);
+        return () => subscribers.current.delete(element);
+      },
+      [],
+    );
 
     const clear = useCallback(() => {
       observerRef.current?.takeRecords();
