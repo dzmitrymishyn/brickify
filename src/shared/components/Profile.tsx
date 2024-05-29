@@ -1,9 +1,25 @@
-import React, { PropsWithChildren, useState } from 'react';
+import React from 'react';
 
-import { extend, slots } from '@/shared/bricks';
+import Strong from './Strong';
+import { BrickValue, PropsWithBrick, PropsWithChange } from '../bricks';
+import Paragraph from '../Paragraph';
 
-const Profile: React.FC<PropsWithChildren> = ({ children }) => {
-  const [showDescription, setShowDescription] = useState(true);
+type Value = BrickValue & {
+  children: string | number;
+  visible: boolean;
+};
+
+type Props =
+  & PropsWithBrick<Value>
+  & PropsWithChange<Value>
+  & {
+    children: string | number;
+  };
+
+const Profile: React.FC<Props> = ({ children, brick, onChange }) => {
+  // const [showDescription, setShowDescription] = useState(true);
+  console.log(1);
+
   return (
     <div
       style={{
@@ -22,16 +38,28 @@ const Profile: React.FC<PropsWithChildren> = ({ children }) => {
       />
       <button
         type="button"
-        onClick={() => setShowDescription((oldState) => !oldState)}
+        onClick={() => {
+          onChange?.({ ...brick.value, visible: !brick.value?.visible }, {
+            oldValue: brick.value,
+            type: 'update' as any,
+          });
+        }}
       >
-        {showDescription ? 'Hide' : 'Show'}
+        {brick.value.visible ? 'Hide' : 'Show'}
         {' '}
         description
       </button>
-      {showDescription && (
-        <div contentEditable suppressContentEditableWarning>
-          {children}
-        </div>
+      {brick.value.visible && (
+        <Paragraph
+          value={children}
+          bricks={[Strong]}
+          onChange={(newValue) => {
+            onChange?.({ ...brick.value, children: newValue?.value ?? '' }, {
+              oldValue: brick.value,
+              type: 'update' as any,
+            });
+          }}
+        />
       )}
     </div>
   );
@@ -39,7 +67,4 @@ const Profile: React.FC<PropsWithChildren> = ({ children }) => {
 
 Profile.displayName = 'Profile';
 
-export default extend(
-  Profile,
-  slots({ children: 'inherit' }),
-);
+export default Profile;

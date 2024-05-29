@@ -11,7 +11,7 @@ import {
   RefObject,
 } from 'react';
 
-import { Brick } from '@/shared/bricks/brick';
+import { NamedComponent } from '@/shared/bricks/brick';
 import { array } from '@/shared/operators';
 
 const hasIs = (value: unknown): value is { is: any } => (
@@ -21,7 +21,10 @@ const hasIs = (value: unknown): value is { is: any } => (
   && typeof value.is === 'function'
 );
 
-export const domToReactFactory = (bricks: Brick[], oldDocumentRef: RefObject<ReactNode>) => {
+export const domToReactFactory = (
+  bricks: NamedComponent[],
+  oldDocumentRef: RefObject<ReactNode>,
+) => {
   const domToReact = (
     node: Node,
     index: number,

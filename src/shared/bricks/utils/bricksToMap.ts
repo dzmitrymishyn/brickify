@@ -1,6 +1,6 @@
-import { Brick } from '../brick';
+import { NamedComponent } from '../brick';
 
-export const bricksToMap = (bricks: Brick[] | 'inherit'): 'inherit' | Record<string, Brick> => (
+export const bricksToMap = (bricks: NamedComponent[] | 'inherit'): 'inherit' | Record<string, NamedComponent> => (
   bricks === 'inherit'
     ? bricks
     : bricks.reduce((slotAcc, brick) => ({

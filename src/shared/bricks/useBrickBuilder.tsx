@@ -1,24 +1,44 @@
 import {
   ReactElement,
   ReactNode,
+  RefObject,
   useMemo,
   useRef,
 } from 'react';
 
-import { Brick } from './brick';
+import { of } from '@/shared/utils/three';
+
+import { Component } from './brick';
 import { bricksToReact } from './bricksToReact';
+import { Change } from './changes';
 import { bricksToMap } from './utils';
 
+export type BricksBuilderChange = {
+  (change: Change): void;
+};
+
 export const useBricksBuilder = (
-  value: unknown,
-  bricks: Brick[],
-): ReactNode => {
-  const cacheRef = useRef<WeakMap<object, ReactElement>>(new WeakMap());
+  children: unknown,
+  bricks: Component[],
+  onChange: (change: Change) => void,
+): [ReactNode, RefObject<any>] => {
+  const rootValueRef = useRef<any>(null);
+  // eslint-disable-next-line max-len
+  const cacheRef = useRef<WeakMap<object, { element: ReactElement, node: any; path: { current: string[] } }>>(
+    new WeakMap(),
+  );
 
-  const element = useMemo(() => bricksToReact(
-    cacheRef.current,
-    ['children', bricksToMap(bricks) as Record<string, Brick>],
-  )(value), [bricks, value]);
+  const element = useMemo(() => {
+    rootValueRef.current = of({ children }, ['children']);
 
-  return element;
+    return bricksToReact({
+      onChange,
+      cache: cacheRef.current,
+      slots: bricksToMap(bricks) as Record<string, Component>,
+      path: () => ['children'],
+      parent: rootValueRef.current,
+    })(children);
+  }, [bricks, children, onChange]);
+
+  return [element, rootValueRef];
 };

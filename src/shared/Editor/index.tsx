@@ -3,21 +3,28 @@
 import React, {
   forwardRef,
   RefObject,
+  useCallback,
   useContext,
   useEffect,
+  useRef,
 } from 'react';
 
-import { Brick, useBricksBuilder } from '@/shared/bricks';
+import {
+  Change,
+  Component,
+  MutationsContext,
+  useBricksBuilder,
+  useMutation,
+  withMutations,
+} from '@/shared/bricks';
+import { patch } from '@/shared/utils/three';
 
 import useMergedRefs from './useMergedRef';
-import { useMutation } from './useMutation';
-import { MutationsContext, withMutations } from './withMutations';
 
 type Props = {
-  value: unknown;
-  bricks?: Brick<any>[];
-  // TODO: This should return updated blocks + the updated result
-  onChange?(updatedBlocks: unknown[]): void;
+  value: unknown[];
+  bricks?: Component<any>[];
+  onChange?(value: unknown): void;
 };
 
 const Editor = forwardRef<HTMLDivElement, Props>(({
@@ -25,22 +32,36 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   bricks = [],
   onChange,
 }, refProp) => {
-  const { setHandleResults, clear } = useContext(MutationsContext)!;
-  const components = useBricksBuilder(value, bricks);
+  const { clear, trackChange } = useContext(MutationsContext)!;
+  const changesRef = useRef<Change[]>([]);
+  const changeBlock = useCallback(
+    (change: Change) => {
+      changesRef.current.push(trackChange(change));
+    },
+    [trackChange],
+  );
+  const [components, treeRef] = useBricksBuilder(value, bricks, changeBlock);
 
-  // When the components are updated we need to clear our MutationsArray to prevent DOM
-  // restoring
+  // When the components are updated we need to clear our MutationsArray to prevent DOM restoring
   useEffect(clear, [components, clear]);
-  // TODO: I don't like the direction of data updates
-  // It should be from the bottom to the top. And we need to use onChange function to
-  // handle them.
-  useEffect(() => onChange && setHandleResults(onChange), [onChange, setHandleResults]);
 
   const mutationRef: RefObject<HTMLElement> = useMutation({
-    // TODO: it's probably not required. This about the situations we're going to handle
-    // characterData into Editor
-    // characterData: () => mutationRef.current?.innerHTML ?? '',
-  });
+    before() {
+      changesRef.current = [];
+    },
+    // mutate: console.log.bind(null, 'Editor:mutate'),
+    after: () => {
+      if (!changesRef.current.length) {
+        return;
+      }
+
+      const newValue = patch(treeRef.current, changesRef.current as any);
+
+      console.log(newValue.children);
+
+      onChange?.(newValue.children);
+    },
+  } as any);
 
   const ref = useMergedRefs(mutationRef, refProp);
 

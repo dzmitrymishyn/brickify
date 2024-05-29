@@ -1,6 +1,6 @@
-export type BrickValue<Name = string> = {
+export type BrickValue<Name extends string = string, Identifier = any> = {
   brick: Name;
-  id?: string;
+  id?: Identifier;
 };
 
 export const isBrickValue = (value: unknown): value is BrickValue => (

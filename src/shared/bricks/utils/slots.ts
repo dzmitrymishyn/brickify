@@ -1,7 +1,7 @@
 import { bricksToMap } from './bricksToMap';
-import { Brick } from '../brick';
+import { NamedComponent } from '../brick';
 
-export type Slot = [string, 'inherit' | Brick[]];
+export type Slot = [string, 'inherit' | NamedComponent[]];
 export type Slots = Record<Slot[0], Slot[1]>;
 
 const addSlots = <S extends Slots>(slots: S) => ({
@@ -14,7 +14,7 @@ const addSlots = <S extends Slots>(slots: S) => ({
 export { addSlots as slots };
 
 type WithSlots = {
-  slots: Record<string, 'inherit' | Record<string, Brick>>;
+  slots: Record<string, 'inherit' | Record<string, NamedComponent>>;
 };
 
 export const hasSlots = (Component: unknown): Component is WithSlots => !!(

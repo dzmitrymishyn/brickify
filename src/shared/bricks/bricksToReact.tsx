@@ -1,19 +1,36 @@
 import * as A from 'fp-ts/lib/Array';
 import { flow } from 'fp-ts/lib/function';
-import {
+import React, {
   ReactElement,
   ReactNode,
 } from 'react';
 
 import { array } from '@/shared/operators';
+import { Node, add, of } from '@/shared/utils/three';
 
-import { Brick } from './brick';
+import {
+  Component,
+  PropsWithBrick,
+  PropsWithChange,
+} from './brick';
+import { Change } from './changes';
 import { hasSlots, isBrickValue } from './utils';
 
-export const bricksToReact = (
-  cache: WeakMap<object, ReactElement>,
-  slot: [string, Record<string, Brick>],
-) => flow(
+type Options = {
+  onChange(change: Change): void;
+  cache: WeakMap<object, { element: ReactElement; node: any; path: { current: string[] } }>;
+  slots: Record<string, Component>;
+  path(): string[];
+  parent: Node;
+};
+
+export const bricksToReact = ({
+  onChange,
+  cache,
+  slots,
+  path: parentPath,
+  parent,
+}: Options) => flow(
   array<unknown>,
   A.mapWithIndex(flow(
     (index, value) => {
@@ -22,40 +39,58 @@ export const bricksToReact = (
       }
 
       const { brick, id, ...rest } = value;
-      const cachedElement = cache.get(value);
+      const cached = cache.get(value);
+      const pathRef = cached?.path ?? { current: [] as string[] };
+      pathRef.current = [`${index}`];
 
-      if (cachedElement) {
-        return cachedElement;
-      }
+      const path = () => [...parentPath(), ...pathRef.current];
+      const change = (newValue: unknown, changeProps: any) => onChange({
+        ...changeProps,
+        value: newValue,
+        path: path(),
+      } as any);
 
-      const Component = slot[1]?.[brick];
+      const Comp = slots?.[brick] as Component<PropsWithChange & PropsWithBrick>;
 
-      if (!Component) {
+      if (!Comp) {
         return null;
       }
 
-      const slots = hasSlots(Component) ? Component.slots : {};
-      const slotProps = Object.entries(slots).reduce((acc, [name, slotBricks]) => {
+      const slotsMap = hasSlots(Comp) ? Comp.slots : {};
+      const slotNames = Object.keys(slotsMap);
+      const node = cached?.node ?? of(value, slotNames);
+
+      add(parent, parentPath().at(-1)!, node);
+
+      if (cached) {
+        return cached.element;
+      }
+
+      const slotProps = Object.entries(slotsMap).reduce((acc, [name, childBricks]) => {
         const childValue = rest[name as keyof typeof rest];
-        acc[name] = bricksToReact(
+        acc[name] = bricksToReact({
+          onChange,
           cache,
-          [name, (slotBricks === 'inherit' ? slot[1] : slotBricks) || {}],
-        )(childValue);
+          slots: (childBricks === 'inherit' ? slots : childBricks) as any || {},
+          path: () => [...path(), name],
+          parent: node,
+        })(childValue);
         return acc;
       }, {} as Record<string, ReactNode[]>);
 
-      const component = (
-        <Component
+      const element = (
+        <Comp
           {...rest}
           {...slotProps}
-          brickValue={value}
+          onChange={change}
+          brick={{ value, path }}
           key={id || index}
         />
       );
 
-      cache.set(value, component);
+      cache.set(value, { element, node, path: pathRef });
 
-      return component;
+      return element;
     },
   )),
 );

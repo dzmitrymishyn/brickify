@@ -2,12 +2,12 @@ import { FC, forwardRef } from 'react';
 
 import { Spread } from '@/shared/utils';
 
-import { Brick } from '../brick';
+import { Component } from '../brick';
 
-export const extend = <InputComponent extends Brick<any>, Parts extends object[]>(
-  brick: InputComponent,
+export const extend = <C extends Component<any>, Parts extends object[]>(
+  brick: C,
   ...parts: Parts
-): InputComponent & Spread<Parts> => {
+): C & Spread<Parts> => {
   const config = Object.assign(
     { displayName: brick.displayName || brick.name },
     ...parts,

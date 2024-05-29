@@ -6,9 +6,24 @@ import {
   useRef,
 } from 'react';
 
-import { MutationHandler, MutationsContext } from './withMutations';
+import { MutationHandler } from './mutations';
+import { MutationsContext } from './MutationsContext';
 
-type Options = Partial<Record<MutationRecordType, MutationHandler>>;
+// type MutationHandle = {
+// };
+
+// type Options2 = {
+//   before(): void;
+//   mutate(options: {
+//     remove: boolean;
+//     addedNodes: Node[];
+//     removedNodes: Node[];
+//     oldValue: string | null;
+//   }): void;
+//   after(): void;
+// };
+
+type Options = Partial<Record<MutationRecordType | 'before' | 'after', MutationHandler>>;
 
 export const useMutation = <Element extends HTMLElement>(
   mutations: Options,
@@ -26,8 +41,8 @@ export const useMutation = <Element extends HTMLElement>(
 
   mutationsRef.current = mutations;
 
-  const mutate = useCallback(
-    (mutation: MutationRecord) => mutationsRef.current[mutation.type]?.(mutation),
+  const mutate = useCallback<MutationHandler>(
+    (mutation) => mutationsRef.current[mutation.type]?.(mutation),
     [],
   );
 

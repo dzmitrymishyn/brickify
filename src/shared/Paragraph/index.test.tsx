@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import Paragraph from './index';
 
 it('should render Paragraph', () => {
-  render(<Paragraph>lorem ipsum</Paragraph>);
+  render(<Paragraph value="lorem ipsum" />);
 
   const container = screen.getByText(/lorem ipsum/i);
 

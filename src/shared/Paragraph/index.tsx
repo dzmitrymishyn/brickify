@@ -11,29 +11,31 @@ import React, {
 } from 'react';
 
 import {
-  Brick,
+  Component as BrickComponent,
+  PropsWithBrick,
+  PropsWithChange,
 } from '@/shared/bricks/brick';
 
 import { domToReactFactory } from './domToReactFactory';
+import { BrickValue, useMutation } from '../bricks';
 import useMergedRefs from '../Editor/useMergedRef';
-import { useMutation } from '../Editor/useMutation';
 
-type Component = {
-  bricks: Brick[];
-  component: ElementType;
+type Value = BrickValue & {
+  value: string | number;
 };
 
-type Props = Partial<Component> & {
-  children: string | number;
-  // TODO: Create default BrickProps
-  brickValue?: any;
+type Props = PropsWithChange<Value> & Partial<PropsWithBrick<Value>> & {
+  bricks?: BrickComponent[];
+  component?: ElementType;
+  value: Value['value'];
 };
 
 const Paragraph = forwardRef<HTMLElement, Props>(({
-  children,
+  value,
   bricks = [],
   component: Component = 'div',
-  brickValue,
+  brick,
+  onChange,
 }, refProp) => {
   const oldComponents = useRef<ReactNode>();
 
@@ -42,16 +44,27 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
     oldComponents,
   ), [bricks]);
   const components = useMemo(
-    () => domToReact(parseDocument(`${children}`), 0),
-    [children, domToReact],
+    () => domToReact(parseDocument(`${value}`), 0),
+    [value, domToReact],
   );
 
   const mutationRef: RefObject<HTMLElement> = useMutation({
-    characterData: () => ({
-      ...brickValue,
-      children: mutationRef.current?.innerHTML ?? '',
-    }),
-  });
+    mutate: ({ remove }: any) => {
+      if (remove) {
+        return onChange?.(null, { type: 'remove' });
+      }
+
+      // const newHtml = mutationRef.current?.children[0]?.innerHTML ?? '';
+      const newHtml = mutationRef.current?.innerHTML ?? '';
+
+      return onChange?.({
+        id: null,
+        brick: 'Paragraph',
+        ...brick?.value,
+        value: newHtml,
+      }, { oldValue: brick?.value, type: 'update' as any });
+    },
+  } as any);
 
   const ref = useMergedRefs(mutationRef, refProp);
 
@@ -59,8 +72,24 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
   oldComponents.current = <>{components}</>;
 
   return (
-    <Component data-brick="paragraph" ref={ref}>
+    <Component
+      data-brick="paragraph"
+      ref={ref}
+      contentEditable
+      suppressContentEditableWarning
+    >
+      {/* <span> */}
       {components}
+      {/* </span> */}
+      {/* <span>
+        {' '}
+        <span
+          style={{ background: '#efefef', fontStyle: 'italic' }}
+          onClick={() => console.log(brick?.path())}
+        >
+          {brick?.path().join('/')}
+        </span>
+      </span> */}
     </Component>
   );
 });

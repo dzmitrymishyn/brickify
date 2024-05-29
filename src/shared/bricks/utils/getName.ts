@@ -1,3 +1,3 @@
-import { Brick } from '../brick';
+import { NamedComponent } from '../brick';
 
-export const getName = (Component: Brick) => Component.displayName || Component.name;
+export const getName = (Component: NamedComponent) => Component.displayName || Component.name;
