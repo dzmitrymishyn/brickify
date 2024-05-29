@@ -3,7 +3,6 @@
  * Support libraries for the flat config you can find here:
  * https://github.com/eslint/eslint/issues/18093
  */
-
 module.exports = {
   extends: [
     'next/core-web-vitals',

@@ -1,7 +1,6 @@
+import { array } from '@brickify/operators';
 import * as A from 'fp-ts/lib/Array';
 import { flow } from 'fp-ts/lib/function';
-
-import { array } from '@/shared/operators';
 
 import { Change } from './change';
 import { Node } from './node';

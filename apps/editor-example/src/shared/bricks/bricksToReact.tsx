@@ -5,7 +5,7 @@ import React, {
   ReactNode,
 } from 'react';
 
-import { array } from '@/shared/operators';
+import { array } from '@brickify/operators';
 import { add, Node, of } from '@/shared/utils/three';
 
 import {

@@ -21,8 +21,8 @@ it('should go to the latest element', () => {
   const result = loopUntil(mockedFn, (current: Item) => current.next)(list);
 
   expect(result).toBeNull();
-  expect(mockedFn).lastCalledWith({ item: 3, next: null }, 2);
-  expect(mockedFn).toBeCalledTimes(3);
+  expect(mockedFn).toHaveBeenLastCalledWith({ item: 3, next: null }, 2);
+  expect(mockedFn).toHaveBeenCalledTimes(3);
 });
 
 it('should return the matched result', () => {

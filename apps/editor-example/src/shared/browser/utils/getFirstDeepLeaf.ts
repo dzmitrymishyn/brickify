@@ -1,4 +1,4 @@
-import { loopUntil } from '@/shared/operators';
+import { loopUntil } from '@brickify/operators';
 
 export const getFirstDeepLeaf = loopUntil<Node>(
   (current) => !current.firstChild,
