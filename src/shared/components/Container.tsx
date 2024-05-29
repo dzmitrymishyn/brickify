@@ -1,15 +1,23 @@
 import React, { PropsWithChildren } from 'react';
 
-import { PropsWithBrick, PropsWithChange, extend, slots, useMutation } from '@/shared/bricks';
+import {
+  extend,
+  PropsWithBrick,
+  PropsWithChange,
+  slots,
+  useMutation,
+} from '@/shared/bricks';
 
 type Props = PropsWithChildren & PropsWithBrick & PropsWithChange;
 
 const Container: React.FC<Props> = ({ children, onChange }) => {
   const mutationRef = useMutation<HTMLDivElement>({
-    mutate: ({ remove }: any) => {
+    mutate({ remove }: any) {
       if (remove) {
         return onChange?.(null, { type: 'remove' });
       }
+
+      return undefined;
     },
   } as any);
 
@@ -18,7 +26,7 @@ const Container: React.FC<Props> = ({ children, onChange }) => {
       {children}
     </div>
   );
-}
+};
 
 Container.displayName = 'Container';
 

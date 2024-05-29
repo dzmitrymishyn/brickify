@@ -6,7 +6,7 @@ import React, {
 } from 'react';
 
 import { array } from '@/shared/operators';
-import { Node, add, of } from '@/shared/utils/three';
+import { add, Node, of } from '@/shared/utils/three';
 
 import {
   Component,

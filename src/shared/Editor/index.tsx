@@ -55,9 +55,12 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
         return;
       }
 
-      const newValue = patch(treeRef.current, changesRef.current as any);
+      const newValue = patch(treeRef.current, changesRef.current as any) as {
+        children: unknown;
+      };
 
-      console.log(newValue.children);
+      // eslint-disable-next-line no-console
+      console.log('value is updated', newValue.children);
 
       onChange?.(newValue.children);
     },
