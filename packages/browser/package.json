@@ -1,0 +1,25 @@
+{
+  "name": "@brickify/browser",
+  "version": "0.0.1",
+  "exports": {
+    "hotkeys": "./src/hotkeys",
+    "manipulations": "./src/manipulations",
+    "selectors": "./src/selectors",
+    "traverse": "./src/traverse",
+    "utils": "./src/utils"
+  },
+  "scripts": {
+    "test": "yarn jest"
+  },
+  "dependencies": {
+    "@brickify/operators": "*",
+    "fp-ts": "^2.16.6",
+    "typescript": "^5.4.2"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.1.0",
+    "@testing-library/jest-dom": "^6.4.5",
+    "@types/jest": "^29.5.12",
+    "ts-jest": "^29.1.4"
+  }
+}

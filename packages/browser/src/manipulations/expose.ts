@@ -1,7 +1,6 @@
+import { tap } from '@brickify/operators';
 import { pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
-
-import { tap } from '@brickify/operators';
 
 import { clearSiblings } from './clearSiblings';
 import { Component } from './models';

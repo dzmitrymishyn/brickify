@@ -1,6 +1,5 @@
-import { pipe } from 'fp-ts/lib/function';
-
 import { reduce } from '@brickify/operators';
+import { pipe } from 'fp-ts/lib/function';
 
 export const createPath = (start: Node, container?: Node | null) => pipe(
   start,
