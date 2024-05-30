@@ -1,8 +1,7 @@
+import { tap } from '@brickifyio/operators';
 import * as A from 'fp-ts/lib/Array';
 import { flow } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
-
-import { tap } from '@brickify/operators';
 
 type MutationHandler = (mutation: MutationRecord) => void;
 

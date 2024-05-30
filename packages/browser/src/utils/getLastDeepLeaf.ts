@@ -1,4 +1,4 @@
-import { loopUntil } from '@brickify/operators';
+import { loopUntil } from '@brickifyio/operators';
 
 export const getLastDeepLeaf = loopUntil<Node>(
   (current) => !current.lastChild,

@@ -1,5 +1,5 @@
 {
-  "name": "@brickify/browser",
+  "name": "@brickifyio/browser",
   "version": "0.0.1",
   "exports": {
     "hotkeys": "./src/hotkeys",
@@ -12,7 +12,7 @@
     "test": "yarn jest"
   },
   "dependencies": {
-    "@brickify/operators": "*",
+    "@brickifyio/operators": "*",
     "fp-ts": "^2.16.6",
     "typescript": "^5.4.2"
   },

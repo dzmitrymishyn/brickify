@@ -1,3 +1,4 @@
+import { array } from '@brickifyio/operators';
 import {
   isDocument,
   isTag,
@@ -12,7 +13,6 @@ import {
 } from 'react';
 
 import { NamedComponent } from '@/shared/bricks/brick';
-import { array } from '@brickify/operators';
 
 const hasIs = (value: unknown): value is { is: any } => (
   (typeof value === 'function' || typeof value === 'object')

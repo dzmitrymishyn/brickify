@@ -1,4 +1,4 @@
-import { tap } from '@brickify/operators';
+import { tap } from '@brickifyio/operators';
 import { pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
 

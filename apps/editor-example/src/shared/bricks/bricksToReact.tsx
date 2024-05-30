@@ -1,3 +1,4 @@
+import { array } from '@brickifyio/operators';
 import * as A from 'fp-ts/lib/Array';
 import { flow } from 'fp-ts/lib/function';
 import React, {
@@ -5,7 +6,6 @@ import React, {
   ReactNode,
 } from 'react';
 
-import { array } from '@brickify/operators';
 import { add, Node, of } from '@/shared/utils/three';
 
 import {

@@ -1,8 +1,11 @@
 {
-  "name": "@brickify/monorepo",
+  "name": "@brickifyio/monorepo",
   "version": "0.0.0",
   "private": true,
   "workspaces": ["packages/*", "apps/*"],
+  "engines": {
+    "node": ">=18.17.0"
+  },
   "scripts": {
     "dev": "turbo dev",
     "test": "turbo test",

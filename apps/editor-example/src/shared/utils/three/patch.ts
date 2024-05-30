@@ -1,4 +1,4 @@
-import { array } from '@brickify/operators';
+import { array } from '@brickifyio/operators';
 import * as A from 'fp-ts/lib/Array';
 import { flow } from 'fp-ts/lib/function';
 
