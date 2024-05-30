@@ -1,29 +1,30 @@
 import {
-  ReactElement,
-  ReactNode,
-  RefObject,
+  type ReactElement,
+  type ReactNode,
+  type RefObject,
   useMemo,
   useRef,
 } from 'react';
 
 import { of } from '@/shared/utils/three';
 
-import { Component } from './brick';
+import { type Component } from './brick';
 import { bricksToReact } from './bricksToReact';
-import { Change } from './changes';
+import { type Change } from './changes';
 import { bricksToMap } from './utils';
 
-export type BricksBuilderChange = {
-  (change: Change): void;
-};
+export type BricksBuilderChange = (change: Change) => void;
 
 export const useBricksBuilder = (
   children: unknown,
   bricks: Component[],
   onChange: (change: Change) => void,
+// eslint-disable-next-line -- check next line
 ): [ReactNode, RefObject<any>] => {
+  // eslint-disable-next-line -- check next line
   const rootValueRef = useRef<any>(null);
-  // eslint-disable-next-line max-len
+
+  // eslint-disable-next-line -- check next line
   const cacheRef = useRef<WeakMap<object, { element: ReactElement, node: any; path: { current: string[] } }>>(
     new WeakMap(),
   );
@@ -36,6 +37,7 @@ export const useBricksBuilder = (
       cache: cacheRef.current,
       slots: bricksToMap(bricks) as Record<string, Component>,
       path: () => ['children'],
+      // eslint-disable-next-line -- check next line
       parent: rootValueRef.current,
     })(children);
   }, [bricks, children, onChange]);

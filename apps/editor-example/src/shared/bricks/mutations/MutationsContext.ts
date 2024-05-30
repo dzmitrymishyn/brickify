@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 
-import { MutationHandler } from './mutations';
+import { type MutationHandler } from './mutations';
 
 type Unsubscribe = () => void;
 
@@ -14,9 +14,9 @@ export type HandleResults = (updatedValues: unknown[]) => void;
 export type MutationsContextType = {
   subscribe: Subscribe;
   // TODO: Come up with fine name
-  clear(): void;
-  trackChange<T>(change: T): T;
-};
+  clear: () => void;
+  trackChange: <T>(change: T) => T;
+}
 
 export const MutationsContext = createContext<MutationsContextType | null>(null);
 

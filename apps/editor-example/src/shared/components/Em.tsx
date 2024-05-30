@@ -1,5 +1,5 @@
 import { compile } from 'css-select';
-import React, { PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { extend } from '@/shared/bricks';
 

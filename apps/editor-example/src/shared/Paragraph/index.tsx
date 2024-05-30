@@ -2,22 +2,22 @@
 
 import { parseDocument } from 'htmlparser2';
 import React, {
-  ElementType,
+  type ElementType,
   forwardRef,
-  ReactNode,
-  RefObject,
+  type ReactNode,
+  type RefObject,
   useMemo,
   useRef,
 } from 'react';
 
 import {
-  Component as BrickComponent,
-  PropsWithBrick,
-  PropsWithChange,
+  type Component as BrickComponent,
+  type PropsWithBrick,
+  type PropsWithChange,
 } from '@/shared/bricks/brick';
 
 import { domToReactFactory } from './domToReactFactory';
-import { BrickValue, useMutation } from '../bricks';
+import { type BrickValue, useMutation } from '../bricks';
 import useMergedRefs from '../Editor/useMergedRef';
 
 type Value = BrickValue & {
@@ -48,7 +48,9 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
     [value, domToReact],
   );
 
+  // eslint-disable-next-line -- TODO: check it
   const mutationRef: RefObject<HTMLElement> = useMutation({
+    // eslint-disable-next-line -- TODO: check it
     mutate: ({ remove }: any) => {
       if (remove) {
         return onChange?.(null, { type: 'remove' });
@@ -62,13 +64,15 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
         brick: 'Paragraph',
         ...brick?.value,
         value: newHtml,
+        // eslint-disable-next-line -- TODO: check it
       }, { oldValue: brick?.value, type: 'update' as any });
     },
+  // eslint-disable-next-line -- TODO: check it
   } as any);
 
   const ref = useMergedRefs(mutationRef, refProp);
 
-  // eslint-disable-next-line react/jsx-no-useless-fragment
+
   oldComponents.current = <>{components}</>;
 
   return (

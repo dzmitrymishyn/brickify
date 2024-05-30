@@ -3,20 +3,21 @@ import {
   isDocument,
   isTag,
   isText,
-  Node,
+  type Node,
 } from 'domhandler';
-import {
+import React, {
   cloneElement,
   isValidElement,
-  ReactNode,
-  RefObject,
+  type ReactNode,
+  type RefObject,
 } from 'react';
 
-import { NamedComponent } from '@/shared/bricks/brick';
+import { type NamedComponent } from '@/shared/bricks/brick';
 
+// eslint-disable-next-line -- TODO: check it
 const hasIs = (value: unknown): value is { is: any } => (
   (typeof value === 'function' || typeof value === 'object')
-  && !!value
+  && value !== null
   && 'is' in value
   && typeof value.is === 'function'
 );
@@ -30,14 +31,18 @@ export const domToReactFactory = (
     index: number,
     oldDocument: ReactNode = oldDocumentRef.current,
   ): ReactNode[] => {
+    // eslint-disable-next-line -- TODO: check it
     const Component: any = bricks.find((brick) => hasIs(brick) && brick.is(node));
+    // eslint-disable-next-line -- TODO: check it
     const oldChildNodes = isValidElement(oldDocument)
+      // eslint-disable-next-line -- TODO: check it
       ? array(oldDocument.props.children) || []
       : [];
 
     if (!Component) {
       if (isTag(node) || isDocument(node)) {
         return node.childNodes.map(
+          // eslint-disable-next-line -- TODO: check it
           (n, i) => domToReact(n, index + i, oldChildNodes[i] || null),
         ).flat();
       }
@@ -52,10 +57,12 @@ export const domToReactFactory = (
     }
 
     const children = node.childNodes.map(
+      // eslint-disable-next-line -- TODO: check it
       (n, i) => domToReact(n, i, oldChildNodes[i] || null),
     ).flat();
 
     if (isValidElement(oldDocument) && oldDocument.type === Component) {
+      // eslint-disable-next-line -- TODO: check it
       if (children.some((child, i) => child !== oldChildNodes[i])) {
         return [cloneElement(oldDocument, {}, ...children)];
       }

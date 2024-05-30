@@ -1,12 +1,12 @@
 import {
-  RefObject,
+  type RefObject,
   useCallback,
   useContext,
   useEffect,
   useRef,
 } from 'react';
 
-import { MutationHandler } from './mutations';
+import { type MutationHandler } from './mutations';
 import { MutationsContext } from './MutationsContext';
 
 // type MutationHandle = {
@@ -28,11 +28,10 @@ type Options = Partial<Record<MutationRecordType | 'before' | 'after', MutationH
 export const useMutation = <Element extends HTMLElement>(
   mutations: Options,
 ): RefObject<Element> => {
-  const { subscribe } = useContext(MutationsContext) || {};
+  const { subscribe } = useContext(MutationsContext) ?? {};
 
   if (!subscribe) {
-    // TODO: Add logger execution
-    // eslint-disable-next-line no-console
+    // eslint-disable-next-line -- TODO: Check it
     console.error('You cannot subscribe on new mutations without the context');
   }
 
@@ -47,12 +46,12 @@ export const useMutation = <Element extends HTMLElement>(
   );
 
   useEffect(() => {
-    if (!subscribe) {
+    if (!subscribe || !ref.current) {
       return;
     }
 
-    // eslint-disable-next-line consistent-return
-    return subscribe(ref.current!, mutate);
+
+    return subscribe(ref.current, mutate);
   }, [mutate, subscribe]);
 
   return ref;

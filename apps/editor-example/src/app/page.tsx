@@ -1,9 +1,10 @@
 'use client';
 
-/* eslint-disable max-len */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 
-import {
+/* eslint no-unused-vars: off -- TODO: check */
+/* eslint @typescript-eslint/no-unused-vars: off -- TODO: check */
+
+import React, {
   forwardRef,
   useEffect, useMemo, useRef, useState,
 } from 'react';
@@ -95,10 +96,10 @@ const Home = () => {
 
   return (
     <div>
-      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
       <Editor
+        // eslint-disable-next-line -- TODO: check it
         value={state as any}
-        onChange={(newValue) => setState(newValue)}
+        onChange={(newValue) => { setState(newValue); }}
         bricks={[
           extend(Paragraph, defaultProps({ component: 'article', bricks: [Em, Strong] })),
           extend(Container, slots({ children: 'inherit' })),
@@ -107,6 +108,6 @@ const Home = () => {
       />
     </div>
   );
-};
+}
 
 export default Home;

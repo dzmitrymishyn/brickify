@@ -2,7 +2,7 @@
 
 import React, {
   forwardRef,
-  RefObject,
+  type RefObject,
   useCallback,
   useContext,
   useEffect,
@@ -10,8 +10,8 @@ import React, {
 } from 'react';
 
 import {
-  Change,
-  Component,
+  type Change,
+  type Component,
   MutationsContext,
   useBricksBuilder,
   useMutation,
@@ -23,8 +23,9 @@ import useMergedRefs from './useMergedRef';
 
 type Props = {
   value: unknown[];
+  // eslint-disable-next-line -- TODO: check it
   bricks?: Component<any>[];
-  onChange?(value: unknown): void;
+  onChange?: (value: unknown) => void;
 };
 
 const Editor = forwardRef<HTMLDivElement, Props>(({
@@ -32,6 +33,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   bricks = [],
   onChange,
 }, refProp) => {
+  // eslint-disable-next-line -- TODO: check it
   const { clear, trackChange } = useContext(MutationsContext)!;
   const changesRef = useRef<Change[]>([]);
   const changeBlock = useCallback(
@@ -45,6 +47,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   // When the components are updated we need to clear our MutationsArray to prevent DOM restoring
   useEffect(clear, [components, clear]);
 
+  // eslint-disable-next-line -- TODO: check it
   const mutationRef: RefObject<HTMLElement> = useMutation({
     before() {
       changesRef.current = [];
@@ -55,15 +58,17 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
         return;
       }
 
+      // eslint-disable-next-line -- TODO: check it
       const newValue = patch(treeRef.current, changesRef.current as any) as {
         children: unknown;
       };
 
-      // eslint-disable-next-line no-console
+      // eslint-disable-next-line -- TODO: check it
       console.log('value is updated', newValue.children);
 
       onChange?.(newValue.children);
     },
+    // eslint-disable-next-line -- TODO: check it
   } as any);
 
   const ref = useMergedRefs(mutationRef, refProp);

@@ -7,12 +7,12 @@ export type Change = {
   slot: string;
   oldValue?: unknown;
   type: ChangeType;
-};
+}
 
 type ChangeBase<Type extends string> = {
   type: Type;
   path: string[];
-};
+}
 
 export type Add = ChangeBase<'add'> & {
   value: unknown;

@@ -1,5 +1,5 @@
 import { SpeedInsights } from '@vercel/speed-insights/next';
-import { PropsWithChildren } from 'react';
+import { type PropsWithChildren } from 'react';
 
 export const metadata = {
   title: '@brickifyio/editor',
@@ -7,7 +7,7 @@ export const metadata = {
 
 type Props = PropsWithChildren;
 
-export default function RootLayout({ children }: Props) {
+const RootLayout: React.FC<Props> = ({ children }) => {
   return (
     <html lang="en">
       <body>
@@ -17,3 +17,5 @@ export default function RootLayout({ children }: Props) {
     </html>
   );
 }
+
+export default RootLayout;

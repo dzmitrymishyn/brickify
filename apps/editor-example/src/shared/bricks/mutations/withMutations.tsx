@@ -1,7 +1,7 @@
-import {
-  ForwardRefExoticComponent,
-  PropsWithoutRef,
-  RefAttributes,
+import React, {
+  type ForwardRefExoticComponent,
+  type PropsWithoutRef,
+  type RefAttributes,
   useCallback,
   useContext,
   useEffect,
@@ -9,8 +9,8 @@ import {
   useRef,
 } from 'react';
 
-import { MutationHandler } from './mutations';
-import { MutationsContext, MutationsContextType } from './MutationsContext';
+import { type MutationHandler } from './mutations';
+import { MutationsContext, type MutationsContextType } from './MutationsContext';
 import { revertDomByMutations } from './revertDomByMutations';
 
 export function withMutations<P, T extends Element>(
@@ -18,13 +18,13 @@ export function withMutations<P, T extends Element>(
 ) {
   const WithMutations = (props: PropsWithoutRef<P>) => {
     const inheritedMutationsContext = useContext(MutationsContext);
-    const hasInheritedContext = !!inheritedMutationsContext;
+    const hasInheritedContext = Boolean(inheritedMutationsContext);
 
     const ref = useRef<T>(null);
     const observerRef = useRef<MutationObserver>();
     const changesRef = useRef<unknown[]>([]);
 
-    // eslint-disable-next-line prefer-arrow-callback
+
     const trackChange = useCallback(function trackChange<Change>(change: Change) {
       changesRef.current.push(change);
       return change;
@@ -34,14 +34,13 @@ export function withMutations<P, T extends Element>(
     const subscribers = useRef(new Map<HTMLElement, MutationHandler>());
 
     useEffect(() => {
-      if (hasInheritedContext) {
-        // TODO: ... Remove it
-        return () => {};
+      if (hasInheritedContext || !ref.current) {
+        return;
       }
 
       const observer = new MutationObserver((mutations) => {
         changesRef.current = [];
-        sortedElements.current.forEach(({ mutate }) => mutate({ type: 'before' }));
+        sortedElements.current.forEach(({ mutate }) => { mutate({ type: 'before' }); });
 
         const defaultOptions = {
           remove: false,
@@ -50,12 +49,15 @@ export function withMutations<P, T extends Element>(
           oldValue: null,
           type: 'mutate',
         };
+        // eslint-disable-next-line -- check it
         const handleOptions = new Map<Node, any>();
 
         mutations.forEach((mutation) => {
           mutation.removedNodes.forEach((node) => {
             if (subscribers.current.has(node as HTMLElement)) {
+              // eslint-disable-next-line -- check it
               const options = handleOptions.get(node) ?? { ...defaultOptions };
+              // eslint-disable-next-line -- check it
               options.remove = true;
               handleOptions.set(node, options);
             }
@@ -65,9 +67,12 @@ export function withMutations<P, T extends Element>(
 
           while (current) {
             if (subscribers.current.has(current as HTMLElement)) {
+              // eslint-disable-next-line -- check it
               const options = handleOptions.get(current) ?? { ...defaultOptions };
 
+              // eslint-disable-next-line -- check it
               options.removedNodes.push(...Array.from(mutation.removedNodes));
+              // eslint-disable-next-line -- check it
               options.addedNodes.push(...Array.from(mutation.addedNodes));
 
               handleOptions.set(current, options);
@@ -78,59 +83,21 @@ export function withMutations<P, T extends Element>(
         });
 
         handleOptions.forEach(
+          // eslint-disable-next-line -- check it
           (options, node) => subscribers.current.get(node as HTMLElement)?.(options),
         );
 
-        // const handled = new Set();
-
-        // debugger;
-        // mutations.forEach((mutation) => {
-        //   const { target } = mutation;
-        //   // const { target, removedNodes } = mutation;
-
-        //   // // eslint-disable-next-line no-restricted-syntax
-        //   // for (const removed of removedNodes.values()) {
-        //   //   if (subscribers.current.has(removed as HTMLElement)) {
-        //   //     const handler = subscribers.current.get(removed as HTMLElement);
-        //   //     handler?.(mutation);
-
-        //   //     return;
-        //   //   }
-        //   // }
-
-        //   let current: Node | null = target;
-
-        //   while (current) {
-        //     if (subscribers.current.has(current as HTMLElement)) {
-        //       if (handled.has(current)) {
-        //         return;
-        //       }
-
-        //       handled.add(current);
-
-        //       const handler = subscribers.current.get(current as HTMLElement);
-        //       const needParentHandle = !!handler?.(mutation);
-
-        //       if (!needParentHandle) {
-        //         break;
-        //       }
-        //     }
-
-        //     current = current.parentNode ?? null;
-        //   }
-        // });
-
-        sortedElements.current.forEach(({ mutate }) => mutate({ type: 'after' }));
+        sortedElements.current.forEach(({ mutate }) => { mutate({ type: 'after' }); });
 
         if (changesRef.current.length) {
           revertDomByMutations(mutations);
           changesRef.current = [];
         }
 
-        observer?.takeRecords();
+        observer.takeRecords();
       });
 
-      observer.observe(ref.current!, {
+      observer.observe(ref.current, {
         subtree: true,
         attributes: true,
         attributeOldValue: true,
@@ -141,7 +108,7 @@ export function withMutations<P, T extends Element>(
 
       observerRef.current = observer;
 
-      return () => observer.disconnect();
+      return () => { observer.disconnect(); };
     }, [hasInheritedContext]);
 
     const subscribe = useCallback<MutationsContextType['subscribe']>(
@@ -187,13 +154,13 @@ export function withMutations<P, T extends Element>(
     );
 
     return (
-      <MutationsContext.Provider value={inheritedMutationsContext || contextValue}>
+      <MutationsContext.Provider value={inheritedMutationsContext ?? contextValue}>
         <Component ref={ref} {...props} />
       </MutationsContext.Provider>
     );
-  };
+  }
 
-  WithMutations.displayName = `WithMutations(${Component.displayName})`;
+  WithMutations.displayName = `WithMutations(${Component.displayName ?? 'Unnamed'})`;
 
   return WithMutations;
 }

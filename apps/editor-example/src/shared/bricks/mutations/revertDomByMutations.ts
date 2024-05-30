@@ -8,7 +8,7 @@ type MutationHandler = (mutation: MutationRecord) => void;
 const mutationHandlers: Partial<Record<MutationRecordType, MutationHandler>> = {
   characterData: (mutation: MutationRecord) => {
     // We need to revert the changes. We just mutate DOM element
-    // eslint-disable-next-line no-param-reassign
+
     mutation.target.textContent = mutation.oldValue;
   },
   childList: flow(
@@ -21,7 +21,7 @@ const mutationHandlers: Partial<Record<MutationRecordType, MutationHandler>> = {
     )),
   ),
   attributes: (mutation: MutationRecord) => {
-    const name = mutation.attributeName!;
+    const name = mutation.attributeName ?? '';
     const target = mutation.target as HTMLElement;
     if (!mutation.oldValue) {
       target.removeAttribute(name);

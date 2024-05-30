@@ -1,7 +1,7 @@
 import React from 'react';
 
 import Strong from './Strong';
-import { BrickValue, PropsWithBrick, PropsWithChange } from '../bricks';
+import { type BrickValue, type PropsWithBrick, type PropsWithChange } from '../bricks';
 import Paragraph from '../Paragraph';
 
 type Value = BrickValue & {
@@ -26,7 +26,7 @@ const Profile: React.FC<Props> = ({ children, brick, onChange }) => (
     }}
     contentEditable={false}
   >
-    {/* eslint-disable-next-line @next/next/no-img-element */}
+    {/* eslint @next/next/no-img-element: off -- this component will be removed */}
     <img
       src="https://placehold.co/400"
       alt="avatar"
@@ -35,8 +35,10 @@ const Profile: React.FC<Props> = ({ children, brick, onChange }) => (
     <button
       type="button"
       onClick={() => {
-        onChange?.({ ...brick.value, visible: !brick.value?.visible }, {
+        onChange?.({ ...brick.value, visible: !brick.value.visible }, {
           oldValue: brick.value,
+          /* eslint @typescript-eslint/no-explicit-any: warn -- the type will be updated */
+          /* eslint @typescript-eslint/no-unsafe-assignment: warn -- the type will be updated */
           type: 'update' as any,
         });
       }}
@@ -45,18 +47,18 @@ const Profile: React.FC<Props> = ({ children, brick, onChange }) => (
       {' '}
       description
     </button>
-    {brick.value.visible && (
-      <Paragraph
+    {brick.value.visible ? <Paragraph
         value={children}
         bricks={[Strong]}
         onChange={(newValue) => {
           onChange?.({ ...brick.value, children: newValue?.value ?? '' }, {
             oldValue: brick.value,
+            /* eslint @typescript-eslint/no-explicit-any: warn -- the type will be updated */
+            /* eslint @typescript-eslint/no-unsafe-assignment: warn -- the type will be updated */
             type: 'update' as any,
           });
         }}
-      />
-    )}
+      /> : null}
   </div>
 );
 

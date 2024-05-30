@@ -1,11 +1,12 @@
+/* eslint @typescript-eslint/no-explicit-any: warn -- the type will be updated */
 export type BrickValue<Name extends string = string, Identifier = any> = {
   brick: Name;
   id?: Identifier;
-};
+}
 
 export const isBrickValue = (value: unknown): value is BrickValue => (
-  !!value
-  && typeof value === 'object'
+  typeof value === 'object'
+  && value !== null
   && 'brick' in value
   && typeof value.brick === 'string'
 );
