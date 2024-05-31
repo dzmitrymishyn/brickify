@@ -1,5 +1,6 @@
 'use client';
 
+import { patch } from '@brickifyio/utils/tree';
 import React, {
   forwardRef,
   type RefObject,
@@ -17,7 +18,6 @@ import {
   useMutation,
   withMutations,
 } from '@/shared/bricks';
-import { patch } from '@/shared/utils/three';
 
 import useMergedRefs from './useMergedRef';
 
@@ -33,7 +33,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   bricks = [],
   onChange,
 }, refProp) => {
-  // eslint-disable-next-line -- TODO: check it
+
   const { clear, trackChange } = useContext(MutationsContext)!;
   const changesRef = useRef<Change[]>([]);
   const changeBlock = useCallback(

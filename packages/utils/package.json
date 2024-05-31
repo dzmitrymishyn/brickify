@@ -1,0 +1,23 @@
+{
+  "name": "@brickifyio/utils",
+  "version": "0.0.1",
+  "exports": {
+    "tree": "./tree",
+    "pq": "./pq"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "test": "yarn jest"
+  },
+  "dependencies": {
+    "@brickifyio/operators": "*",
+    "fp-ts": "^2.16.6",
+    "typescript": "^5.4.2"
+  },
+  "devDependencies": {
+    "@brickifyio/eslint-config": "*",
+    "@brickifyio/tsconfig": "*",
+    "@types/jest": "^29.5.12",
+    "ts-jest": "^29.1.4"
+  }
+}

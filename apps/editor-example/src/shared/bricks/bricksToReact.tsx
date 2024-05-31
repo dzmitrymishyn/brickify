@@ -1,12 +1,11 @@
 import { array } from '@brickifyio/operators';
+import { add, type Node, of } from '@brickifyio/utils/tree';
 import * as A from 'fp-ts/lib/Array';
 import { flow } from 'fp-ts/lib/function';
 import React, {
   type ReactElement,
   type ReactNode,
 } from 'react';
-
-import { add, type Node, of } from '@/shared/utils/three';
 
 import {
   type Component,

@@ -1,3 +1,4 @@
+import { of } from '@brickifyio/utils/tree';
 import {
   type ReactElement,
   type ReactNode,
@@ -5,8 +6,6 @@ import {
   useMemo,
   useRef,
 } from 'react';
-
-import { of } from '@/shared/utils/three';
 
 import { type Component } from './brick';
 import { bricksToReact } from './bricksToReact';
