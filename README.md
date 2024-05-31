@@ -16,8 +16,6 @@ for serving examples.
 ## Useful links
 
 - [ReactJs](https://react.dev/). The core library for this is reactjs.
-- [Airbnb codestyle](https://github.com/airbnb/javascript). I really like it and I hope
-  you're familiar with this approach.
 - [fp-ts](https://gcanti.github.io/fp-ts/). I decided to use fp-ts since it's good enough
   in typescript and easy to use.
 
