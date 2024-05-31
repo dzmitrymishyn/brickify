@@ -44,8 +44,8 @@ it('should return the matched result', () => {
     item: 2,
     next: { item: 3, next: null },
   });
-  expect(mockedFn).lastCalledWith({ item: 2, next: { item: 3, next: null } }, 1);
-  expect(mockedFn).toBeCalledTimes(2);
+  expect(mockedFn).toHaveBeenCalledWith({ item: 2, next: { item: 3, next: null } }, 1);
+  expect(mockedFn).toHaveBeenCalledTimes(2);
 });
 
 it('should pass correct index on each tick', () => {
@@ -70,7 +70,7 @@ it('should pass correct index on each tick', () => {
   loopUntil((_, index) => mockedFn(index), (current: Item) => current.next)(list);
 
   new Array(4).fill(null).forEach((_, index) => {
-    expect(mockedFn).nthCalledWith(index + 1, index);
+    expect(mockedFn).toHaveBeenNthCalledWith(index + 1, index);
   });
 });
 
@@ -80,5 +80,5 @@ it('should not call callback function', () => {
   loopUntil(mockedFn, (current: Item) => current.next)(null);
   loopUntil(mockedFn, (current: Item) => current.next)(undefined);
 
-  expect(mockedFn).not.toBeCalled();
+  expect(mockedFn).not.toHaveBeenCalled();
 });

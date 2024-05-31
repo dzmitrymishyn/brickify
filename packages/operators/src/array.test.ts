@@ -7,7 +7,7 @@ it('should transform any single value to array', () => {
     { hello: 'world' },
     1,
     'hello',
-    () => {},
+    () => true,
   ];
 
   singleValues.forEach((value) => {

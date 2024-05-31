@@ -12,14 +12,7 @@ const project = path.resolve(process.cwd(), 'tsconfig.json');
  */
 
 module.exports = {
-  extends: [
-    './base.js',
-    '@vercel/style-guide/eslint/react',
-    '@vercel/style-guide/eslint/jest-react',
-    '@vercel/style-guide/eslint/next',
-  ].map(require.resolve),
-  rules: {
-    'react/function-component-definition': ['warn', { namedComponents: 'arrow-function' }],
-  },
+  extends: ['./base.js', '@vercel/style-guide/eslint/jest'].map(require.resolve),
+  rules: {},
 };
 

@@ -1,5 +1,5 @@
 import { expose } from './expose';
-import { Component } from './models';
+import { type Component } from './models';
 import { surround } from './surround';
 import { closest } from '../traverse';
 

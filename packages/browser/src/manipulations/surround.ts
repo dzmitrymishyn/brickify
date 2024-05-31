@@ -2,7 +2,7 @@ import { pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
 
 import { clearNodes } from './clearNodes';
-import { Component } from './models';
+import { type Component } from './models';
 import { prepareRange } from './prepareRange';
 import { wrapToNode } from './wrapToNode';
 import { createRange } from '../selection';
@@ -19,8 +19,9 @@ const surroundAscendedUntilPath = (
   let current: Node | null = startNode;
 
   do {
-    const parent: Node | null = current?.parentNode;
+    const parent: Node | null = current.parentNode;
 
+    // eslint-disable-next-line -- current could be null on the first round
     if (!parent || !current) { break; }
 
     if (parent === container || current === container) {
@@ -29,7 +30,7 @@ const surroundAscendedUntilPath = (
 
     if ((ltr && parent.firstChild === current) || (!ltr && parent.lastChild === current)) {
       current = parent;
-      // eslint-disable-next-line no-continue
+
       continue;
     }
 
@@ -38,7 +39,7 @@ const surroundAscendedUntilPath = (
     clearNodes(wrapper, component.selector);
 
     while (current && !getSibling(current, ltr) && current.parentNode !== container) {
-      current = current?.parentNode ?? null;
+      current = current.parentNode ?? null;
     }
 
     current = getSibling(current, ltr);

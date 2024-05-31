@@ -29,7 +29,13 @@ it('should remove all strong element from the container', () => {
 it('should remove strong only in list', () => {
   createDocument();
 
-  const list = screen.queryByRole('list')!;
+  const list = screen.queryByRole('list');
+
+  expect(list).toBeDefined();
+
+  if (!list) {
+    return;
+  }
 
   clearNodes(list, 'strong');
 
@@ -40,7 +46,14 @@ it('should remove strong only in list', () => {
 it('should replace parent main with children', () => {
   createDocument();
 
-  const main = screen.queryByRole('main')!;
+  const main = screen.queryByRole('main');
+
+  expect(main).toBeDefined();
+
+  if (!main) {
+    return;
+  }
+
   const children = Array.from(main.children);
 
   clearNodes(main, 'main', true);

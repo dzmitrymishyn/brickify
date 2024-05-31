@@ -7,13 +7,11 @@ export const clearNodes = (root: DocumentFragment | Node, selector: string, clea
   while (current || ancestors.length) {
     if (!current) {
       current = ancestors.pop()?.nextSibling || null;
-      // eslint-disable-next-line no-continue
       continue;
     }
 
     if (isText(current)) {
       current = current.nextSibling;
-      // eslint-disable-next-line no-continue
       continue;
     }
 
@@ -21,7 +19,6 @@ export const clearNodes = (root: DocumentFragment | Node, selector: string, clea
       const temp = current.firstChild;
       current.replaceWith(...Array.from(current.childNodes));
       current = temp;
-      // eslint-disable-next-line no-continue
       continue;
     }
 

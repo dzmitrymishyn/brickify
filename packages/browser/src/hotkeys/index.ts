@@ -55,10 +55,12 @@ const KEY_MAP = {
   '\\': 220,
 } as const;
 
-const shift = (event: KeyboardEvent) => event.shiftKey;
-const ctrl = (event: KeyboardEvent) => event.ctrlKey;
-const cmd = (event: KeyboardEvent) => event.metaKey;
-const option = (event: KeyboardEvent) => event.altKey;
+type Check = (event: KeyboardEvent) => boolean;
+
+const shift: Check = (event: KeyboardEvent) => event.shiftKey;
+const ctrl: Check = (event: KeyboardEvent) => event.ctrlKey;
+const cmd: Check = (event: KeyboardEvent) => event.metaKey;
+const option: Check = (event: KeyboardEvent) => event.altKey;
 
 const MODIFIERS_CHEKCKERS = {
   // shiftKey
@@ -99,9 +101,9 @@ export const match = (event: Event, shortcut: string) => {
 
   return splitAndTrim(shortcut, '+')
     .every((key) => (
-      MODIFIERS_CHEKCKERS[key as keyof typeof MODIFIERS_CHEKCKERS]
+      (MODIFIERS_CHEKCKERS as Record<string, Check | undefined>)[key]
       || (
-        KEY_MAP[key as keyof typeof KEY_MAP]
+        (KEY_MAP as Record<string, number | undefined>)[key]
         && code(event) === KEY_MAP[key as keyof typeof KEY_MAP]
       )
     ) || code(event) === key.toUpperCase().charCodeAt(0));

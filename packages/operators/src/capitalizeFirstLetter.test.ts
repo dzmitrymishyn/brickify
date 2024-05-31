@@ -9,17 +9,17 @@ it('should return an empty line', () => {
 });
 
 it('should handle any wrong type', () => {
-  const wrongInputs: any[] = [
+  const wrongInputs: unknown[] = [
     null,
     undefined,
     {},
     [],
-    () => {},
+    () => true,
     1,
     Symbol('test'),
   ];
 
   wrongInputs.forEach(
-    (value) => expect(capitalizeFirstLetter(value)).toBe(''),
+    (value) => expect(capitalizeFirstLetter(value as string)).toBe(''),
   );
 });

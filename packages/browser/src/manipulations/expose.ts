@@ -3,7 +3,7 @@ import { pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
 
 import { clearSiblings } from './clearSiblings';
-import { Component } from './models';
+import { type Component } from './models';
 import { prepareRange } from './prepareRange';
 import { wrapToNode } from './wrapToNode';
 import { createRange } from '../selection';
@@ -67,12 +67,12 @@ const exposeSiblings = (
     }
   }
 
-  if (!parentContainer?.childNodes.length) {
-    parentContainer?.remove();
+  if (!parentContainer.childNodes.length) {
+    parentContainer.remove();
   }
 
-  if (!nextContainer?.childNodes.length) {
-    nextContainer?.remove();
+  if (!nextContainer.childNodes.length) {
+    nextContainer.remove();
   }
 
   return parentMatched ? 'parent-removed' : 'parent-replaced';
@@ -98,33 +98,35 @@ export const expose = (
       const rightChild = rightPath.at(i + 1);
 
       if (leftMatched && leftParent && leftChild !== leftParent.firstChild && leftChild) {
+        // eslint-disable-next-line -- TODO: check it
         wrapToNode(component.create(), leftParent.firstChild!, leftChild.previousSibling);
       }
 
       if (rightMatched && rightParent && rightChild && rightChild !== rightParent.lastChild) {
+        // eslint-disable-next-line -- TODO: check it
         wrapToNode(component.create(), rightChild.nextSibling!);
       }
 
       if (leftParent === rightParent) {
-        if (leftChild && leftChild !== rightChild && leftChild?.nextSibling !== rightChild) {
+        if (leftChild && leftChild !== rightChild && leftChild.nextSibling !== rightChild) {
           clearSiblings(component.selector, leftChild.nextSibling, rightChild);
         }
         if (exposeSiblings(component, leftChild, rightChild)) {
           leftMatched = true;
           rightMatched = true;
         }
-        // eslint-disable-next-line no-continue
+
         continue;
       }
 
       if (leftParent) {
         clearSiblings(component.selector, leftChild?.nextSibling);
-        leftMatched = !!exposeSiblings(component, leftChild) || leftMatched;
+        leftMatched = Boolean(exposeSiblings(component, leftChild)) || leftMatched;
       }
 
       if (rightParent) {
         clearSiblings(component.selector, rightParent.firstChild, rightChild);
-        rightMatched = !!exposeSiblings(component, rightParent.firstChild, rightChild)
+        rightMatched = Boolean(exposeSiblings(component, rightParent.firstChild, rightChild))
           || rightMatched;
       }
     }

@@ -4,11 +4,11 @@ export const wrapToNode = (
   wrapper: Element,
   start: Node,
   end: Node | null = null,
-  ltr: boolean = true,
+  ltr = true,
 ) => {
   let child: Node | null = start;
 
-  const parent = child.parentNode!;
+  const parent = child.parentNode;
   const startSibling = getSibling(start, !ltr);
   const endSibling = getSibling(end, ltr);
 
@@ -21,9 +21,11 @@ export const wrapToNode = (
     child = nextSibling;
   } while (child);
 
-  const parentsChild = ltr
-    ? endSibling && closestUntilChildOfParent(endSibling, parent)
-    : startSibling && closestUntilChildOfParent(startSibling, parent);
+  if (parent) {
+    const parentsChild = ltr
+      ? endSibling && closestUntilChildOfParent(endSibling, parent)
+      : startSibling && closestUntilChildOfParent(startSibling, parent);
 
-  parent.insertBefore(wrapper, parentsChild);
+    parent.insertBefore(wrapper, parentsChild);
+  }
 };

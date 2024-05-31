@@ -9,6 +9,7 @@
     "utils": "./src/utils"
   },
   "scripts": {
+    "lint": "eslint .",
     "test": "yarn jest"
   },
   "dependencies": {
@@ -17,6 +18,8 @@
     "typescript": "^5.4.2"
   },
   "devDependencies": {
+    "@brickifyio/eslint-config": "*",
+    "@brickifyio/tsconfig": "*",
     "@testing-library/dom": "^10.1.0",
     "@testing-library/jest-dom": "^6.4.5",
     "@types/jest": "^29.5.12",
