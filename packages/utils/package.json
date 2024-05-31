@@ -2,12 +2,11 @@
   "name": "@brickifyio/utils",
   "version": "0.0.1",
   "exports": {
-    "tree": "./tree",
-    "pq": "./pq"
+    "./tree": "./tree",
+    "./pq": "./pq"
   },
   "scripts": {
-    "lint": "eslint .",
-    "test": "yarn jest"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@brickifyio/operators": "*",

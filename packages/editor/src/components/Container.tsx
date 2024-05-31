@@ -6,7 +6,7 @@ import {
   type PropsWithChange,
   slots,
   useMutation,
-} from '@/shared/bricks';
+} from '../bricks';
 
 type Props = PropsWithChildren & PropsWithBrick & PropsWithChange;
 

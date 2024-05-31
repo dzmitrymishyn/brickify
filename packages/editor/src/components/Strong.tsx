@@ -2,7 +2,7 @@ import { compile } from 'css-select';
 import React from 'react';
 import { type PropsWithChildren } from 'react';
 
-import { extend } from '@/shared/bricks';
+import { extend } from '../bricks';
 
 const Strong: React.FC<PropsWithChildren> = ({ children }) => (
   <strong>{children}</strong>

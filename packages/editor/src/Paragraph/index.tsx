@@ -1,7 +1,5 @@
-'use client';
-
 import { parseDocument } from 'htmlparser2';
-import React, {
+import {
   type ElementType,
   forwardRef,
   type ReactNode,
@@ -10,14 +8,14 @@ import React, {
   useRef,
 } from 'react';
 
+
+import { domToReactFactory } from './domToReactFactory';
+import { type BrickValue, useMutation } from '../bricks';
 import {
   type Component as BrickComponent,
   type PropsWithBrick,
   type PropsWithChange,
-} from '@/shared/bricks/brick';
-
-import { domToReactFactory } from './domToReactFactory';
-import { type BrickValue, useMutation } from '../bricks';
+} from '../bricks/brick';
 import useMergedRefs from '../Editor/useMergedRef';
 
 type Value = BrickValue & {

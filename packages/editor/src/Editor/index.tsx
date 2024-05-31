@@ -1,5 +1,3 @@
-'use client';
-
 import { patch } from '@brickifyio/utils/tree';
 import React, {
   forwardRef,
@@ -10,6 +8,7 @@ import React, {
   useRef,
 } from 'react';
 
+import useMergedRefs from './useMergedRef';
 import {
   type Change,
   type Component,
@@ -17,9 +16,8 @@ import {
   useBricksBuilder,
   useMutation,
   withMutations,
-} from '@/shared/bricks';
+} from '../bricks';
 
-import useMergedRefs from './useMergedRef';
 
 type Props = {
   value: unknown[];

@@ -12,7 +12,7 @@ import React, {
   type RefObject,
 } from 'react';
 
-import { type NamedComponent } from '@/shared/bricks/brick';
+import { type NamedComponent } from '../bricks/brick';
 
 // eslint-disable-next-line -- TODO: check it
 const hasIs = (value: unknown): value is { is: any } => (

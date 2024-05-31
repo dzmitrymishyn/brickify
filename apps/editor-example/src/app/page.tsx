@@ -4,25 +4,24 @@
 /* eslint no-unused-vars: off -- TODO: check */
 /* eslint @typescript-eslint/no-unused-vars: off -- TODO: check */
 
-import React, {
-  forwardRef,
-  useEffect, useMemo, useRef, useState,
-} from 'react';
-
 import {
   defaultProps,
   extend,
   slots,
   withMutations,
-} from '@/shared/bricks';
-import Container from '@/shared/components/Container';
-import Em from '@/shared/components/Em';
-import Profile from '@/shared/components/Profile';
-import Strong from '@/shared/components/Strong';
-import Editor from '@/shared/Editor';
-import Paragraph from '@/shared/Paragraph';
+} from '@brickifyio/editor/bricks';
+import Container from '@brickifyio/editor/components/Container';
+import Em from '@brickifyio/editor/components/Em';
+import Profile from '@brickifyio/editor/components/Profile';
+import Strong from '@brickifyio/editor/components/Strong';
+import Editor from '@brickifyio/editor/Editor';
+import Paragraph from '@brickifyio/editor/Paragraph';
+import React, {
+  forwardRef,
+  useEffect, useMemo, useRef, useState,
+} from 'react';
 
-const Home = () => {
+const Page = () => {
   const newKey = useMemo(() => {
     let i = 1000;
     return () => {
@@ -110,4 +109,4 @@ const Home = () => {
   );
 }
 
-export default Home;
+export default Page;

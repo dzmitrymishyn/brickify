@@ -98,12 +98,10 @@ export const expose = (
       const rightChild = rightPath.at(i + 1);
 
       if (leftMatched && leftParent && leftChild !== leftParent.firstChild && leftChild) {
-        // eslint-disable-next-line -- TODO: check it
         wrapToNode(component.create(), leftParent.firstChild!, leftChild.previousSibling);
       }
 
       if (rightMatched && rightParent && rightChild && rightChild !== rightParent.lastChild) {
-        // eslint-disable-next-line -- TODO: check it
         wrapToNode(component.create(), rightChild.nextSibling!);
       }
 

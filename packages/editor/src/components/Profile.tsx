@@ -26,7 +26,6 @@ const Profile: React.FC<Props> = ({ children, brick, onChange }) => (
     }}
     contentEditable={false}
   >
-    {/* eslint @next/next/no-img-element: off -- this component will be removed */}
     <img
       src="https://placehold.co/400"
       alt="avatar"
@@ -50,7 +49,8 @@ const Profile: React.FC<Props> = ({ children, brick, onChange }) => (
     {brick.value.visible ? <Paragraph
         value={children}
         bricks={[Strong]}
-        onChange={(newValue) => {
+        onChange={(newValue: any) => {
+          // eslint-disable-next-line -- make it safe
           onChange?.({ ...brick.value, children: newValue?.value ?? '' }, {
             oldValue: brick.value,
             /* eslint @typescript-eslint/no-explicit-any: warn -- the type will be updated */
