@@ -24,7 +24,6 @@ export function withMutations<P, T extends Element>(
     const observerRef = useRef<MutationObserver>();
     const changesRef = useRef<unknown[]>([]);
 
-
     const trackChange = useCallback(function trackChange<Change>(change: Change) {
       changesRef.current.push(change);
       return change;

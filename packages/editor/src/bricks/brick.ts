@@ -20,5 +20,5 @@ export type ChangeOptions<Value> = {
 }
 
 export type PropsWithChange<Value extends BrickValue = BrickValue> = {
-  onChange?: (value: Value | null, options: ChangeOptions<Value>) => void;
+  onChange?: (value: Partial<Value> | null, options: ChangeOptions<Value>) => void;
 }

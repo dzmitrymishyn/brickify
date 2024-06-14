@@ -1,14 +1,14 @@
 export type ChangeBase<Type extends string> = {
   type: Type;
   path: string[];
-}
+};
 
 export type Add = ChangeBase<'add'> & {
-  value: unknown;
+  value: object;
 };
 
 export type Update = ChangeBase<'update'> & {
-  value: unknown;
+  value: object;
 };
 
 export type Remove = ChangeBase<'remove'>;

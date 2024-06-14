@@ -1,4 +1,4 @@
 export type Node = {
-  value: unknown;
+  value: object;
   slots: Record<string, Node[]>;
-}
+};

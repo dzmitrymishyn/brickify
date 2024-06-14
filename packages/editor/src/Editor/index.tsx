@@ -1,4 +1,4 @@
-import { patch } from '@brickifyio/utils/tree';
+import { patch } from '@brickifyio/utils/slots-tree';
 import React, {
   forwardRef,
   type RefObject,
@@ -57,7 +57,10 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
       }
 
       // eslint-disable-next-line -- TODO: check it
-      const newValue = patch(treeRef.current, changesRef.current as any) as {
+      const changes: any[] = changesRef.current;
+      // changesRef.current.push()
+      // eslint-disable-next-line -- TODO: check it
+      const newValue = patch(treeRef.current, changes) as {
         children: unknown;
       };
 

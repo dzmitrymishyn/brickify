@@ -58,9 +58,6 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
       const newHtml = mutationRef.current?.innerHTML ?? '';
 
       return onChange?.({
-        id: null,
-        brick: 'Paragraph',
-        ...brick?.value,
         value: newHtml,
         // eslint-disable-next-line -- TODO: check it
       }, { oldValue: brick?.value, type: 'update' as any });
@@ -69,7 +66,6 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
   } as any);
 
   const ref = useMergedRefs(mutationRef, refProp);
-
 
   oldComponents.current = <>{components}</>;
 

@@ -1,5 +1,5 @@
 import { array } from '@brickifyio/operators';
-import { add, type Node, of } from '@brickifyio/utils/tree';
+import { add, type Node, of } from '@brickifyio/utils/slots-tree';
 import * as A from 'fp-ts/lib/Array';
 import { flow } from 'fp-ts/lib/function';
 import React, {
@@ -13,7 +13,7 @@ import {
   type PropsWithChange,
 } from './brick';
 import { type Change } from './changes';
-import { hasSlots, isBrickValue } from './utils';
+import { type BrickValue, hasSlots, isBrickValue } from './utils';
 
 type Options = {
   onChange: (change: Change) => void;
@@ -38,7 +38,6 @@ export const bricksToReact = ({
         return null;
       }
 
-      // eslint-disable-next-line -- TODO: Add types
       const { brick, id, ...rest } = value;
       const cached = cache.get(value);
       const pathRef = cached?.path ?? { current: [] as string[] };
@@ -46,11 +45,16 @@ export const bricksToReact = ({
 
       const path = () => [...parentPath(), ...pathRef.current];
       // eslint-disable-next-line -- TODO: Add types
-      const change = (newValue: unknown, changeProps: any) => { onChange({
-        ...changeProps,
-        value: newValue,
-        path: path(),
-      }); };
+      const change = (newValue: Partial<BrickValue> | null, changeProps: any) => {
+        // eslint-disable-next-line -- TODO: Add types
+        onChange({
+          ...changeProps,
+          value: newValue
+            ? { ...value, ...newValue }
+            : newValue,
+          path: path(),
+        });
+      };
 
       const Comp = slots[brick] as Component<PropsWithChange & PropsWithBrick>;
 

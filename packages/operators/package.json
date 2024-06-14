@@ -4,7 +4,7 @@
   "main": "./src/index.ts",
   "scripts": {
     "lint": "eslint .",
-    "test": "yarn jest"
+    "test": "jest"
   },
   "dependencies": {
     "typescript": "^5.4.2"

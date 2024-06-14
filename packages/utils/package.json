@@ -2,14 +2,16 @@
   "name": "@brickifyio/utils",
   "version": "0.0.1",
   "exports": {
-    "./tree": "./tree",
+    "./slots-tree": "./slots-tree",
     "./pq": "./pq"
   },
   "scripts": {
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "jest"
   },
   "dependencies": {
     "@brickifyio/operators": "*",
+    "assert": "^2.1.0",
     "fp-ts": "^2.16.6",
     "typescript": "^5.4.2"
   },

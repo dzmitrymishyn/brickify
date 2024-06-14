@@ -1,4 +1,4 @@
-import { of } from '@brickifyio/utils/tree';
+import { of } from '@brickifyio/utils/slots-tree';
 import {
   type ReactElement,
   type ReactNode,

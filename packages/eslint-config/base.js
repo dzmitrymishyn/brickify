@@ -33,17 +33,19 @@ module.exports = {
     },
   },
   ignorePatterns: ['node_modules/', 'dist/'],
-  // add rules configurations here
   rules: {
     'import/no-default-export': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     'unicorn/filename-case': 'off',
+    "@typescript-eslint/semi": ['warn'],
     '@typescript-eslint/no-confusing-void-expression': 'off',
     '@typescript-eslint/no-invalid-void-type': 'off',
     '@typescript-eslint/restrict-template-expressions': 'off',
     '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
     '@typescript-eslint/prefer-nullish-coalescing': 'off',
     '@typescript-eslint/no-non-null-assertion': 'off',
+    '@typescript-eslint/no-unnecessary-condition': 'off',
+    'unicorn/prefer-node-protocol': 'off',
     'sort-imports': ['warn', {
       ignoreCase: true,
       ignoreDeclarationSort: true,
@@ -55,6 +57,12 @@ module.exports = {
       'newlines-between': 'always',
       warnOnUnassignedImports: true,
       groups: ['external', 'internal'],
+      pathGroups: [
+        {
+          pattern: 'assert',
+          group: 'external',
+        },
+      ]
     }],
   },
 };
