@@ -34,11 +34,9 @@ const Profile: React.FC<Props> = ({ children, brick, onChange }) => (
     <button
       type="button"
       onClick={() => {
-        onChange?.({ ...brick.value, visible: !brick.value.visible }, {
-          oldValue: brick.value,
-          /* eslint @typescript-eslint/no-explicit-any: warn -- the type will be updated */
-          /* eslint @typescript-eslint/no-unsafe-assignment: warn -- the type will be updated */
-          type: 'update' as any,
+        onChange?.({
+          type: 'update',
+          visible: !brick.value.visible,
         });
       }}
     >
@@ -47,18 +45,15 @@ const Profile: React.FC<Props> = ({ children, brick, onChange }) => (
       description
     </button>
     {brick.value.visible ? <Paragraph
-        value={children}
-        bricks={[Strong]}
-        onChange={(newValue: any) => {
-          // eslint-disable-next-line -- make it safe
-          onChange?.({ ...brick.value, children: newValue?.value ?? '' }, {
-            oldValue: brick.value,
-            /* eslint @typescript-eslint/no-explicit-any: warn -- the type will be updated */
-            /* eslint @typescript-eslint/no-unsafe-assignment: warn -- the type will be updated */
-            type: 'update' as any,
-          });
-        }}
-      /> : null}
+      value={children}
+      bricks={[Strong]}
+      onChange={(newValue) => {
+        onChange?.({
+          children: newValue.type === 'update' ? newValue.value ?? '' : '',
+          type: 'update',
+        });
+      }}
+    /> : null}
   </div>
 );
 

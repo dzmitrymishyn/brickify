@@ -37,7 +37,6 @@ module.exports = {
     'import/no-default-export': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     'unicorn/filename-case': 'off',
-    "@typescript-eslint/semi": ['warn'],
     '@typescript-eslint/no-confusing-void-expression': 'off',
     '@typescript-eslint/no-invalid-void-type': 'off',
     '@typescript-eslint/restrict-template-expressions': 'off',

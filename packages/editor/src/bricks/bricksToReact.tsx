@@ -2,7 +2,9 @@ import { array } from '@brickifyio/operators';
 import { add, type Node, of } from '@brickifyio/utils/slots-tree';
 import * as A from 'fp-ts/lib/Array';
 import { flow } from 'fp-ts/lib/function';
-import React, {
+import {
+  createRef,
+  type MutableRefObject,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -13,16 +15,21 @@ import {
   type PropsWithChange,
 } from './brick';
 import { type Change } from './changes';
-import { type BrickValue, hasSlots, isBrickValue } from './utils';
+import { hasSlots, isBrickValue } from './utils';
+
+export type CacheItem = {
+  element: ReactElement;
+  node: Node;
+  path: { current: string[] };
+};
 
 type Options = {
   onChange: (change: Change) => void;
-  // eslint-disable-next-line -- TODO: Add types
-  cache: WeakMap<object, { element: ReactElement; node: any; path: { current: string[] } }>;
+  cache: WeakMap<object, CacheItem>;
   slots: Record<string, Component>;
   path: () => string[];
   parent: Node;
-}
+};
 
 export const bricksToReact = ({
   onChange,
@@ -40,35 +47,30 @@ export const bricksToReact = ({
 
       const { brick, id, ...rest } = value;
       const cached = cache.get(value);
-      const pathRef = cached?.path ?? { current: [] as string[] };
+      const pathRef = cached?.path ?? createRef<string[]>() as MutableRefObject<string[]>;
       pathRef.current = [`${index}`];
 
       const path = () => [...parentPath(), ...pathRef.current];
-      // eslint-disable-next-line -- TODO: Add types
-      const change = (newValue: Partial<BrickValue> | null, changeProps: any) => {
-        // eslint-disable-next-line -- TODO: Add types
+      const change = ({ type, ...newValue }: { type: Change['type'] }) => {
         onChange({
-          ...changeProps,
+          type,
           value: newValue
             ? { ...value, ...newValue }
-            : newValue,
+            : value,
           path: path(),
         });
       };
 
       const Comp = slots[brick] as Component<PropsWithChange & PropsWithBrick>;
 
-      // eslint-disable-next-line -- TODO: Check it
       if (!Comp) {
         return null;
       }
 
       const slotsMap = hasSlots(Comp) ? Comp.slots : {};
       const slotNames = Object.keys(slotsMap);
-      // eslint-disable-next-line -- TODO: Check it
       const node = cached?.node ?? of(value, slotNames);
 
-      // eslint-disable-next-line -- TODO: Check it
       add(parent, parentPath().at(-1)!, node);
 
       if (cached) {
@@ -83,7 +85,6 @@ export const bricksToReact = ({
           // eslint-disable-next-line -- TODO: Check it
           slots: (childBricks === 'inherit' ? slots : childBricks) as any || {},
           path: () => [...path(), name],
-          // eslint-disable-next-line -- TODO: Check it
           parent: node,
         })(childValue);
         return acc;
@@ -95,12 +96,10 @@ export const bricksToReact = ({
           {...slotProps}
           onChange={change}
           brick={{ value, path }}
-          // eslint-disable-next-line -- TODO: Check it
           key={id || index}
         />
       );
 
-      // eslint-disable-next-line -- TODO: Check it
       cache.set(value, { element, node, path: pathRef });
 
       return element;

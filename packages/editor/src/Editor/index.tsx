@@ -45,22 +45,17 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   // When the components are updated we need to clear our MutationsArray to prevent DOM restoring
   useEffect(clear, [components, clear]);
 
-  // eslint-disable-next-line -- TODO: check it
   const mutationRef: RefObject<HTMLElement> = useMutation({
-    before() {
+    before: () => {
       changesRef.current = [];
     },
-    // mutate: console.log.bind(null, 'Editor:mutate'),
     after: () => {
       if (!changesRef.current.length) {
         return;
       }
 
-      // eslint-disable-next-line -- TODO: check it
-      const changes: any[] = changesRef.current;
-      // changesRef.current.push()
-      // eslint-disable-next-line -- TODO: check it
-      const newValue = patch(treeRef.current, changes) as {
+      const changes = changesRef.current;
+      const newValue = patch(treeRef.current!, changes) as {
         children: unknown;
       };
 
@@ -69,8 +64,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
 
       onChange?.(newValue.children);
     },
-    // eslint-disable-next-line -- TODO: check it
-  } as any);
+  });
 
   const ref = useMergedRefs(mutationRef, refProp);
 

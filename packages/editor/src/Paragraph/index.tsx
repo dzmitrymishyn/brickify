@@ -8,14 +8,14 @@ import {
   useRef,
 } from 'react';
 
-
 import { domToReactFactory } from './domToReactFactory';
-import { type BrickValue, useMutation } from '../bricks';
 import {
   type Component as BrickComponent,
+  type BrickValue,
   type PropsWithBrick,
   type PropsWithChange,
-} from '../bricks/brick';
+  useMutation,
+} from '../bricks';
 import useMergedRefs from '../Editor/useMergedRef';
 
 type Value = BrickValue & {
@@ -32,7 +32,6 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
   value,
   bricks = [],
   component: Component = 'div',
-  brick,
   onChange,
 }, refProp) => {
   const oldComponents = useRef<ReactNode>();
@@ -46,24 +45,21 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
     [value, domToReact],
   );
 
-  // eslint-disable-next-line -- TODO: check it
   const mutationRef: RefObject<HTMLElement> = useMutation({
-    // eslint-disable-next-line -- TODO: check it
-    mutate: ({ remove }: any) => {
+    mutate: ({ remove }) => {
       if (remove) {
-        return onChange?.(null, { type: 'remove' });
+        return onChange?.({ type: 'remove' });
       }
 
       // const newHtml = mutationRef.current?.children[0]?.innerHTML ?? '';
       const newHtml = mutationRef.current?.innerHTML ?? '';
 
       return onChange?.({
+        type: 'update',
         value: newHtml,
-        // eslint-disable-next-line -- TODO: check it
-      }, { oldValue: brick?.value, type: 'update' as any });
+      });
     },
-  // eslint-disable-next-line -- TODO: check it
-  } as any);
+  });
 
   const ref = useMergedRefs(mutationRef, refProp);
 

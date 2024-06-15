@@ -8,7 +8,6 @@ type MutationHandler = (mutation: MutationRecord) => void;
 const mutationHandlers: Partial<Record<MutationRecordType, MutationHandler>> = {
   characterData: (mutation: MutationRecord) => {
     // We need to revert the changes. We just mutate DOM element
-
     mutation.target.textContent = mutation.oldValue;
   },
   childList: flow(

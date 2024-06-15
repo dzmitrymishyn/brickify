@@ -12,16 +12,14 @@ type Props = PropsWithChildren & PropsWithBrick & PropsWithChange;
 
 const Container: React.FC<Props> = ({ children, onChange }) => {
   const mutationRef = useMutation<HTMLDivElement>({
-    /* eslint @typescript-eslint/no-unsafe-argument: off -- the type will be updated */
-    /* eslint @typescript-eslint/no-explicit-any: warn -- the type will be updated */
-    mutate({ remove }: any) {
+    mutate({ remove }) {
       if (remove) {
-        return onChange?.(null, { type: 'remove' });
+        return onChange?.({ type: 'remove' });
       }
 
       return undefined;
     },
-  } as any);
+  });
 
   return (
     <div ref={mutationRef} style={{ margin: '0 auto', maxWidth: 600 }}>

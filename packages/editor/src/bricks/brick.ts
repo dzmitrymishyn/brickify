@@ -1,6 +1,6 @@
 import { type FC, type ForwardRefExoticComponent } from 'react';
 
-import { type ChangeType } from './changes';
+import { type Add, type Remove, type Update } from './changes';
 import { type BrickValue } from './utils/values';
 
 export type Component<Props = object> = FC<Props> | ForwardRefExoticComponent<Props>;
@@ -8,17 +8,17 @@ export type Component<Props = object> = FC<Props> | ForwardRefExoticComponent<Pr
 export type NamedComponent = {
   displayName?: string;
   name: string;
-}
+};
 
 export type PropsWithBrick<Value extends BrickValue = BrickValue> = {
   brick: { value: Value; path: () => string[] };
-}
+};
 
-export type ChangeOptions<Value> = {
-  type: ChangeType;
-  oldValue?: Value;
-}
+type ChangeProps<Value extends BrickValue> =
+  | { type: Remove['type'] }
+  | ({ type: Add['type'] } & Partial<Value>)
+  | ({ type: Update['type'] } & Partial<Value>);
 
 export type PropsWithChange<Value extends BrickValue = BrickValue> = {
-  onChange?: (value: Partial<Value> | null, options: ChangeOptions<Value>) => void;
-}
+  onChange?: (change: ChangeProps<Value>) => void;
+};

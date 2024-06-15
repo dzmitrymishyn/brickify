@@ -1,12 +1,12 @@
 import { createContext } from 'react';
 
-import { type MutationHandler } from './mutations';
+import { type Mutation } from './mutations';
 
 type Unsubscribe = () => void;
 
 type Subscribe = (
   element: HTMLElement,
-  mutate: MutationHandler,
+  mutate: (mutation: Mutation) => void,
 ) => Unsubscribe;
 
 export type HandleResults = (updatedValues: unknown[]) => void;

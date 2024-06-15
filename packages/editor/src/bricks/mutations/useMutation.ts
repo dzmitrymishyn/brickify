@@ -6,24 +6,17 @@ import {
   useRef,
 } from 'react';
 
-import { type MutationHandler } from './mutations';
+import {
+  type MutationHandler,
+  type MutationMutate,
+} from './mutations';
 import { MutationsContext } from './MutationsContext';
 
-// type MutationHandle = {
-// };
-
-// type Options2 = {
-//   before(): void;
-//   mutate(options: {
-//     remove: boolean;
-//     addedNodes: Node[];
-//     removedNodes: Node[];
-//     oldValue: string | null;
-//   }): void;
-//   after(): void;
-// };
-
-type Options = Partial<Record<MutationRecordType | 'before' | 'after', MutationHandler>>;
+type Options = Partial<{
+  after: () => void;
+  before: () => void;
+  mutate: (mutation: MutationMutate) => void;
+}>;
 
 export const useMutation = <Element extends HTMLElement>(
   mutations: Options,
@@ -41,7 +34,12 @@ export const useMutation = <Element extends HTMLElement>(
   mutationsRef.current = mutations;
 
   const mutate = useCallback<MutationHandler>(
-    (mutation) => mutationsRef.current[mutation.type]?.(mutation),
+    (mutation) => {
+      if (mutation.type === 'mutate') {
+        return mutationsRef.current[mutation.type]?.(mutation);
+      }
+      return mutationsRef.current[mutation.type]?.();
+    },
     [],
   );
 
@@ -49,7 +47,6 @@ export const useMutation = <Element extends HTMLElement>(
     if (!subscribe || !ref.current) {
       return;
     }
-
 
     return subscribe(ref.current, mutate);
   }, [mutate, subscribe]);

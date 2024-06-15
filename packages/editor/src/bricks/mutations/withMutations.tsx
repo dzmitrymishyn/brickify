@@ -9,7 +9,7 @@ import React, {
   useRef,
 } from 'react';
 
-import { type MutationHandler } from './mutations';
+import { type MutationHandler, type MutationMutate } from './mutations';
 import { MutationsContext, type MutationsContextType } from './MutationsContext';
 import { revertDomByMutations } from './revertDomByMutations';
 
@@ -39,24 +39,22 @@ export function withMutations<P, T extends Element>(
 
       const observer = new MutationObserver((mutations) => {
         changesRef.current = [];
-        sortedElements.current.forEach(({ mutate }) => { mutate({ type: 'before' }); });
+        sortedElements.current.forEach(({ mutate }) => {
+          mutate({ type: 'before' });
+        });
 
-        const defaultOptions = {
+        const defaultOptions: MutationMutate = {
           remove: false,
           removedNodes: [],
           addedNodes: [],
-          oldValue: null,
           type: 'mutate',
         };
-        // eslint-disable-next-line -- check it
-        const handleOptions = new Map<Node, any>();
+        const handleOptions = new Map<Node, MutationMutate>();
 
         mutations.forEach((mutation) => {
           mutation.removedNodes.forEach((node) => {
             if (subscribers.current.has(node as HTMLElement)) {
-              // eslint-disable-next-line -- check it
               const options = handleOptions.get(node) ?? { ...defaultOptions };
-              // eslint-disable-next-line -- check it
               options.remove = true;
               handleOptions.set(node, options);
             }
@@ -66,12 +64,9 @@ export function withMutations<P, T extends Element>(
 
           while (current) {
             if (subscribers.current.has(current as HTMLElement)) {
-              // eslint-disable-next-line -- check it
               const options = handleOptions.get(current) ?? { ...defaultOptions };
 
-              // eslint-disable-next-line -- check it
               options.removedNodes.push(...Array.from(mutation.removedNodes));
-              // eslint-disable-next-line -- check it
               options.addedNodes.push(...Array.from(mutation.addedNodes));
 
               handleOptions.set(current, options);
@@ -82,7 +77,6 @@ export function withMutations<P, T extends Element>(
         });
 
         handleOptions.forEach(
-          // eslint-disable-next-line -- check it
           (options, node) => subscribers.current.get(node as HTMLElement)?.(options),
         );
 

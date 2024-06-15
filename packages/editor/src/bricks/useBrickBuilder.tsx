@@ -1,6 +1,5 @@
-import { of } from '@brickifyio/utils/slots-tree';
+import { of, type Node as SlotsTreeNode } from '@brickifyio/utils/slots-tree';
 import {
-  type ReactElement,
   type ReactNode,
   type RefObject,
   useMemo,
@@ -8,7 +7,7 @@ import {
 } from 'react';
 
 import { type Component } from './brick';
-import { bricksToReact } from './bricksToReact';
+import { bricksToReact, type CacheItem } from './bricksToReact';
 import { type Change } from './changes';
 import { bricksToMap } from './utils';
 
@@ -18,13 +17,10 @@ export const useBricksBuilder = (
   children: unknown,
   bricks: Component[],
   onChange: (change: Change) => void,
-// eslint-disable-next-line -- check next line
-): [ReactNode, RefObject<any>] => {
-  // eslint-disable-next-line -- check next line
-  const rootValueRef = useRef<any>(null);
+): [ReactNode, RefObject<SlotsTreeNode>] => {
+  const rootValueRef = useRef<SlotsTreeNode | null>(null);
 
-  // eslint-disable-next-line -- check next line
-  const cacheRef = useRef<WeakMap<object, { element: ReactElement, node: any; path: { current: string[] } }>>(
+  const cacheRef = useRef<WeakMap<object, CacheItem>>(
     new WeakMap(),
   );
 
@@ -36,7 +32,6 @@ export const useBricksBuilder = (
       cache: cacheRef.current,
       slots: bricksToMap(bricks) as Record<string, Component>,
       path: () => ['children'],
-      // eslint-disable-next-line -- check next line
       parent: rootValueRef.current,
     })(children);
   }, [bricks, children, onChange]);
