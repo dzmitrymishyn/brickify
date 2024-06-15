@@ -2,7 +2,7 @@
 export type BrickValue<Name extends string = string, Identifier = number> = {
   brick: Name;
   id?: Identifier;
-}
+};
 
 export const isBrickValue = (value: unknown): value is BrickValue => (
   typeof value === 'object'

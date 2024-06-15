@@ -21,7 +21,6 @@ const surroundAscendedUntilPath = (
   do {
     const parent: Node | null = current.parentNode;
 
-    // eslint-disable-next-line -- current could be null on the first round
     if (!parent || !current) { break; }
 
     if (parent === container || current === container) {

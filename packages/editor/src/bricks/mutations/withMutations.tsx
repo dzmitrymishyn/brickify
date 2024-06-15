@@ -151,7 +151,7 @@ export function withMutations<P, T extends Element>(
         <Component ref={ref} {...props} />
       </MutationsContext.Provider>
     );
-  }
+  };
 
   WithMutations.displayName = `WithMutations(${Component.displayName ?? 'Unnamed'})`;
 

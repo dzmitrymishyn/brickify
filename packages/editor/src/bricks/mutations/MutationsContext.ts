@@ -16,7 +16,7 @@ export type MutationsContextType = {
   // TODO: Come up with fine name
   clear: () => void;
   trackChange: <T>(change: T) => T;
-}
+};
 
 export const MutationsContext = createContext<MutationsContextType | null>(null);
 
