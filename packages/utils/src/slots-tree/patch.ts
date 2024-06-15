@@ -9,7 +9,7 @@ import assert from 'assert';
 
 type NewValue = 'unhandled' | 'removed' | object;
 
-export const buildChangesMap = (changes: Change[]) => pipe(
+export const makeChangesMap = (changes: Change[]) => pipe(
   changes,
   A.reduce<Change, Record<string, Change[]>>({}, (changesMap, change) => {
     // To understand next children updates path we need to populate changesMap
@@ -37,34 +37,32 @@ export const buildChangesMap = (changes: Change[]) => pipe(
 export const traverseArray = (
   nodes: Node[],
   changesMap: Record<string, Change[]>,
-  currentPath: string[] = [],
-): object[] => {
-  return pipe(
-    nodes,
-    A.flatMap((node: Node, index) => traverseAndApplyChanges(
-      node,
-      changesMap,
-      [...currentPath, `${index}`],
-    )),
-    I.bindTo('startArray'),
-    I.bind('endArray', () => pipe(
-      [...currentPath, nodes.length].join('/'),
-      (lastElementsPath) => changesMap[lastElementsPath] ?? [],
-      A.reduce<Change, object[]>([], (acc, change) => {
-        if (change.type === 'add') {
-          acc.push(change.value);
-        }
-        return acc;
-      }),
-    )),
-    ({ startArray, endArray }) => [...startArray, ...endArray],
-  );
-};
+  currentPath: string[],
+): object[] => pipe(
+  nodes,
+  A.flatMap((node: Node, index) => traverseAndApplyChanges(
+    node,
+    changesMap,
+    [...currentPath, `${index}`],
+  )),
+  I.bindTo('startArray'),
+  I.bind('endArray', () => pipe(
+    [...currentPath, nodes.length].join('/'),
+    (lastElementsPath) => changesMap[lastElementsPath] ?? [],
+    A.reduce<Change, object[]>([], (acc, change) => {
+      if (change.type === 'add') {
+        acc.push(change.value);
+      }
+      return acc;
+    }),
+  )),
+  ({ startArray, endArray }) => [...startArray, ...endArray],
+);
 
 export const prepareNewValue = (
   node: Node,
   changesMap: Record<string, Change[]>,
-  currentPath: string[] = [],
+  currentPath: string[],
 ) => (value: NewValue) => {
   if (value === 'removed') {
     return [];
@@ -143,8 +141,8 @@ export const traverseAndApplyChanges = (
 };
 
 export const patch = (root: Node, changes: Change[]) => pipe(
-  buildChangesMap(changes),
-  (changesMap) => traverseAndApplyChanges(root, changesMap, []),
+  makeChangesMap(changes),
+  (changesMap) => traverseAndApplyChanges(root, changesMap),
   ([newRootNode]) => {
     // TODO: do I really want to assert it? Maybe it's ok to return null?
     assert(newRootNode !== undefined, 'Unpredictable removal of root element');

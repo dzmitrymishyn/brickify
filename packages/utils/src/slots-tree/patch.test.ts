@@ -1,17 +1,17 @@
 import { type Change } from './change';
 import { of } from './of';
 import {
-  buildChangesMap,
+  makeChangesMap,
   patch,
 } from './patch';
 
-describe('buildChangesMap()', () => {
+describe('makeChangesMap()', () => {
   it('should build changes map', () => {
     const update1: Change = { type: 'update', value: {}, path: ['children', '0', 'test1'] };
     const update2: Change = { type: 'update', value: {}, path: ['children', '1', 'test2'] };
     const update3: Change = { type: 'update', value: {}, path: ['children', '3', 'test3'] };
 
-    const nextMap = buildChangesMap([update1, update2, update3]);
+    const nextMap = makeChangesMap([update1, update2, update3]);
 
     expect(nextMap).toMatchObject({
       '': [],
@@ -26,7 +26,7 @@ describe('buildChangesMap()', () => {
   });
 
   it('should build empty map on empty changes array', () => {
-    expect(buildChangesMap([])).toMatchObject({});
+    expect(makeChangesMap([])).toMatchObject({});
   });
 });
 
@@ -304,5 +304,19 @@ describe('patch()', () => {
     expect(nextValue).toMatchObject({
       children: [{ test: 2 },],
     });
+  });
+
+  it('should throw assertion error for unknown change type', () => {
+    const tree = of({}, ['children'], {
+      children: [of({})],
+    });
+
+    expect(() => patch(tree, [
+      {
+        type: 'unknown' as Change['type'],
+        path: ['children', '0'],
+        value: { test: 'test' },
+      },
+    ])).toThrow('Unknown mutation type');
   });
 });
