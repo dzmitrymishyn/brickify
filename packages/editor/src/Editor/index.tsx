@@ -31,7 +31,6 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   bricks = [],
   onChange,
 }, refProp) => {
-
   const { clear, trackChange } = useContext(MutationsContext)!;
   const changesRef = useRef<Change[]>([]);
   const changeBlock = useCallback(

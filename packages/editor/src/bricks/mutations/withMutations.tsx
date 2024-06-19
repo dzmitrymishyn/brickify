@@ -1,3 +1,5 @@
+import {addRange, type CustomRange, fromCustomRange, getCustomRange} from '@brickifyio/browser/selection';
+import { pipe } from 'fp-ts/lib/function';
 import React, {
   type ForwardRefExoticComponent,
   type PropsWithoutRef,
@@ -21,6 +23,7 @@ export function withMutations<P, T extends Element>(
     const hasInheritedContext = Boolean(inheritedMutationsContext);
 
     const ref = useRef<T>(null);
+    const rangeRef = useRef<null | CustomRange>();
     const observerRef = useRef<MutationObserver>();
     const changesRef = useRef<unknown[]>([]);
 
@@ -31,6 +34,33 @@ export function withMutations<P, T extends Element>(
 
     const sortedElements = useRef<{ depth: number; mutate: MutationHandler }[]>([]);
     const subscribers = useRef(new Map<HTMLElement, MutationHandler>());
+
+    useEffect(() => {
+      if (!ref.current) {
+        return;
+      }
+
+      const element: Element = ref.current;
+      const events = [
+        'keydown', 'keyup', 'input', 'change', 'paste', 'cut', 'click', 'dblclick', 'drop',
+        'beforeInput',
+      ];
+
+      const saveSelection = () => {
+        rangeRef.current = getCustomRange();
+      };
+
+      // Add event listeners to save the selection range before any mutation
+      events.forEach(
+        (event) => element.addEventListener(event, saveSelection, true),
+      );
+
+      return () => {
+        events.forEach(
+          (event) => element.removeEventListener(event, saveSelection, true),
+        );
+      };
+    }, []);
 
     useEffect(() => {
       if (hasInheritedContext || !ref.current) {
@@ -80,14 +110,15 @@ export function withMutations<P, T extends Element>(
           (options, node) => subscribers.current.get(node as HTMLElement)?.(options),
         );
 
-        sortedElements.current.forEach(({ mutate }) => { mutate({ type: 'after' }); });
-
         if (changesRef.current.length) {
           revertDomByMutations(mutations);
+          pipe(rangeRef.current, fromCustomRange, addRange);
+          rangeRef.current = null;
           changesRef.current = [];
         }
-
         observer.takeRecords();
+
+        sortedElements.current.forEach(({ mutate }) => { mutate({ type: 'after' }); });
       });
 
       observer.observe(ref.current, {
