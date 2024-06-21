@@ -1,3 +1,4 @@
+import { type CustomRange } from '@brickifyio/browser/selection';
 import { createContext } from 'react';
 
 import { type Mutation } from './mutations';
@@ -16,6 +17,7 @@ export type MutationsContextType = {
   // TODO: Come up with fine name
   clear: () => void;
   trackChange: <T>(change: T) => T;
+  afterMutationRange: () => CustomRange | null | undefined;
 };
 
 export const MutationsContext = createContext<MutationsContextType | null>(null);

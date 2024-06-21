@@ -1,4 +1,6 @@
+import { addRange, fromCustomRange } from '@brickifyio/browser/selection';
 import { patch } from '@brickifyio/utils/slots-tree';
+import { pipe } from 'fp-ts/lib/function';
 import React, {
   forwardRef,
   type RefObject,
@@ -31,7 +33,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   bricks = [],
   onChange,
 }, refProp) => {
-  const { clear, trackChange } = useContext(MutationsContext)!;
+  const { clear, trackChange, afterMutationRange } = useContext(MutationsContext)!;
   const changesRef = useRef<Change[]>([]);
   const changeBlock = useCallback(
     (change: Change) => {
@@ -43,6 +45,9 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
 
   // When the components are updated we need to clear our MutationsArray to prevent DOM restoring
   useEffect(clear, [components, clear]);
+  useEffect(() => {
+    pipe(afterMutationRange(), fromCustomRange, addRange);
+  }, [afterMutationRange, components]);
 
   const mutationRef: RefObject<HTMLElement> = useMutation({
     before: () => {

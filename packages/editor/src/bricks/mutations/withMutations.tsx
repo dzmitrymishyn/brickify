@@ -1,4 +1,12 @@
-import {addRange, fromRangeLike, getRangeLike, type RangeLike} from '@brickifyio/browser/selection';
+import {
+  addRange,
+  type CustomRange,
+  fromRangeLike,
+  getRange,
+  getRangeLike,
+  type RangeLike,
+  toCustomRange,
+} from '@brickifyio/browser/selection';
 import { pipe } from 'fp-ts/lib/function';
 import React, {
   type ForwardRefExoticComponent,
@@ -23,7 +31,8 @@ export function withMutations<P, T extends Element>(
     const hasInheritedContext = Boolean(inheritedMutationsContext);
 
     const ref = useRef<T>(null);
-    const rangeRef = useRef<null | RangeLike>();
+    const beforeMutationRangeRef = useRef<null | RangeLike>();
+    const afterMutationRangeRef = useRef<null | CustomRange>();
     const observerRef = useRef<MutationObserver>();
     const changesRef = useRef<unknown[]>([]);
 
@@ -47,7 +56,7 @@ export function withMutations<P, T extends Element>(
       ];
 
       const saveSelection = () => {
-        rangeRef.current = getRangeLike();
+        beforeMutationRangeRef.current = getRangeLike();
       };
 
       // Add event listeners to save the selection range before any mutation
@@ -122,9 +131,10 @@ export function withMutations<P, T extends Element>(
           );
 
           if (changesRef.current.length) {
+            afterMutationRangeRef.current = pipe(getRange(), toCustomRange(ref.current!));
             revertDomByMutations(mutations);
-            pipe(rangeRef.current, fromRangeLike, addRange);
-            rangeRef.current = null;
+            pipe(beforeMutationRangeRef.current, fromRangeLike, addRange);
+            beforeMutationRangeRef.current = null;
             changesRef.current = [];
           }
 
@@ -135,7 +145,8 @@ export function withMutations<P, T extends Element>(
               // TODO: Add error handler
             }
           });
-        } catch {
+        } catch (error) {
+          console.log(error);
           // TODO: Add error handler
         } finally {
           observer.takeRecords();
@@ -194,6 +205,9 @@ export function withMutations<P, T extends Element>(
         subscribe,
         clear,
         trackChange,
+        afterMutationRange() {
+          return afterMutationRangeRef.current;
+        },
       }),
       [subscribe, clear, trackChange],
     );
