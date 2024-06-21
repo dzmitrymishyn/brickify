@@ -11,6 +11,7 @@ import {
   type MutationMutate,
 } from './mutations';
 import { MutationsContext } from './MutationsContext';
+import assert from 'assert';
 
 type Options = Partial<{
   after: () => void;
@@ -23,10 +24,7 @@ export const useMutation = <Element extends HTMLElement>(
 ): RefObject<Element> => {
   const { subscribe } = useContext(MutationsContext) ?? {};
 
-  if (!subscribe) {
-    // eslint-disable-next-line -- TODO: Check it
-    console.error('You cannot subscribe on new mutations without the context');
-  }
+  assert(subscribe, 'You cannot subscribe on new mutations without the context');
 
   const mutationsRef = useRef(mutations);
   const ref = useRef<Element>(null);
@@ -44,7 +42,7 @@ export const useMutation = <Element extends HTMLElement>(
   );
 
   useEffect(() => {
-    if (!subscribe || !ref.current) {
+    if (!ref.current) {
       return;
     }
 

@@ -19,6 +19,7 @@ import {
   useMutation,
   withMutations,
 } from '../bricks';
+import { useLogger, withBrickContext } from '../core';
 
 
 type Props = {
@@ -34,6 +35,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   onChange,
 }, refProp) => {
   const { clear, trackChange, afterMutationRange } = useContext(MutationsContext)!;
+  const logger = useLogger();
   const changesRef = useRef<Change[]>([]);
   const changeBlock = useCallback(
     (change: Change) => {
@@ -63,8 +65,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
         children: unknown;
       };
 
-      // eslint-disable-next-line -- TODO: check it
-      console.log('value is updated', newValue.children);
+      logger.log('Editor value is updated', newValue.children);
 
       onChange?.(newValue.children);
     },
@@ -86,4 +87,8 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
 
 Editor.displayName = 'Editor';
 
-export default withMutations(Editor);
+export default pipe(
+  Editor,
+  withMutations,
+  withBrickContext,
+);

@@ -99,6 +99,7 @@ const Page = () => {
       <Editor
         // eslint-disable-next-line -- TODO: check it
         value={state as any}
+        logger={console}
         onChange={(newValue) => { setState(newValue); }}
         bricks={[
           extend(Paragraph, defaultProps({ component: 'article', bricks: [Em, Strong] })),

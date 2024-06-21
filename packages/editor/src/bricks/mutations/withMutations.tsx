@@ -22,11 +22,13 @@ import React, {
 import { type MutationHandler, type MutationMutate } from './mutations';
 import { MutationsContext, type MutationsContextType } from './MutationsContext';
 import { revertDomByMutations } from './revertDomByMutations';
+import { useLogger } from '../../core';
 
 export function withMutations<P, T extends Element>(
   Component: ForwardRefExoticComponent<PropsWithoutRef<P> & RefAttributes<T>>,
 ) {
   const WithMutations = (props: PropsWithoutRef<P>) => {
+    const logger = useLogger();
     const inheritedMutationsContext = useContext(MutationsContext);
     const hasInheritedContext = Boolean(inheritedMutationsContext);
 
@@ -82,8 +84,8 @@ export function withMutations<P, T extends Element>(
           sortedElements.current.forEach(({ mutate }) => {
             try {
               mutate({ type: 'before' });
-            } catch {
-              // TODO: Add error handler
+            } catch (error) {
+              logger.error('Something was broken before mutations handler', error);
             }
           });
 
@@ -124,8 +126,8 @@ export function withMutations<P, T extends Element>(
             (options, node) => {
               try {
                 subscribers.current.get(node as HTMLElement)?.(options);
-              } catch {
-                // TODO: Add error handler
+              } catch (error) {
+                logger.error('Current mutation handler was broken', error);
               }
             },
           );
@@ -141,13 +143,12 @@ export function withMutations<P, T extends Element>(
           sortedElements.current.forEach(({ mutate }) => {
             try {
               mutate({ type: 'after' });
-            } catch {
-              // TODO: Add error handler
+            } catch (error) {
+              logger.error('Something was broken after mutations handler', error);
             }
           });
         } catch (error) {
-          console.log(error);
-          // TODO: Add error handler
+          logger.log('The mutations observer works incorrect', error);
         } finally {
           observer.takeRecords();
         }
@@ -165,7 +166,7 @@ export function withMutations<P, T extends Element>(
       observerRef.current = observer;
 
       return () => observer.disconnect();
-    }, [hasInheritedContext]);
+    }, [hasInheritedContext, logger]);
 
     const subscribe = useCallback<MutationsContextType['subscribe']>(
       (element, mutate) => {
