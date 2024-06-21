@@ -7,11 +7,11 @@
     "test": "jest"
   },
   "dependencies": {
-    "typescript": "^5.4.2"
+    "typescript": "^5.5.2"
   },
   "devDependencies": {
     "@brickifyio/eslint-config": "*",
     "@brickifyio/tsconfig": "*",
-    "ts-jest": "^29.1.4"
+    "ts-jest": "^29.1.5"
   }
 }
