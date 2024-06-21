@@ -1,4 +1,4 @@
-import {addRange, type CustomRange, fromCustomRange, getCustomRange} from '@brickifyio/browser/selection';
+import {addRange, fromRangeLike, getRangeLike, type RangeLike} from '@brickifyio/browser/selection';
 import { pipe } from 'fp-ts/lib/function';
 import React, {
   type ForwardRefExoticComponent,
@@ -23,7 +23,7 @@ export function withMutations<P, T extends Element>(
     const hasInheritedContext = Boolean(inheritedMutationsContext);
 
     const ref = useRef<T>(null);
-    const rangeRef = useRef<null | CustomRange>();
+    const rangeRef = useRef<null | RangeLike>();
     const observerRef = useRef<MutationObserver>();
     const changesRef = useRef<unknown[]>([]);
 
@@ -47,7 +47,7 @@ export function withMutations<P, T extends Element>(
       ];
 
       const saveSelection = () => {
-        rangeRef.current = getCustomRange();
+        rangeRef.current = getRangeLike();
       };
 
       // Add event listeners to save the selection range before any mutation
@@ -68,57 +68,78 @@ export function withMutations<P, T extends Element>(
       }
 
       const observer = new MutationObserver((mutations) => {
-        changesRef.current = [];
-        sortedElements.current.forEach(({ mutate }) => {
-          mutate({ type: 'before' });
-        });
-
-        const defaultOptions: MutationMutate = {
-          remove: false,
-          removedNodes: [],
-          addedNodes: [],
-          type: 'mutate',
-        };
-        const handleOptions = new Map<Node, MutationMutate>();
-
-        mutations.forEach((mutation) => {
-          mutation.removedNodes.forEach((node) => {
-            if (subscribers.current.has(node as HTMLElement)) {
-              const options = handleOptions.get(node) ?? { ...defaultOptions };
-              options.remove = true;
-              handleOptions.set(node, options);
+        try {
+          changesRef.current = [];
+          sortedElements.current.forEach(({ mutate }) => {
+            try {
+              mutate({ type: 'before' });
+            } catch {
+              // TODO: Add error handler
             }
           });
 
-          let current: Node | null = mutation.target;
+          const defaultOptions: MutationMutate = {
+            remove: false,
+            removedNodes: [],
+            addedNodes: [],
+            type: 'mutate',
+          };
+          const handleOptions = new Map<Node, MutationMutate>();
 
-          while (current) {
-            if (subscribers.current.has(current as HTMLElement)) {
-              const options = handleOptions.get(current) ?? { ...defaultOptions };
+          mutations.forEach((mutation) => {
+            mutation.removedNodes.forEach((node) => {
+              if (subscribers.current.has(node as HTMLElement)) {
+                const options = handleOptions.get(node) ?? { ...defaultOptions };
+                options.remove = true;
+                handleOptions.set(node, options);
+              }
+            });
 
-              options.removedNodes.push(...Array.from(mutation.removedNodes));
-              options.addedNodes.push(...Array.from(mutation.addedNodes));
+            let current: Node | null = mutation.target;
 
-              handleOptions.set(current, options);
+            while (current) {
+              if (subscribers.current.has(current as HTMLElement)) {
+                const options = handleOptions.get(current) ?? { ...defaultOptions };
+
+                options.removedNodes.push(...Array.from(mutation.removedNodes));
+                options.addedNodes.push(...Array.from(mutation.addedNodes));
+
+                handleOptions.set(current, options);
+              }
+
+              current = current.parentNode ?? null;
             }
+          });
 
-            current = current.parentNode ?? null;
+          handleOptions.forEach(
+            (options, node) => {
+              try {
+                subscribers.current.get(node as HTMLElement)?.(options);
+              } catch {
+                // TODO: Add error handler
+              }
+            },
+          );
+
+          if (changesRef.current.length) {
+            revertDomByMutations(mutations);
+            pipe(rangeRef.current, fromRangeLike, addRange);
+            rangeRef.current = null;
+            changesRef.current = [];
           }
-        });
 
-        handleOptions.forEach(
-          (options, node) => subscribers.current.get(node as HTMLElement)?.(options),
-        );
-
-        if (changesRef.current.length) {
-          revertDomByMutations(mutations);
-          pipe(rangeRef.current, fromCustomRange, addRange);
-          rangeRef.current = null;
-          changesRef.current = [];
+          sortedElements.current.forEach(({ mutate }) => {
+            try {
+              mutate({ type: 'after' });
+            } catch {
+              // TODO: Add error handler
+            }
+          });
+        } catch {
+          // TODO: Add error handler
+        } finally {
+          observer.takeRecords();
         }
-        observer.takeRecords();
-
-        sortedElements.current.forEach(({ mutate }) => { mutate({ type: 'after' }); });
       });
 
       observer.observe(ref.current, {
@@ -132,7 +153,7 @@ export function withMutations<P, T extends Element>(
 
       observerRef.current = observer;
 
-      return () => { observer.disconnect(); };
+      return () => observer.disconnect();
     }, [hasInheritedContext]);
 
     const subscribe = useCallback<MutationsContextType['subscribe']>(
