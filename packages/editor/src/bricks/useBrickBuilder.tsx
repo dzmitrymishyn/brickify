@@ -31,7 +31,7 @@ export const useBricksBuilder = (
       onChange,
       cache: cacheRef.current,
       slots: bricksToMap(bricks) as Record<string, Component>,
-      path: () => ['children'],
+      parentPathRef: { current: () => ['children'] },
       parent: rootValueRef.current,
     })(children);
   }, [bricks, children, onChange]);

@@ -1,4 +1,4 @@
-import { type FC, type ForwardRefExoticComponent } from 'react';
+import { type FC, type ForwardRefExoticComponent, type MutableRefObject } from 'react';
 
 import { type Add, type Remove, type Update } from './changes';
 import { type BrickValue } from './utils/values';
@@ -11,7 +11,7 @@ export type NamedComponent = {
 };
 
 export type PropsWithBrick<Value extends BrickValue = BrickValue> = {
-  brick: { value: Value; path: () => string[] };
+  brick: { value: Value; pathRef: MutableRefObject<() => string[]> };
 };
 
 type ChangeProps<Value extends BrickValue> =

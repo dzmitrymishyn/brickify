@@ -20,14 +20,14 @@ import { hasSlots, isBrickValue } from './utils';
 export type CacheItem = {
   element: ReactElement;
   node: Node;
-  path: { current: string[] };
+  pathRef: MutableRefObject<() => string[]>;
 };
 
 type Options = {
   onChange: (change: Change) => void;
   cache: WeakMap<object, CacheItem>;
   slots: Record<string, Component>;
-  path: () => string[];
+  parentPathRef: MutableRefObject<() => string[]>;
   parent: Node;
 };
 
@@ -35,7 +35,7 @@ export const bricksToReact = ({
   onChange,
   cache,
   slots,
-  path: parentPath,
+  parentPathRef,
   parent,
 }: Options) => flow(
   array<unknown>,
@@ -47,17 +47,17 @@ export const bricksToReact = ({
 
       const { brick, id, ...rest } = value;
       const cached = cache.get(value);
-      const pathRef = cached?.path ?? createRef<string[]>() as MutableRefObject<string[]>;
-      pathRef.current = [`${index}`];
+      const pathRef = cached?.pathRef
+        ?? createRef<() => string[]>() as MutableRefObject<() => string[]>;
+      pathRef.current = () => [...parentPathRef.current(), `${index}`];
 
-      const path = () => [...parentPath(), ...pathRef.current];
       const change = ({ type, ...newValue }: { type: Change['type'] }) => {
         onChange({
           type,
           value: newValue
             ? { ...value, ...newValue }
             : value,
-          path: path(),
+          path: pathRef.current(),
         });
       };
 
@@ -71,7 +71,7 @@ export const bricksToReact = ({
       const slotNames = Object.keys(slotsMap);
       const node = cached?.node ?? of(value, slotNames);
 
-      add(parent, parentPath().at(-1)!, node);
+      add(parent, parentPathRef.current().at(-1)!, node);
 
       if (cached) {
         return cached.element;
@@ -84,7 +84,7 @@ export const bricksToReact = ({
           cache,
           // eslint-disable-next-line -- TODO: Check it
           slots: (childBricks === 'inherit' ? slots : childBricks) as any || {},
-          path: () => [...path(), name],
+          parentPathRef: { current: () => [...pathRef.current(), name] },
           parent: node,
         })(childValue);
         return acc;
@@ -95,12 +95,12 @@ export const bricksToReact = ({
           {...rest}
           {...slotProps}
           onChange={change}
-          brick={{ value, path }}
+          brick={{ value, pathRef }}
           key={id || index}
         />
       );
 
-      cache.set(value, { element, node, path: pathRef });
+      cache.set(value, { element, node, pathRef });
 
       return element;
     },
