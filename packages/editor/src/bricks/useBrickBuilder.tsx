@@ -27,13 +27,13 @@ export const useBricksBuilder = (
   const element = useMemo(() => {
     rootValueRef.current = of({ children }, ['children']);
 
-    return bricksToReact({
+    return bricksToReact(children)({
       onChange,
       cache: cacheRef.current,
       slots: bricksToMap(bricks) as Record<string, Component>,
       parentPathRef: { current: () => ['children'] },
       parent: rootValueRef.current,
-    })(children);
+    });
   }, [bricks, children, onChange]);
 
   return [element, rootValueRef];
