@@ -7,8 +7,8 @@ import {
 } from 'react';
 
 import { type Component } from './brick';
-import { bricksToReact, type CacheItem } from './bricksToReact';
 import { type Change } from './changes';
+import { type CacheItem, objectToReact } from './objectToReact';
 import { bricksToMap } from './utils';
 
 export type BricksBuilderChange = (change: Change) => void;
@@ -27,7 +27,7 @@ export const useBricksBuilder = (
   const element = useMemo(() => {
     rootValueRef.current = of({ children }, ['children']);
 
-    return bricksToReact(children)({
+    return objectToReact(children)({
       onChange,
       cache: cacheRef.current,
       slots: bricksToMap(bricks) as Record<string, Component>,
