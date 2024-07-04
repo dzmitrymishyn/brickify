@@ -31,7 +31,11 @@ export const createRange = (
 
 export const getRange = flow(
   getSelection,
-  O.map((selection) => selection.getRangeAt(0)),
+  O.map((selection) => (
+    selection.rangeCount > 0
+      ? selection.getRangeAt(0)
+      : null
+  )),
   O.toNullable,
 );
 
