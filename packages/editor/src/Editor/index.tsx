@@ -1,5 +1,5 @@
 import { addRange, fromCustomRange } from '@brickifyio/browser/selection';
-import { patch } from '@brickifyio/utils/slots-tree';
+import { type Node, patch } from '@brickifyio/utils/slots-tree';
 import { pipe } from 'fp-ts/lib/function';
 import React, {
   forwardRef,
@@ -29,6 +29,14 @@ type Props = {
   onChange?: (value: unknown) => void;
 };
 
+const emptyChangesState = (type: 'default' | 'browser' = 'default'): {
+  type: 'default' | 'browser';
+  changes: Change[];
+} => ({
+  type,
+  changes: [],
+});
+
 const Editor = forwardRef<HTMLDivElement, Props>(({
   value,
   bricks = [],
@@ -40,14 +48,38 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
     afterMutationRange,
   } = useContext(MutationsContext)!;
   const logger = useLogger();
-  const changesRef = useRef<Change[]>([]);
+  const changesState = useRef(emptyChangesState('default'));
+  const onChangeRef = useRef<(value: unknown) => void>();
+
+  onChangeRef.current = onChange;
+
+  const emitChange = useCallback((changes: Change[], root?: Node) => {
+    if (!changes.length || !root) {
+      return;
+    }
+
+    const newValue = patch(root, changes) as {
+      children: unknown;
+    };
+
+    logger.log('Editor value is updated', newValue.children);
+
+    onChangeRef.current?.(newValue.children);
+  }, [logger]);
+
   const changeBlock = useCallback(
-    (change: Change) => {
-      changesRef.current.push(trackChange(change));
+    (change: Change, root?: Node) => {
+      if (changesState.current.type === 'browser') {
+        changesState.current.changes.push(trackChange(change));
+        return;
+      }
+      emitChange([change], root);
     },
-    [trackChange],
+    [trackChange, emitChange],
   );
-  const [components, treeRef] = useBricksBuilder(value, bricks, changeBlock);
+  const [components, treeRef] = useBricksBuilder(value, bricks, (change) => {
+    changeBlock(change, treeRef.current ?? undefined);
+  });
 
   // When the components are updated we need to clear our MutationsArray to
   // prevent DOM restoring
@@ -58,21 +90,11 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
 
   const mutationRef: RefObject<HTMLElement> = useMutation({
     before: () => {
-      changesRef.current = [];
+      changesState.current = emptyChangesState('browser');
     },
     after: () => {
-      if (!changesRef.current.length) {
-        return;
-      }
-
-      const changes = changesRef.current;
-      const newValue = patch(treeRef.current!, changes) as {
-        children: unknown;
-      };
-
-      logger.log('Editor value is updated', newValue.children);
-
-      onChange?.(newValue.children);
+      emitChange(changesState.current.changes, treeRef.current ?? undefined);
+      changesState.current = emptyChangesState('default');
     },
   });
 
