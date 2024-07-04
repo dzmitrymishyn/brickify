@@ -20,7 +20,10 @@ import {
 } from 'react';
 
 import { type MutationHandler, type MutationMutate } from './mutations';
-import { MutationsContext, type MutationsContextType } from './MutationsContext';
+import {
+  MutationsContext,
+  type MutationsContextType,
+} from './MutationsContext';
 import { revertDomByMutations } from './revertDomByMutations';
 import { useLogger } from '../../core';
 
@@ -38,12 +41,15 @@ export function withMutations<P, T extends Element>(
     const observerRef = useRef<MutationObserver>();
     const changesRef = useRef<unknown[]>([]);
 
-    const trackChange = useCallback(function trackChange<Change>(change: Change) {
+    const trackChange = useCallback(function trackChange<C>(change: C) {
       changesRef.current.push(change);
       return change;
     }, []);
 
-    const sortedElements = useRef<{ depth: number; mutate: MutationHandler }[]>([]);
+    const sortedElements = useRef<{
+      depth: number;
+      mutate: MutationHandler;
+    }[]>([]);
     const subscribers = useRef(new Map<HTMLElement, MutationHandler>());
 
     useEffect(() => {
@@ -53,8 +59,8 @@ export function withMutations<P, T extends Element>(
 
       const element: Element = ref.current;
       const events = [
-        'keydown', 'keyup', 'input', 'change', 'paste', 'cut', 'click', 'dblclick', 'drop',
-        'beforeInput',
+        'keydown', 'keyup', 'input', 'change', 'paste', 'cut', 'click',
+        'dblclick', 'drop', 'beforeInput',
       ];
 
       const saveSelection = () => {
@@ -85,7 +91,10 @@ export function withMutations<P, T extends Element>(
             try {
               mutate({ type: 'before' });
             } catch (error) {
-              logger.error('Something was broken before mutations handler', error);
+              logger.error(
+                'Something was broken before mutations handler',
+                error,
+              );
             }
           });
 
@@ -100,7 +109,8 @@ export function withMutations<P, T extends Element>(
           mutations.forEach((mutation) => {
             mutation.removedNodes.forEach((node) => {
               if (subscribers.current.has(node as HTMLElement)) {
-                const options = handleOptions.get(node) ?? { ...defaultOptions };
+                const options = handleOptions.get(node)
+                  ?? { ...defaultOptions };
                 options.remove = true;
                 handleOptions.set(node, options);
               }
@@ -110,9 +120,12 @@ export function withMutations<P, T extends Element>(
 
             while (current) {
               if (subscribers.current.has(current as HTMLElement)) {
-                const options = handleOptions.get(current) ?? { ...defaultOptions };
+                const options = handleOptions.get(current)
+                  ?? { ...defaultOptions };
 
-                options.removedNodes.push(...Array.from(mutation.removedNodes));
+                options.removedNodes.push(
+                  ...Array.from(mutation.removedNodes),
+                );
                 options.addedNodes.push(...Array.from(mutation.addedNodes));
 
                 handleOptions.set(current, options);
@@ -133,7 +146,10 @@ export function withMutations<P, T extends Element>(
           );
 
           if (changesRef.current.length) {
-            afterMutationRangeRef.current = pipe(getRange(), toCustomRange(ref.current!));
+            afterMutationRangeRef.current = pipe(
+              getRange(),
+              toCustomRange(ref.current!),
+            );
             revertDomByMutations(mutations);
             pipe(beforeMutationRangeRef.current, fromRangeLike, addRange);
             beforeMutationRangeRef.current = null;
@@ -144,7 +160,10 @@ export function withMutations<P, T extends Element>(
             try {
               mutate({ type: 'after' });
             } catch (error) {
-              logger.error('Something was broken after mutations handler', error);
+              logger.error(
+                'Something was broken after mutations handler',
+                error,
+              );
             }
           });
         } catch (error) {
@@ -214,13 +233,17 @@ export function withMutations<P, T extends Element>(
     );
 
     return (
-      <MutationsContext.Provider value={inheritedMutationsContext ?? contextValue}>
+      <MutationsContext.Provider
+        value={inheritedMutationsContext ?? contextValue}
+      >
         <Component ref={ref} {...props} />
       </MutationsContext.Provider>
     );
   };
 
-  WithMutations.displayName = `WithMutations(${Component.displayName ?? 'Unnamed'})`;
+  WithMutations.displayName = (
+    `WithMutations(${Component.displayName ?? 'Unnamed'})`
+  );
 
   return WithMutations;
 }
