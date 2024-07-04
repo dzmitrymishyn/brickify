@@ -67,18 +67,12 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
     onChangeRef.current?.(newValue.children);
   }, [logger]);
 
-  const changeBlock = useCallback(
-    (change: Change, root?: Node) => {
-      if (changesState.current.type === 'browser') {
-        changesState.current.changes.push(trackChange(change));
-        return;
-      }
-      emitChange([change], root);
-    },
-    [trackChange, emitChange],
-  );
   const [components, treeRef] = useBricksBuilder(value, bricks, (change) => {
-    changeBlock(change, treeRef.current ?? undefined);
+    if (changesState.current.type === 'browser') {
+      changesState.current.changes.push(trackChange(change));
+      return;
+    }
+    emitChange([change], treeRef.current ?? undefined);
   });
 
   // When the components are updated we need to clear our MutationsArray to

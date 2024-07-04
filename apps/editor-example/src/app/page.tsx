@@ -107,6 +107,9 @@ const Page = () => {
           Profile,
         ]}
       />
+      <pre>
+        {JSON.stringify(state, null, 2)}
+      </pre>
     </div>
   );
 };
