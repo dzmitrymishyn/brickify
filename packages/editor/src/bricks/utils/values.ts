@@ -1,4 +1,3 @@
-/* eslint @typescript-eslint/no-explicit-any: warn -- the type will be updated */
 export type BrickValue<Name extends string = string, Identifier = number> = {
   brick: Name;
   id?: Identifier;

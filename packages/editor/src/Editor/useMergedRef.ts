@@ -1,19 +1,19 @@
 import { useCallback } from 'react';
 
-export default function useMergedRefs<T>(...refs: React.Ref<T>[]): React.RefCallback<T> {
-  return useCallback(
+// Keep in mind that the length of the array should be always the same
+const useMergedRefs = <T>(...refs: React.Ref<T>[]): React.RefCallback<T> =>
+  useCallback(
     (element: T) => {
-      // eslint-disable-next-line -- TODO: check it
-      for (let i = 0; i < refs.length; i += 1) {
-        const ref = refs[i];
+      refs.forEach((ref) => {
         if (typeof ref === 'function') {
           ref(element);
         } else if (ref && typeof ref === 'object') {
           (ref as React.MutableRefObject<T>).current = element;
         }
-      }
+      });
     },
-    // eslint-disable-next-line -- TODO: check it
+    // eslint-disable-next-line -- here could be any array of deps
     refs,
   );
-}
+
+export default useMergedRefs;

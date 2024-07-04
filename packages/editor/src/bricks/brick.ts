@@ -1,9 +1,15 @@
-import { type FC, type ForwardRefExoticComponent, type MutableRefObject } from 'react';
+import {
+  type FC,
+  type ForwardRefExoticComponent,
+  type MutableRefObject,
+} from 'react';
 
 import { type Add, type Remove, type Update } from './changes';
 import { type BrickValue } from './utils/values';
 
-export type Component<Props = object> = FC<Props> | ForwardRefExoticComponent<Props>;
+export type Component<Props = object> =
+  | FC<Props>
+  | ForwardRefExoticComponent<Props>;
 
 export type NamedComponent = {
   displayName?: string;

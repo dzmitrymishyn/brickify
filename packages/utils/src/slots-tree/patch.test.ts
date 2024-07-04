@@ -7,9 +7,15 @@ import {
 
 describe('makeChangesMap()', () => {
   it('should build changes map', () => {
-    const update1: Change = { type: 'update', value: {}, path: ['children', '0', 'test1'] };
-    const update2: Change = { type: 'update', value: {}, path: ['children', '1', 'test2'] };
-    const update3: Change = { type: 'update', value: {}, path: ['children', '3', 'test3'] };
+    const update1: Change = {
+      type: 'update', value: {}, path: ['children', '0', 'test1'],
+    };
+    const update2: Change = {
+      type: 'update', value: {}, path: ['children', '1', 'test2'],
+    };
+    const update3: Change = {
+      type: 'update', value: {}, path: ['children', '3', 'test3'],
+    };
 
     const nextMap = makeChangesMap([update1, update2, update3]);
 
@@ -151,7 +157,9 @@ describe('patch()', () => {
       { type: 'update', path: ['children', '0'], value: updatedValue },
     ]);
 
-    expect(nextValue).toMatchObject({ children: [{ test: 2, newField: true }] });
+    expect(nextValue).toMatchObject({
+      children: [{ test: 2, newField: true }],
+    });
   });
 
   it('should add, update and remove nothing', () => {

@@ -1,8 +1,8 @@
 import { getLastDeepLeaf } from './getLastDeepLeaf';
 
 const createDocument = () => {
-  // We need to use such kind of style because template string with pretty format
-  // creates a lot of additional text nodes between element
+  // We need to use such kind of style because template string with pretty
+  // format creates a lot of additional text nodes between element
   document.body.innerHTML = ''
     + '<main>'
       + '<ul>'

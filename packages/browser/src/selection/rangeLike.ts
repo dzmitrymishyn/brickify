@@ -11,12 +11,12 @@ export type RangeLike = Pick<
 export const getRangeLike = flow(
   getRange,
   O.fromNullable,
-  O.map(({ startContainer, startOffset, endContainer, endOffset }): RangeLike => ({
+  O.map(({ startContainer, startOffset, endContainer, endOffset }) => ({
     startContainer,
     startOffset,
     endContainer,
     endOffset,
-  })),
+  } as RangeLike)),
   O.toNullable,
 );
 

@@ -1,4 +1,5 @@
-export const isText = (node?: Node | null): node is Text => node?.nodeType === Node.TEXT_NODE;
+export const isText = (node?: Node | null): node is Text =>
+  node?.nodeType === Node.TEXT_NODE;
 
 export const splitIfText = (node: Node, offset: number) => {
   const textLength = node.textContent?.length || 0;
@@ -13,7 +14,10 @@ export const splitIfText = (node: Node, offset: number) => {
 export const splitBoundaryText = (range: Range) => {
   const clonedRange = range.cloneRange();
 
-  clonedRange.setStart(splitIfText(clonedRange.startContainer, clonedRange.startOffset), 0);
+  clonedRange.setStart(
+    splitIfText(clonedRange.startContainer, clonedRange.startOffset),
+    0,
+  );
   splitIfText(clonedRange.endContainer, clonedRange.endOffset);
 
   return clonedRange;

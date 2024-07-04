@@ -13,7 +13,8 @@ export const makeChangesMap = (changes: Change[]) => pipe(
   changes,
   A.reduce<Change, Record<string, Change[]>>({}, (changesMap, change) => {
     // To understand next children updates path we need to populate changesMap
-    // with all the keys, it gives us an opportunity to go only into updated path
+    // with all the keys, it gives us an opportunity to go only into updated
+    // path
     const key = change.path.reduce((acc, item) => {
       const current = `${acc}${acc ? '/' : ''}${item}`;
 

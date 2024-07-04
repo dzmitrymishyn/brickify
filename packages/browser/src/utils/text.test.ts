@@ -75,7 +75,8 @@ describe('splitBoundaryText', () => {
     range.setStart(div, 6);
     range.setEnd(div, div.textContent!.length - 5);
 
-    expect(splitBoundaryText(range).commonAncestorContainer.textContent).toBe('ipsum dolar sit');
+    expect(splitBoundaryText(range).commonAncestorContainer.textContent)
+      .toBe('ipsum dolar sit');
   });
 
   it('shoud split text in multiple nodes', () => {

@@ -32,7 +32,10 @@ export const domToReactFactory = (
     oldDocument: ReactNode = oldDocumentRef.current,
   ): ReactNode[] => {
     // eslint-disable-next-line -- TODO: check it
-    const Component: any = bricks.find((brick) => hasIs(brick) && brick.is(node));
+    const Component: any = bricks.find(
+      // eslint-disable-next-line -- TODO: check it
+      (brick) => hasIs(brick) && brick.is(node),
+    );
     // eslint-disable-next-line -- TODO: check it
     const oldChildNodes = isValidElement(oldDocument)
       // eslint-disable-next-line -- TODO: check it

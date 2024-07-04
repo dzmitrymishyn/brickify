@@ -49,7 +49,10 @@ const exposeSiblings = (
       if (currentContainer) {
         currentContainer.append(currentChild);
       } else {
-        parentContainer.parentElement?.insertBefore(currentChild, nextContainer);
+        parentContainer.parentElement?.insertBefore(
+          currentChild,
+          nextContainer,
+        );
       }
 
       if (currentChild === end) {
@@ -85,8 +88,10 @@ export const expose = (
 ) => (inputRange.collapsed ? inputRange : pipe(
   prepareRange(inputRange),
   ({ startContainer, endContainer }) => ({ startContainer, endContainer }),
-  I.bind('leftPath', ({ startContainer }) => createPath(startContainer, container)),
-  I.bind('rightPath', ({ endContainer }) => createPath(endContainer, container)),
+  I.bind('leftPath', ({ startContainer }) =>
+    createPath(startContainer, container)),
+  I.bind('rightPath', ({ endContainer }) =>
+    createPath(endContainer, container)),
   tap(({ leftPath, rightPath }) => {
     let leftMatched = false;
     let rightMatched = false;
@@ -97,16 +102,34 @@ export const expose = (
       const rightParent = rightPath.at(i);
       const rightChild = rightPath.at(i + 1);
 
-      if (leftMatched && leftParent && leftChild !== leftParent.firstChild && leftChild) {
-        wrapToNode(component.create(), leftParent.firstChild!, leftChild.previousSibling);
+      if (
+        leftMatched
+        && leftParent
+        && leftChild !== leftParent.firstChild
+        && leftChild
+      ) {
+        wrapToNode(
+          component.create(),
+          leftParent.firstChild!,
+          leftChild.previousSibling,
+        );
       }
 
-      if (rightMatched && rightParent && rightChild && rightChild !== rightParent.lastChild) {
+      if (
+        rightMatched
+        && rightParent
+        && rightChild
+        && rightChild !== rightParent.lastChild
+      ) {
         wrapToNode(component.create(), rightChild.nextSibling!);
       }
 
       if (leftParent === rightParent) {
-        if (leftChild && leftChild !== rightChild && leftChild.nextSibling !== rightChild) {
+        if (
+          leftChild
+          && leftChild !== rightChild
+          && leftChild.nextSibling !== rightChild
+        ) {
           clearSiblings(component.selector, leftChild.nextSibling, rightChild);
         }
         if (exposeSiblings(component, leftChild, rightChild)) {
@@ -119,15 +142,18 @@ export const expose = (
 
       if (leftParent) {
         clearSiblings(component.selector, leftChild?.nextSibling);
-        leftMatched = Boolean(exposeSiblings(component, leftChild)) || leftMatched;
+        leftMatched = Boolean(exposeSiblings(component, leftChild))
+          || leftMatched;
       }
 
       if (rightParent) {
         clearSiblings(component.selector, rightParent.firstChild, rightChild);
-        rightMatched = Boolean(exposeSiblings(component, rightParent.firstChild, rightChild))
-          || rightMatched;
+        rightMatched = Boolean(
+          exposeSiblings(component, rightParent.firstChild, rightChild)
+        ) || rightMatched;
       }
     }
   }),
-  ({ startContainer, endContainer }) => createRange(startContainer, endContainer),
+  ({ startContainer, endContainer }) =>
+    createRange(startContainer, endContainer),
 ));

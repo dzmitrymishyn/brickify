@@ -8,7 +8,7 @@ import {
   toCustomRange,
 } from '@brickifyio/browser/selection';
 import { pipe } from 'fp-ts/lib/function';
-import React, {
+import {
   type ForwardRefExoticComponent,
   type PropsWithoutRef,
   type RefAttributes,
@@ -47,7 +47,7 @@ export function withMutations<P, T extends Element>(
     const subscribers = useRef(new Map<HTMLElement, MutationHandler>());
 
     useEffect(() => {
-      if (!ref.current) {
+      if (!ref.current || hasInheritedContext) {
         return;
       }
 
@@ -71,7 +71,7 @@ export function withMutations<P, T extends Element>(
           (event) => element.removeEventListener(event, saveSelection, true),
         );
       };
-    }, []);
+    }, [hasInheritedContext]);
 
     useEffect(() => {
       if (hasInheritedContext || !ref.current) {

@@ -17,14 +17,15 @@ export const useBricksBuilder = (
   children: unknown,
   bricks: Component[],
   onChange: (change: Change) => void,
-): [ReactNode, RefObject<SlotsTreeNode>] => {
-  const rootValueRef = useRef<SlotsTreeNode | null>(null);
+): [ReactNode, RefObject<SlotsTreeNode | undefined>] => {
+  const rootValueRef = useRef<SlotsTreeNode | undefined>(undefined);
 
   const cacheRef = useRef<WeakMap<object, CacheItem>>(
     new WeakMap(),
   );
 
   const element = useMemo(() => {
+    const oldParent = rootValueRef.current;
     rootValueRef.current = of({ children }, ['children']);
 
     return objectToReact(children)({
@@ -33,6 +34,7 @@ export const useBricksBuilder = (
       slots: bricksToMap(bricks) as Record<string, Component>,
       parentPathRef: { current: () => ['children'] },
       parent: rootValueRef.current,
+      oldParent,
     });
   }, [bricks, children, onChange]);
 

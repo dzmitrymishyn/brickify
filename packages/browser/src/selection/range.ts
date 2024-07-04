@@ -17,7 +17,11 @@ export const createRange = (
     endContainer,
     (
       endOffset
-      ?? (isText(endContainer) ? endContainer.textContent?.length : endContainer.childNodes.length)
+      ?? (
+        isText(endContainer)
+          ? endContainer.textContent?.length
+          : endContainer.childNodes.length
+      )
       ?? 0
     ),
   );

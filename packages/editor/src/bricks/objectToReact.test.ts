@@ -17,9 +17,9 @@ const testBrick: BrickValue = {
   brick: 'test',
 };
 
-const createPathRef = (path: string[] = []): MutableRefObject<() => string[]> => ({
-  current: jest.fn(() => path),
-});
+const createPathRef = (
+  path: string[] = [],
+): MutableRefObject<() => string[]> => ({ current: jest.fn(() => path) });
 
 const createDeps = ({
   onChange = jest.fn(() => null),

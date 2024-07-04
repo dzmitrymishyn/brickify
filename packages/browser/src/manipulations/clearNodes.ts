@@ -1,6 +1,10 @@
 import { isElement, isText } from '../utils';
 
-export const clearNodes = (root: DocumentFragment | Node, selector: string, clearRoot = false) => {
+export const clearNodes = (
+  root: DocumentFragment | Node,
+  selector: string,
+  clearRoot = false,
+) => {
   const ancestors: ChildNode[] = [];
   let current: ChildNode | null = root.firstChild;
 

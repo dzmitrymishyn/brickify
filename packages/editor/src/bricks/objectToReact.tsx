@@ -4,7 +4,8 @@ import { flow, pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
 import * as O from 'fp-ts/lib/Option';
 import * as R from 'fp-ts/lib/Reader';
-import {
+import React, {
+  cloneElement,
   createRef,
   type MutableRefObject,
   type ReactElement,
@@ -32,6 +33,7 @@ type Dependencies = {
   slots: Record<string, ComponentType>;
   parentPathRef: PathRef;
   parent: Node;
+  oldParent?: Node;
 };
 
 type Data = {
@@ -39,8 +41,10 @@ type Data = {
   slotMap: Record<string, 'inherit' | Record<string, NamedComponent>>;
   change: (event: { type: Change['type'] }) => void;
   cached?: CacheItem;
+  cachedOutdated?: CacheItem;
   pathRef: PathRef;
   node: Node;
+  nodeOutdated?: Node;
   Component: ComponentType;
   index: number;
 };
@@ -110,8 +114,21 @@ export const addTreeNode = <T extends AddTreeNodeData>(data: T) => ({
   node: data.cached?.node ?? of(data.value, Object.keys(data.slotMap)),
 });
 
+type AddOutdatedDataDeps = PickedDeps<'cache' | 'oldParent' | 'parentPathRef'>;
+const addOutdatedData = (deps: AddOutdatedDataDeps) =>
+  <T extends PickedData<'index'>>(data: T) => {
+    const path = deps.parentPathRef.current();
+    const slotName = path?.[path?.length - 1];
+    const nodeOutdated = deps.oldParent?.slots?.[slotName]?.[data.index];
+    return {
+      ...data,
+      nodeOutdated,
+      cachedOutdated: deps.cache.get(nodeOutdated?.value ?? {}),
+    };
+  };
+
 export const buildSlots = (deps: Dependencies) =>
-  ({ slotMap, value, node, pathRef }: Data) =>
+  ({ slotMap, value, node, pathRef, nodeOutdated }: Data) =>
     Object
       .entries(slotMap)
       .reduce<Record<string, readonly ReactNode[]>>(
@@ -129,6 +146,7 @@ export const buildSlots = (deps: Dependencies) =>
               current: () => [...pathRef.current(), name],
             },
             parent: node,
+            oldParent: nodeOutdated,
           });
           return acc;
         },
@@ -137,18 +155,22 @@ export const buildSlots = (deps: Dependencies) =>
 
 export const build = (deps: Dependencies) => flow(
   I.bind('slotProps', buildSlots(deps)),
-  I.map(({ slotProps, Component, change, value, index, pathRef }) => {
+  I.map(({ slotProps, Component, change, value, index, pathRef, cachedOutdated }) => {
     const { id, brick: _brick, ...rest } = value;
+    const key = `${id || index}`;
+
+    const props = {
+      ...rest,
+      ...slotProps,onChange: change,
+      brick: { value, pathRef },
+    };
+
+    if (cachedOutdated && cachedOutdated?.element.key === key) {
+      return cloneElement(cachedOutdated.element, props);
+    }
+
     return (
-      <Component
-        {...rest}
-        {...slotProps}
-        {...{
-          onChange: change,
-          brick: { value, pathRef },
-        }}
-        key={id || index}
-      />
+      <Component {...props} key={id || index} />
     );
   }),
 );
@@ -167,6 +189,7 @@ export const objectToReact = flow(
         addChange(deps),
         addSlotsMeta,
         addTreeNode,
+        addOutdatedData(deps),
         tap(({ node }) => add(
           deps.parent,
           deps.parentPathRef.current().at(-1)!,

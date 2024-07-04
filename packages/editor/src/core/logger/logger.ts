@@ -1,4 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- we can pass anything
+// eslint-disable-next-line -- we can pass anything and we need to use any
 export type Log = (message?: any, ...optionalParams: any[]) => void;
 
 export type Logger = {

@@ -34,7 +34,11 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   bricks = [],
   onChange,
 }, refProp) => {
-  const { clear, trackChange, afterMutationRange } = useContext(MutationsContext)!;
+  const {
+    clear,
+    trackChange,
+    afterMutationRange,
+  } = useContext(MutationsContext)!;
   const logger = useLogger();
   const changesRef = useRef<Change[]>([]);
   const changeBlock = useCallback(
@@ -45,7 +49,8 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   );
   const [components, treeRef] = useBricksBuilder(value, bricks, changeBlock);
 
-  // When the components are updated we need to clear our MutationsArray to prevent DOM restoring
+  // When the components are updated we need to clear our MutationsArray to
+  // prevent DOM restoring
   useEffect(clear, [components, clear]);
   useEffect(() => {
     pipe(afterMutationRange(), fromCustomRange, addRange);

@@ -44,7 +44,9 @@ it('should return the matched result', () => {
     item: 2,
     next: { item: 3, next: null },
   });
-  expect(mockedFn).toHaveBeenCalledWith({ item: 2, next: { item: 3, next: null } }, 1);
+  expect(mockedFn).toHaveBeenCalledWith({
+    item: 2, next: { item: 3, next: null },
+  }, 1);
   expect(mockedFn).toHaveBeenCalledTimes(2);
 });
 
@@ -67,7 +69,10 @@ it('should pass correct index on each tick', () => {
   };
   const mockedFn = jest.fn<null, [number]>(() => null);
 
-  loopUntil((_, index) => mockedFn(index), (current: Item) => current.next)(list);
+  loopUntil(
+    (_, index) => mockedFn(index),
+    (current: Item) => current.next,
+  )(list);
 
   new Array(4).fill(null).forEach((_, index) => {
     expect(mockedFn).toHaveBeenNthCalledWith(index + 1, index);

@@ -1,4 +1,6 @@
-const isff = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase().indexOf('firefox') > 0 : false;
+const isff = typeof navigator !== 'undefined'
+  ? navigator.userAgent.toLowerCase().indexOf('firefox') > 0
+  : false;
 
 // Special Keys
 const KEY_MAP = {

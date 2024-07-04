@@ -27,7 +27,10 @@ const surroundAscendedUntilPath = (
       return current;
     }
 
-    if ((ltr && parent.firstChild === current) || (!ltr && parent.lastChild === current)) {
+    if (
+      (ltr && parent.firstChild === current)
+      || (!ltr && parent.lastChild === current)
+    ) {
       current = parent;
 
       continue;
@@ -37,7 +40,11 @@ const surroundAscendedUntilPath = (
     wrapToNode(wrapper, current, null, ltr);
     clearNodes(wrapper, component.selector);
 
-    while (current && !getSibling(current, ltr) && current.parentNode !== container) {
+    while (
+      current
+      && !getSibling(current, ltr)
+      && current.parentNode !== container
+    ) {
       current = current.parentNode ?? null;
     }
 
@@ -73,5 +80,6 @@ export const surround = (
       return { startContainer, endContainer };
     },
   ),
-  ({ startContainer, endContainer }) => createRange(startContainer, endContainer),
+  ({ startContainer, endContainer }) =>
+    createRange(startContainer, endContainer),
 ));

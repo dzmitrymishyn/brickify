@@ -7,7 +7,7 @@
   "files.trimTrailingWhitespace": true,
   "editor.overviewRulerBorder": false,
   "editor.rulers": [
-    81
+    79
   ],
   "javascript.preferences.quoteStyle": "single",
   "typescript.preferences.quoteStyle": "single",

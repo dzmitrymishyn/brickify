@@ -3,10 +3,13 @@ export const makePq = <T>(compare: (a: T, b: T) => number) => {
 
   const getLeftChildIndex = (parentIndex: number) => 2 * parentIndex + 1;
   const getRightChildIndex = (parentIndex: number) => 2 * parentIndex + 2;
-  const getParentIndex = (childIndex: number) => Math.floor((childIndex - 1) / 2);
+  const getParentIndex = (childIndex: number) =>
+    Math.floor((childIndex - 1) / 2);
 
-  const hasLeftChild = (index: number) => getLeftChildIndex(index) < heap.length;
-  const hasRightChild = (index: number) => getRightChildIndex(index) < heap.length;
+  const hasLeftChild = (index: number) =>
+    getLeftChildIndex(index) < heap.length;
+  const hasRightChild = (index: number) =>
+    getRightChildIndex(index) < heap.length;
   const hasParent = (index: number) => getParentIndex(index) >= 0;
 
   const leftChild = (index: number) => heap[getLeftChildIndex(index)];
@@ -21,7 +24,10 @@ export const makePq = <T>(compare: (a: T, b: T) => number) => {
     let index = 0;
     while (hasLeftChild(index)) {
       let smallerChildIndex = getLeftChildIndex(index);
-      if (hasRightChild(index) && compare(rightChild(index), leftChild(index)) > 0) {
+      if (
+        hasRightChild(index)
+        && compare(rightChild(index), leftChild(index)) > 0
+      ) {
         smallerChildIndex = getRightChildIndex(index);
       }
       if (compare(heap[index], heap[smallerChildIndex]) > 0) {

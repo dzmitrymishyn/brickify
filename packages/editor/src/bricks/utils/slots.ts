@@ -17,8 +17,11 @@ type WithSlots = {
   slots: Record<string, 'inherit' | Record<string, NamedComponent>>;
 };
 
-export const hasSlots = (Component: unknown): Component is WithSlots => Boolean((typeof Component === 'function' || typeof Component === 'object')
-  && Component
-  && 'slots' in Component
-  && typeof Component.slots === 'object'
-  && Component.slots);
+export const hasSlots = (Component: unknown): Component is WithSlots =>
+  Boolean(
+    (typeof Component === 'function' || typeof Component === 'object')
+    && Component
+    && 'slots' in Component
+    && typeof Component.slots === 'object'
+    && Component.slots,
+  );

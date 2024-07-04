@@ -19,7 +19,9 @@ export function withBrickContext<P = object>(Component: ComponentType<P>) {
     );
   };
 
-  WithBrickContext.displayName = `WithBrickContext(${Component.displayName ?? 'Unnamed'})`;
+  WithBrickContext.displayName = (
+    `WithBrickContext(${Component.displayName ?? 'Unnamed'})`
+  );
 
   return WithBrickContext;
 };
