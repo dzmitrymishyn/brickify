@@ -1,25 +1,23 @@
 import { addRange, fromCustomRange } from '@brickifyio/browser/selection';
 import { type Node, patch } from '@brickifyio/utils/slots-tree';
 import { pipe } from 'fp-ts/lib/function';
-import React, {
+import {
   forwardRef,
   type RefObject,
   useCallback,
-  useContext,
   useEffect,
   useRef,
 } from 'react';
 
 import useMergedRefs from './useMergedRef';
 import {
-  type Change,
   type Component,
-  MutationsContext,
   useBricksBuilder,
-  useMutation,
-  withMutations,
 } from '../bricks';
-import { useLogger, withBrickContext } from '../core';
+import { withBrickContext } from '../core';
+import { type Change } from '../core/changes';
+import { useBrickContext, useLogger } from '../core/hooks/useBrickContext';
+import { useMutation } from '../core/hooks/useMutation';
 
 
 type Props = {
@@ -43,10 +41,10 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   onChange,
 }, refProp) => {
   const {
-    clear,
+    ranges,
+    clearMutations,
     trackChange,
-    afterMutationRange,
-  } = useContext(MutationsContext)!;
+  } = useBrickContext();
   const logger = useLogger();
   const changesState = useRef(emptyChangesState('default'));
   const onChangeRef = useRef<(value: unknown) => void>();
@@ -77,10 +75,10 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
 
   // When the components are updated we need to clear our MutationsArray to
   // prevent DOM restoring
-  useEffect(clear, [components, clear]);
+  useEffect(clearMutations, [components, clearMutations]);
   useEffect(() => {
-    pipe(afterMutationRange(), fromCustomRange, addRange);
-  }, [afterMutationRange, components]);
+    pipe(ranges.getAfter(), fromCustomRange, addRange);
+  }, [ranges, components]);
 
   const mutationRef: RefObject<HTMLElement> = useMutation({
     before: () => {
@@ -110,6 +108,5 @@ Editor.displayName = 'Editor';
 
 export default pipe(
   Editor,
-  withMutations,
   withBrickContext,
 );

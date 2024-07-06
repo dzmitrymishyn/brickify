@@ -1,16 +1,15 @@
 import {
   type RefObject,
   useCallback,
-  useContext,
   useEffect,
   useRef,
 } from 'react';
 
+import { useBrickContext } from './useBrickContext';
 import {
   type MutationHandler,
   type MutationMutate,
-} from './mutations';
-import { MutationsContext } from './MutationsContext';
+} from '../mutations';
 import assert from 'assert';
 
 type Options = Partial<{
@@ -22,9 +21,12 @@ type Options = Partial<{
 export const useMutation = <Element extends HTMLElement>(
   mutations: Options,
 ): RefObject<Element> => {
-  const { subscribe } = useContext(MutationsContext) ?? {};
+  const { subscribeMutation } = useBrickContext();
 
-  assert(subscribe, 'You cannot subscribe on new mutations without the context');
+  assert(
+    subscribeMutation,
+    'You cannot subscribe on new mutations without the context',
+  );
 
   const mutationsRef = useRef(mutations);
   const ref = useRef<Element>(null);
@@ -46,8 +48,8 @@ export const useMutation = <Element extends HTMLElement>(
       return;
     }
 
-    return subscribe(ref.current, mutate);
-  }, [mutate, subscribe]);
+    return subscribeMutation(ref.current, mutate);
+  }, [mutate, subscribeMutation]);
 
   return ref;
 };

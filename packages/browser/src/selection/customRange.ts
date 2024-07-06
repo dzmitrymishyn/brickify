@@ -40,7 +40,7 @@ export const toCustomRange = (container: Node) => flow(
     endPath,
     container,
   })),
-  O.getOrElseW(() => null),
+  O.toUndefined,
 );
 
 const makePath = (container: Node, path: number[]) => {

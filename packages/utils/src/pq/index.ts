@@ -76,3 +76,5 @@ export const makePq = <T>(compare: (a: T, b: T) => number) => {
     add,
   };
 };
+
+export type PriorityQueue<T> = ReturnType<typeof makePq<T>>;

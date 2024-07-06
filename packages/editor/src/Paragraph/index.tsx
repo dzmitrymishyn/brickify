@@ -14,9 +14,10 @@ import {
   type BrickValue,
   type PropsWithBrick,
   type PropsWithChange,
-  useMutation,
 } from '../bricks';
 import useMergedRefs from '../Editor/useMergedRef';
+import { useMutation } from '../core/hooks/useMutation';
+// import { useCommands } from '../bricks/commands/useCommand';
 
 type Value = BrickValue & {
   value: string | number;
@@ -60,6 +61,8 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
       });
     },
   });
+
+  // useCommands(() => console.log('handle'));
 
   const ref = useMergedRefs(mutationRef, refProp);
 

@@ -1,7 +1,8 @@
 import React from 'react';
 
 import Strong from './Strong';
-import { type BrickValue, type PropsWithBrick, type PropsWithChange, useMutation } from '../bricks';
+import { type BrickValue, type PropsWithBrick, type PropsWithChange } from '../bricks';
+import { useMutation } from '../core/hooks/useMutation';
 import Paragraph from '../Paragraph';
 
 type Value = BrickValue & {

@@ -1,2 +1,2 @@
-export * from './BrickContext';
+export * from './models';
 export * from './withBrickContext';

@@ -7,9 +7,9 @@ import {
 } from 'react';
 
 import { type Component } from './brick';
-import { type Change } from './changes';
 import { type CacheItem, objectToReact } from './objectToReact';
 import { bricksToMap } from './utils';
+import { type Change } from '../core/changes';
 
 export type BricksBuilderChange = (change: Change) => void;
 

@@ -1,20 +1,63 @@
-import { type ComponentType } from 'react';
+import {
+  type ForwardRefExoticComponent,
+  useMemo,
+} from 'react';
 
 import { BrickContext } from './BrickContext';
-import { EmptyLogger } from '../logger';
+import useMergedRefs from '../../Editor/useMergedRef';
+import { type Change } from '../changes';
+import { useBeforeAfterRanges } from '../hooks/useBeforeAfterRanges';
+import { useChanges } from '../hooks/useChanges';
+import { useRangeSaver } from '../hooks/useRangeSaver';
+import { EmptyLogger, type Logger } from '../logger';
+import { useMutationsController } from '../mutations';
 
 type Props = {
-  logger?: Console;
+  logger?: Logger;
 };
 
-export function withBrickContext<P = object>(Component: ComponentType<P>) {
+export function withBrickContext<P>(
+  Component: ForwardRefExoticComponent<P>,
+) {
   const WithBrickContext: React.FC<P & Props> = ({
     logger = EmptyLogger,
     ...props
   }) => {
+    const changes = useChanges();
+    const [rangesControllerRef, rangesController] = useBeforeAfterRanges();
+    const rangeSaverElementRef = useRangeSaver(rangesController);
+    const {
+      ref: mutationsRef,
+      subscribe: subscribeMutation,
+      clear: clearMutations,
+    } = useMutationsController(rangesController, changes);
+
+    const contextValue = useMemo(() => ({
+      logger,
+      ranges: rangesController,
+      subscribeMutation,
+      clearMutations,
+      trackChange(change: Change) {
+        changes.add(change);
+        return change;
+      },
+    }), [
+      logger,
+      subscribeMutation,
+      clearMutations,
+      changes,
+      rangesController,
+    ]);
+
+    const ref = useMergedRefs(
+      rangesControllerRef,
+      rangeSaverElementRef,
+      mutationsRef,
+    );
+
     return (
-      <BrickContext.Provider value={{ logger }}>
-        <Component {...props as P & JSX.IntrinsicAttributes} />
+      <BrickContext.Provider value={contextValue}>
+        <Component ref={ref} {...props as P} />
       </BrickContext.Provider>
     );
   };

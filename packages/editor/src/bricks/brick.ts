@@ -4,8 +4,8 @@ import {
   type MutableRefObject,
 } from 'react';
 
-import { type Add, type Remove, type Update } from './changes';
 import { type BrickValue } from './utils/values';
+import { type Add, type Remove, type Update } from '../core/changes';
 
 export type Component<Props = object> =
   | FC<Props>

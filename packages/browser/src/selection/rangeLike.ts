@@ -17,7 +17,7 @@ export const getRangeLike = flow(
     endContainer,
     endOffset,
   } as RangeLike)),
-  O.toNullable,
+  O.toUndefined,
 );
 
 export const fromRangeLike = flow(
