@@ -3,7 +3,7 @@ const isff = typeof navigator !== 'undefined'
   : false;
 
 // Special Keys
-const KEY_MAP = {
+const KEY_MAP: Record<string, number | undefined> = {
   backspace: 8,
   '⌫': 8,
   tab: 9,
@@ -64,7 +64,7 @@ const ctrl: Check = (event: KeyboardEvent) => event.ctrlKey;
 const cmd: Check = (event: KeyboardEvent) => event.metaKey;
 const option: Check = (event: KeyboardEvent) => event.altKey;
 
-const MODIFIERS_CHEKCKERS = {
+const MODIFIERS_CHEKCKERS: Record<string, Check | undefined> = {
   // shiftKey
   '⇧': shift,
   shift,
@@ -103,10 +103,7 @@ export const match = (event: Event, shortcut: string) => {
 
   return splitAndTrim(shortcut, '+')
     .every((key) => (
-      (MODIFIERS_CHEKCKERS as Record<string, Check | undefined>)[key]
-      || (
-        (KEY_MAP as Record<string, number | undefined>)[key]
-        && code(event) === KEY_MAP[key as keyof typeof KEY_MAP]
-      )
+      MODIFIERS_CHEKCKERS[key]?.(event)
+      || (KEY_MAP[key] && code(event) === KEY_MAP[key])
     ) || code(event) === key.toUpperCase().charCodeAt(0));
 };
