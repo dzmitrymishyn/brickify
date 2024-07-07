@@ -71,12 +71,10 @@ const Profile: React.FC<Props> = ({ children, brick, onChange }) => {
       {visible ? <Paragraph
         value={children}
         bricks={[Strong]}
-        onChange={(newValue) => {
-          onChange?.({
-            children: newValue.type === 'update' ? newValue.value ?? '' : '',
-            type: 'update',
-          });
-        }}
+        onChange={(newValue) => onChange?.({
+          children: newValue.type === 'update' ? newValue.value ?? '' : '',
+          type: 'update',
+        })}
       /> : null}
     </div>
   );

@@ -54,11 +54,15 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
       }
 
       // const newHtml = mutationRef.current?.children[0]?.innerHTML ?? '';
-      const newHtml = mutationRef.current?.innerHTML ?? '';
+      const newHtml = mutationRef.current?.innerHTML ?? '&nbsp;';
+
+      const formattedHtml = /^.&nbsp;$/.test(newHtml)
+        ? newHtml[0]
+        : newHtml;
 
       return onChange?.({
         type: 'update',
-        value: newHtml,
+        value: formattedHtml === '<br>' ? '&nbsp;' : formattedHtml,
       });
     },
   });
