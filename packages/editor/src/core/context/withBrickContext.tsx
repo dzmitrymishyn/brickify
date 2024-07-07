@@ -10,9 +10,21 @@ import { BrickContext } from './BrickContext';
 import useMergedRefs from '../../Editor/useMergedRef';
 import { useBeforeAfterRanges } from '../hooks/useBeforeAfterRanges';
 import { useBrickState } from '../hooks/useBrickState';
+import { useDisallowHotkeys } from '../hooks/useDisallowHotkeys';
 import { useRangeSaver } from '../hooks/useRangeSaver';
 import { EmptyLogger, type Logger } from '../logger';
 import { useMutationsController } from '../mutations';
+
+const metaKeyDisallowList = [
+  'enter',
+  'shift+enter',
+  ...[
+    'z', // undo
+    'b', // bold
+    'i', // italic
+    'u', // underline
+  ].map((key) => [`ctrl+${key}`, `cmd+${key}`]),
+].flat();
 
 type Props = {
   logger?: Logger;
@@ -30,6 +42,7 @@ export function withBrickContext<P extends { value: object }>(
     const state = useBrickState(initialEditable);
     const [rangesControllerRef, rangesController] = useBeforeAfterRanges();
     const rangeSaverElementRef = useRangeSaver(rangesController);
+    const disalowKeyboardRef = useDisallowHotkeys(metaKeyDisallowList);
     const {
       ref: mutationsRef,
       subscribe: subscribeMutation,
@@ -59,6 +72,7 @@ export function withBrickContext<P extends { value: object }>(
       rangesControllerRef,
       rangeSaverElementRef,
       mutationsRef,
+      disalowKeyboardRef,
     );
 
     return (

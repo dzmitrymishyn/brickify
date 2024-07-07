@@ -2,8 +2,9 @@
   "name": "@brickifyio/browser",
   "version": "0.0.1",
   "exports": {
-    "./selection": "./selection",
-    "./manipulations": "./manipulations"
+    "./hotkeys": "./hotkeys",
+    "./manipulations": "./manipulations",
+    "./selection": "./selection"
   },
   "scripts": {
     "lint": "eslint .",
