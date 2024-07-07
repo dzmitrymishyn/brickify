@@ -11,6 +11,7 @@ import {
 } from '@brickifyio/editor/bricks';
 import Container from '@brickifyio/editor/components/Container';
 import Em from '@brickifyio/editor/components/Em';
+import Heading from '@brickifyio/editor/components/Heading';
 import Profile from '@brickifyio/editor/components/Profile';
 import Strong from '@brickifyio/editor/components/Strong';
 import Editor from '@brickifyio/editor/Editor';
@@ -29,6 +30,7 @@ const Page = () => {
   //   { brick: 'Paragraph', id: newKey(), value: '1Lorem <strong style="color: red"><strong>i<em>ps</em>um</strong></strong> dolar sit <strong>amet</strong>' },
   // ]);
   const [state, setState] = useState<unknown>(() => Array.from({ length: 1 }, () => [
+    { brick: 'Heading', id: newKey(), value: 'Heading' },
     { brick: 'Paragraph', id: newKey(), value: 'First line start <strong style="color: red"><strong>11str str<em>12st em</em>13str str</strong></strong> 14 <strong>15 st</strong>' },
     { brick: 'Paragraph', id: newKey(), value: 'Second line start <strong>21 st</strong> 22' },
     { brick: 'Paragraph', id: newKey(), value: ['3rd line 31', ' 32 ', '33'] },
@@ -108,6 +110,7 @@ const Page = () => {
         logger={console}
         onChange={(newValue) => { setState(newValue); }}
         bricks={[
+          Heading,
           extend(Paragraph, defaultProps({ component: 'article', bricks: [Em, Strong] })),
           extend(Container, slots({ children: 'inherit' })),
           Profile,
