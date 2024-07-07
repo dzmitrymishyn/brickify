@@ -15,9 +15,9 @@ import {
   type PropsWithBrick,
   type PropsWithChange,
 } from '../bricks';
-import useMergedRefs from '../Editor/useMergedRef';
+import { useBrickContext } from '../core/hooks/useBrickContext';
 import { useMutation } from '../core/hooks/useMutation';
-// import { useCommands } from '../bricks/commands/useCommand';
+import useMergedRefs from '../Editor/useMergedRef';
 
 type Value = BrickValue & {
   value: string | number;
@@ -36,6 +36,7 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
   onChange,
 }, refProp) => {
   const oldComponents = useRef<ReactNode>();
+  const { state } = useBrickContext();
 
   const domToReact = useMemo(() => domToReactFactory(
     bricks,
@@ -72,8 +73,10 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
     <Component
       data-brick="paragraph"
       ref={ref}
-      contentEditable
-      suppressContentEditableWarning
+      {...state().editable && {
+        contentEditable: true,
+        suppressContentEditableWarning: true,
+      }}
     >
       {/* <span> */}
       {components}

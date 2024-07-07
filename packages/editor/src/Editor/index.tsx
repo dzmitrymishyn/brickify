@@ -1,11 +1,9 @@
-import { addRange, fromCustomRange } from '@brickifyio/browser/selection';
 import { type Node, patch } from '@brickifyio/utils/slots-tree';
 import { pipe } from 'fp-ts/lib/function';
 import {
   forwardRef,
   type RefObject,
   useCallback,
-  useEffect,
   useRef,
 } from 'react';
 
@@ -19,7 +17,6 @@ import { type Change } from '../core/changes';
 import { useBrickContext, useLogger } from '../core/hooks/useBrickContext';
 import { useMutation } from '../core/hooks/useMutation';
 
-
 type Props = {
   value: unknown[];
   // eslint-disable-next-line -- TODO: check it
@@ -27,26 +24,14 @@ type Props = {
   onChange?: (value: unknown) => void;
 };
 
-const emptyChangesState = (type: 'default' | 'browser' = 'default'): {
-  type: 'default' | 'browser';
-  changes: Change[];
-} => ({
-  type,
-  changes: [],
-});
-
 const Editor = forwardRef<HTMLDivElement, Props>(({
   value,
   bricks = [],
   onChange,
 }, refProp) => {
-  const {
-    ranges,
-    clearMutations,
-    trackChange,
-  } = useBrickContext();
+  const { state } = useBrickContext();
   const logger = useLogger();
-  const changesState = useRef(emptyChangesState('default'));
+  const editorChangesRef = useRef<Change[]>([]);
   const onChangeRef = useRef<(value: unknown) => void>();
 
   onChangeRef.current = onChange;
@@ -66,27 +51,19 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   }, [logger]);
 
   const [components, treeRef] = useBricksBuilder(value, bricks, (change) => {
-    if (changesState.current.type === 'browser') {
-      changesState.current.changes.push(trackChange(change));
+    if (state().changes === 'interaction') {
+      emitChange([change], treeRef.current ?? undefined);
       return;
     }
-    emitChange([change], treeRef.current ?? undefined);
+
+    editorChangesRef.current.push(change);
+    return change;
   });
 
-  // When the components are updated we need to clear our MutationsArray to
-  // prevent DOM restoring
-  useEffect(clearMutations, [components, clearMutations]);
-  useEffect(() => {
-    pipe(ranges.getAfter(), fromCustomRange, addRange);
-  }, [ranges, components]);
-
   const mutationRef: RefObject<HTMLElement> = useMutation({
-    before: () => {
-      changesState.current = emptyChangesState('browser');
-    },
     after: () => {
-      emitChange(changesState.current.changes, treeRef.current ?? undefined);
-      changesState.current = emptyChangesState('default');
+      emitChange(editorChangesRef.current, treeRef.current ?? undefined);
+      editorChangesRef.current = [];
     },
   });
 
@@ -96,8 +73,10 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
     <div
       ref={ref}
       data-brick="editor"
-      contentEditable
-      suppressContentEditableWarning
+      {...state().editable && {
+        contentEditable: true,
+        suppressContentEditableWarning: true,
+      }}
     >
       {components}
     </div>

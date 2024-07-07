@@ -16,8 +16,6 @@ const Container: React.FC<Props> = ({ children, onChange }) => {
       if (remove) {
         return onChange?.({ type: 'remove' });
       }
-
-      return undefined;
     },
   });
 

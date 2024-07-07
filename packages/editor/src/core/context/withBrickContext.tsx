@@ -1,51 +1,57 @@
+import { addRange, fromCustomRange } from '@brickifyio/browser/selection';
+import { pipe } from 'fp-ts/lib/function';
 import {
   type ForwardRefExoticComponent,
+  useEffect,
   useMemo,
 } from 'react';
 
 import { BrickContext } from './BrickContext';
 import useMergedRefs from '../../Editor/useMergedRef';
-import { type Change } from '../changes';
 import { useBeforeAfterRanges } from '../hooks/useBeforeAfterRanges';
-import { useChanges } from '../hooks/useChanges';
+import { useBrickState } from '../hooks/useBrickState';
 import { useRangeSaver } from '../hooks/useRangeSaver';
 import { EmptyLogger, type Logger } from '../logger';
 import { useMutationsController } from '../mutations';
 
 type Props = {
   logger?: Logger;
+  editable?: boolean;
 };
 
-export function withBrickContext<P>(
+export function withBrickContext<P extends { value: object }>(
   Component: ForwardRefExoticComponent<P>,
 ) {
   const WithBrickContext: React.FC<P & Props> = ({
     logger = EmptyLogger,
+    editable: initialEditable = false,
     ...props
   }) => {
-    const changes = useChanges();
+    const state = useBrickState(initialEditable);
     const [rangesControllerRef, rangesController] = useBeforeAfterRanges();
     const rangeSaverElementRef = useRangeSaver(rangesController);
     const {
       ref: mutationsRef,
       subscribe: subscribeMutation,
       clear: clearMutations,
-    } = useMutationsController(rangesController, changes);
+    } = useMutationsController({ rangesController, state, logger });
+
+    // When the value is updated we need to clear our MutationsArray.
+    // It will be performed after all the React's mutations in the DOM.
+    useEffect(clearMutations, [props.value, clearMutations]);
+    useEffect(function restoreRange() {
+      pipe(rangesController.getAfter(), fromCustomRange, addRange);
+    }, [rangesController, props.value]);
 
     const contextValue = useMemo(() => ({
       logger,
       ranges: rangesController,
       subscribeMutation,
-      clearMutations,
-      trackChange(change: Change) {
-        changes.add(change);
-        return change;
-      },
+      state: state.get,
     }), [
       logger,
       subscribeMutation,
-      clearMutations,
-      changes,
+      state,
       rangesController,
     ]);
 

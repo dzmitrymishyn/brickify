@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import Strong from './Strong';
 import { type BrickValue, type PropsWithBrick, type PropsWithChange } from '../bricks';
+import { useBrickContext } from '../core/hooks/useBrickContext';
 import { useMutation } from '../core/hooks/useMutation';
 import Paragraph from '../Paragraph';
 
@@ -18,6 +19,15 @@ type Props =
   };
 
 const Profile: React.FC<Props> = ({ children, brick, onChange }) => {
+  const { state } = useBrickContext();
+  const [isDescriptionVisible, setIsDescriptionVisible] = useState(
+    brick.value.visible,
+  );
+
+  const visible = state().editable
+    ? brick.value.visible
+    : isDescriptionVisible;
+
   const mutationRef = useMutation<HTMLDivElement>({
     mutate: ({ remove }) => {
       if (remove) {
@@ -45,17 +55,21 @@ const Profile: React.FC<Props> = ({ children, brick, onChange }) => {
       <button
         type="button"
         onClick={() => {
-          onChange?.({
-            type: 'update',
-            visible: !brick.value.visible,
-          });
+          if (state().editable) {
+            onChange?.({
+              type: 'update',
+              visible: !visible,
+            });
+          } else {
+            setIsDescriptionVisible((oldValue) => !oldValue);
+          }
         }}
       >
-        {brick.value.visible ? 'Hide' : 'Show'}
+        {visible ? 'Hide' : 'Show'}
         {' '}
         description
       </button>
-      {brick.value.visible ? <Paragraph
+      {visible ? <Paragraph
         value={children}
         bricks={[Strong]}
         onChange={(newValue) => {

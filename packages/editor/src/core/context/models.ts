@@ -1,4 +1,3 @@
-import { type Change } from '../changes';
 import {
   type BeforeAfterRangesController,
 } from '../hooks/useBeforeAfterRanges';
@@ -16,10 +15,11 @@ export type BrickContextType = {
   logger: Logger;
 
   ranges: BeforeAfterRangesController;
-  trackChange: (change: Change) => Change;
+
+  state: () => {
+    changes: 'interaction' | 'browser';
+    editable: boolean;
+  };
 
   subscribeMutation: ElementSubscribe<(mutation: Mutation) => void>;
-  clearMutations: () => void;
-
-  // subscribeCommand: ElementSubscribe<() => void>;
 };

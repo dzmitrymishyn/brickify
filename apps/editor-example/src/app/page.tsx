@@ -8,7 +8,6 @@ import {
   defaultProps,
   extend,
   slots,
-  withMutations,
 } from '@brickifyio/editor/bricks';
 import Container from '@brickifyio/editor/components/Container';
 import Em from '@brickifyio/editor/components/Em';
@@ -16,10 +15,7 @@ import Profile from '@brickifyio/editor/components/Profile';
 import Strong from '@brickifyio/editor/components/Strong';
 import Editor from '@brickifyio/editor/Editor';
 import Paragraph from '@brickifyio/editor/Paragraph';
-import React, {
-  forwardRef,
-  useEffect, useMemo, useRef, useState,
-} from 'react';
+import React, { useMemo, useState } from 'react';
 
 const Page = () => {
   const newKey = useMemo(() => {
@@ -93,12 +89,22 @@ const Page = () => {
     //   brick: 'Paragraph', id: newKey(), value: `${newKey()} hello world`,
     // })),
   ]).flat());
+  const [editable, setEditable] = useState(true);
 
   return (
     <div>
+      <button
+        type="button"
+        onClick={() => setEditable((oldEditable) => !oldEditable)}
+      >
+        {editable ? 'Disable' : 'Enable'}
+        {' '}
+        editable mode
+      </button>
       <Editor
         // eslint-disable-next-line -- TODO: check it
         value={state as any}
+        editable={editable}
         logger={console}
         onChange={(newValue) => { setState(newValue); }}
         bricks={[

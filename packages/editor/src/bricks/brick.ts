@@ -20,11 +20,15 @@ export type PropsWithBrick<Value extends BrickValue = BrickValue> = {
   brick: { value: Value; pathRef: MutableRefObject<() => string[]> };
 };
 
-type ChangeProps<Value extends BrickValue> =
+export type ChangeProps<Value extends BrickValue> =
   | { type: Remove['type'] }
   | ({ type: Add['type'] } & Partial<Value>)
   | ({ type: Update['type'] } & Partial<Value>);
 
 export type PropsWithChange<Value extends BrickValue = BrickValue> = {
-  onChange?: (change: ChangeProps<Value>) => void;
+  onChange?: (change: ChangeProps<Value>) => (
+    ChangeProps<Value>
+    | void
+    | null
+  );
 };

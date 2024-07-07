@@ -15,7 +15,11 @@ import assert from 'assert';
 type Options = Partial<{
   after: () => void;
   before: () => void;
-  mutate: (mutation: MutationMutate) => void;
+  /**
+   * Return value notify do we need to restore the DOM. If no return Falsy
+   * value
+   */
+  mutate: (mutation: MutationMutate) => unknown;
 }>;
 
 export const useMutation = <Element extends HTMLElement>(

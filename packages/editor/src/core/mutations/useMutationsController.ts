@@ -9,12 +9,20 @@ import {
 import { revertDomByMutations } from './revertDomByMutations';
 import { type BeforeAfterRangesController } from '../hooks/useBeforeAfterRanges';
 import { useBrickContextUnsafe } from '../hooks/useBrickContext';
-import { type ChangesController } from '../hooks/useChanges';
+import { type BrickState } from '../hooks/useBrickState';
+import { type Logger } from '../logger';
 
-export const useMutationsController = (
+type UseMutationsControllerOptions = {
   rangesController: BeforeAfterRangesController,
-  changesController: ChangesController,
-) => {
+  state: BrickState,
+  logger?: Logger;
+};
+
+export const useMutationsController = ({
+  rangesController,
+  state,
+  logger,
+}: UseMutationsControllerOptions) => {
   const inheritedContext = useBrickContextUnsafe();
   const hasInheritedContext = Boolean(inheritedContext);
   const ref = useRef<Element>(null);
@@ -33,17 +41,21 @@ export const useMutationsController = (
       return;
     }
 
+    let wereChanges = false;
     const observer = new MutationObserver((mutations) => {
+      wereChanges = false;
       try {
-        changesController.clear();
+        logger?.group?.(`Mutations were detected at ${Date.now()}`);
+
+        state.updateChangesState('browser');
         sortedElements.current.forEach(({ mutate }) => {
           try {
             mutate({ type: 'before' });
           } catch (error) {
-            // logger.error(
-            //   'Something was broken before mutations handler',
-            //   error,
-            // );
+            logger?.error(
+              'Something was broken before mutations handler',
+              error,
+            );
           }
         });
 
@@ -87,9 +99,15 @@ export const useMutationsController = (
         handleOptions.forEach(
           (options, node) => {
             try {
-              subscribersRef.current.get(node as HTMLElement)?.(options);
+              const result = subscribersRef.current.get(
+                node as HTMLElement,
+              )?.(options);
+
+              if (result) {
+                wereChanges = wereChanges || result;
+              }
             } catch (error) {
-              // logger.error('Current mutation handler was broken', error);
+              logger?.error('Current mutation handler was broken', error);
             }
           },
         );
@@ -98,14 +116,14 @@ export const useMutationsController = (
           try {
             mutate({ type: 'after' });
           } catch (error) {
-            // logger.error(
-            //   'Something was broken after mutations handler',
-            //   error,
-            // );
+            logger?.error(
+              'Something was broken after mutations handler',
+              error,
+            );
           }
         });
 
-        if (changesController.get().length) {
+        if (wereChanges) {
           rangesController.saveAfter();
           revertDomByMutations(mutations);
           pipe(
@@ -114,12 +132,18 @@ export const useMutationsController = (
             addRange,
             () => rangesController.clearBefore(),
           );
-          changesController.clear();
+          logger?.log('The DOM was restored since there are mutations');
+        } else {
+          logger?.log(
+            'Mutations were ignored since there are no registered changes',
+          );
         }
       } catch (error) {
-        // logger.log('The mutations observer works incorrect', error);
+        logger?.error('The mutations observer works incorrect', error);
       } finally {
         observer.takeRecords();
+        state.updateChangesState('interaction');
+        logger?.groupEnd?.();
       }
     });
 
@@ -135,7 +159,7 @@ export const useMutationsController = (
     observerRef.current = observer;
 
     return () => observer.disconnect();
-  }, [hasInheritedContext, rangesController]);
+  }, [hasInheritedContext, rangesController, state, logger]);
 
   const subscribe = useCallback(
     (element: HTMLElement, mutate: MutationHandler) => {

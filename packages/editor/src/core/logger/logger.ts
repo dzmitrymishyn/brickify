@@ -6,4 +6,6 @@ export type Logger = {
   warn: Log;
   error: Log;
   trace: Log;
+  group?: (label?: string) => void;
+  groupEnd?: () => void;
 };
