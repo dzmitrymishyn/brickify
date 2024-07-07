@@ -39,7 +39,7 @@ type Dependencies = {
 type Data = {
   value: BrickValue;
   slotMap: Record<string, 'inherit' | Record<string, NamedComponent>>;
-  change: (...changes: { type: Change['type'] }[]) => void;
+  change: (...changes: Change[]) => void;
   cached?: CacheItem;
   cachedOutdated?: CacheItem;
   pathRef: PathRef;
