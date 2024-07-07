@@ -53,14 +53,18 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
     onChangeRef.current?.(newValue.children);
   }, [logger]);
 
-  const [components, treeRef] = useBricksBuilder(value, bricks, (change) => {
-    if (state().changes === 'interaction') {
-      emitChange([change], treeRef.current ?? undefined);
+  const [components, treeRef] = useBricksBuilder(value, bricks, (...changes) => {
+    if (!changes.length) {
       return;
     }
 
-    editorChangesRef.current.push(change);
-    return change;
+    if (state().changes === 'interaction') {
+      emitChange(changes, treeRef.current ?? undefined);
+      return;
+    }
+
+    editorChangesRef.current.push(...changes);
+    return changes;
   });
 
   const mutationRef: RefObject<HTMLElement> = useMutation({

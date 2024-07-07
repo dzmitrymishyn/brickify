@@ -28,7 +28,7 @@ export type CacheItem = {
 };
 
 type Dependencies = {
-  onChange: (change: Change) => void;
+  onChange: (...changes: Change[]) => void;
   cache: WeakMap<object, CacheItem>;
   slots: Record<string, ComponentType>;
   parentPathRef: PathRef;
@@ -39,7 +39,7 @@ type Dependencies = {
 type Data = {
   value: BrickValue;
   slotMap: Record<string, 'inherit' | Record<string, NamedComponent>>;
-  change: (event: { type: Change['type'] }) => void;
+  change: (...changes: { type: Change['type'] }[]) => void;
   cached?: CacheItem;
   cachedOutdated?: CacheItem;
   pathRef: PathRef;
@@ -94,13 +94,13 @@ export const addPathRef = ({ parentPathRef }: PickedDeps<'parentPathRef'>) =>
 export const addChange = ({ onChange }: PickedDeps<'onChange'>) =>
   <T extends PickedData<'value' | 'pathRef'>>(data: T) => ({
     ...data,
-    change: ({ type, ...newValue }: { type: Change['type'] }) => onChange({
-      type,
-      value: newValue
-        ? { ...data.value, ...newValue }
-        : data.value,
-      path: data.pathRef.current(),
-    }),
+    change: (...changes: Change[]) => onChange(
+      ...changes.map(({ type, ...newValue }) => ({
+        type,
+        value: { ...data.value, ...newValue },
+        path: data.pathRef.current(),
+      }))
+    ),
   });
 
 export const addSlotsMeta = <T extends PickedData<'Component'>>(value: T) => ({

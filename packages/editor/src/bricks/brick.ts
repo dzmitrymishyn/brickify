@@ -26,8 +26,9 @@ export type ChangeProps<Value extends BrickValue> =
   | ({ type: Update['type'] } & Partial<Value>);
 
 export type PropsWithChange<Value extends BrickValue = BrickValue> = {
-  onChange?: (change: ChangeProps<Value>) => (
+  onChange?: (...changes: ChangeProps<Value>[]) => (
     ChangeProps<Value>
+    | ChangeProps<Value>[]
     | void
     | null
   );
