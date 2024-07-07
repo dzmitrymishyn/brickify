@@ -3,7 +3,7 @@ import { compile } from 'css-select';
 import React, { type PropsWithChildren } from 'react';
 
 import { extend } from '../bricks';
-import { Command, Commands } from '../core/commands';
+import { type Command, type Commands } from '../core/commands';
 
 type EmCommand = Command<'reshape'>;
 

@@ -12,10 +12,13 @@ import {
   type Component,
   useBricksBuilder,
 } from '../bricks';
-import { withBrickContext } from '../core';
-import { type Change } from '../core/changes';
-import { useBrickContext, useLogger } from '../core/hooks/useBrickContext';
-import { useMutation } from '../core/hooks/useMutation';
+import {
+  type Change,
+  useBrickContext,
+  useLogger,
+  useMutation,
+  withBrickContext,
+} from '../core';
 
 type Props = {
   value: unknown[];

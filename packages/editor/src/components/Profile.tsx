@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 
 import Strong from './Strong';
 import { type BrickValue, type PropsWithBrick, type PropsWithChange } from '../bricks';
-import { useBrickContext } from '../core/hooks/useBrickContext';
-import { useMutation } from '../core/hooks/useMutation';
+import { useBrickContext, useMutation } from '../core';
 import Paragraph from '../Paragraph';
 
 type Value = BrickValue & {

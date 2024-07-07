@@ -6,7 +6,7 @@ import {
   type PropsWithChange,
   slots,
 } from '../bricks';
-import { useMutation } from '../core/hooks/useMutation';
+import { useMutation } from '../core';
 
 type Props = PropsWithChildren & PropsWithBrick & PropsWithChange;
 

@@ -5,11 +5,11 @@ import {
   useRef,
 } from 'react';
 
-import { useBrickContext } from './useBrickContext';
 import {
   type MutationHandler,
   type MutationMutate,
-} from '../mutations';
+} from './mutations';
+import { useBrickContext } from '../hooks/useBrickContext';
 import assert from 'assert';
 
 type Options = Partial<{

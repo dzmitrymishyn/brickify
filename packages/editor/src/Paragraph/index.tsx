@@ -16,7 +16,7 @@ import {
   type PropsWithChange,
 } from '../bricks';
 import { useBrickContext } from '../core/hooks/useBrickContext';
-import { useMutation } from '../core/hooks/useMutation';
+import { useMutation } from '../core/mutations/useMutation';
 import useMergedRefs from '../Editor/useMergedRef';
 
 type Value = BrickValue & {
