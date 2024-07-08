@@ -9,6 +9,7 @@ import {
   extend,
   slots,
 } from '@brickifyio/editor/bricks';
+import { ShiftEnterBr } from '@brickifyio/editor/components/Br';
 import Container from '@brickifyio/editor/components/Container';
 import Em from '@brickifyio/editor/components/Em';
 import Heading from '@brickifyio/editor/components/Heading';
@@ -111,7 +112,7 @@ const Page = () => {
         onChange={(newValue) => { setState(newValue); }}
         bricks={[
           Heading,
-          extend(Paragraph, defaultProps({ component: 'article', bricks: [Em, Strong] })),
+          extend(Paragraph, defaultProps({ component: 'article', bricks: [Em, Strong, ShiftEnterBr] })),
           extend(Container, slots({ children: 'inherit' })),
           Profile,
         ]}
