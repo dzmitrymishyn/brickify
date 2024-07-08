@@ -2,8 +2,7 @@ const isff = typeof navigator !== 'undefined'
   ? navigator.userAgent.toLowerCase().indexOf('firefox') > 0
   : false;
 
-// Special Keys
-const KEY_MAP: Record<string, number | undefined> = {
+const SPECIAL_KEYS: Record<string, number | undefined> = {
   backspace: 8,
   '⌫': 8,
   tab: 9,
@@ -64,7 +63,7 @@ const ctrl: Check = (event: KeyboardEvent) => event.ctrlKey;
 const cmd: Check = (event: KeyboardEvent) => event.metaKey;
 const option: Check = (event: KeyboardEvent) => event.altKey;
 
-const MODIFIERS_CHEKCKERS: Record<string, Check | undefined> = {
+const MODIFIER_CHECKS: Record<string, Check | undefined> = {
   // shiftKey
   '⇧': shift,
   shift,
@@ -101,9 +100,19 @@ export const match = (event: Event, shortcut: string) => {
     return false;
   }
 
-  return splitAndTrim(shortcut, '+')
-    .every((key) => (
-      MODIFIERS_CHEKCKERS[key]?.(event)
-      || (KEY_MAP[key] && code(event) === KEY_MAP[key])
-    ) || code(event) === key.toUpperCase().charCodeAt(0));
+  const keys = splitAndTrim(shortcut, '+');
+  const matchedKeysCount = keys.reduce<number>((acc, key) => {
+    const matched = Boolean(
+      SPECIAL_KEYS[key]
+        ? code(event) === SPECIAL_KEYS[key]
+        : (
+          MODIFIER_CHECKS[key]?.(event)
+          || code(event) === key.toUpperCase().charCodeAt(0)
+        )
+    );
+
+    return acc + (matched ? 1 : 0);
+  }, 0);
+
+  return keys.length === matchedKeysCount;
 };
