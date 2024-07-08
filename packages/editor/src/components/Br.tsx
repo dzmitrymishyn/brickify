@@ -1,4 +1,4 @@
-import { isElementWithinRange } from '@brickifyio/browser/selection';
+import { fromRangeLike, isElementWithinRange } from '@brickifyio/browser/selection';
 import { isText } from '@brickifyio/browser/utils';
 import { compile } from 'css-select';
 import React from 'react';
@@ -10,12 +10,14 @@ import { type HandleCommandOptions } from '../core/commands';
 const Br: React.FC = () => <br />;
 
 const addBr = ({ range, results, element }: HandleCommandOptions) => {
-  const newRange = range();
+  const newRange = fromRangeLike(range());
 
   if (newRange && isElementWithinRange(element, newRange)) {
     const brNode = document.createElement('br');
 
-    newRange.extractContents();
+    // Make sure we'll not lose the range element after extracting the content
+    newRange.collapse(true);
+    range()?.extractContents();
     newRange.insertNode(brNode);
 
     // If we don't have text after the last br node we should add additional
@@ -37,11 +39,7 @@ const addBr = ({ range, results, element }: HandleCommandOptions) => {
 
     range(newRange);
     results({ stopPropagation: true });
-
-    return true;
   }
-
-  return false;
 };
 
 export default extend(

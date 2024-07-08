@@ -1,4 +1,4 @@
-import { getRange, isElementWithinRange } from '@brickifyio/browser/selection';
+import { addRange, getRange, isElementWithinRange } from '@brickifyio/browser/selection';
 import { getFirstDeepLeaf } from '@brickifyio/browser/utils';
 import { useCallback, useEffect, useRef } from 'react';
 
@@ -10,7 +10,7 @@ import {
 import { type ChangesController } from '../changes';
 import { type BeforeAfterRangesController } from '../hooks';
 import { type Logger } from '../logger';
-import { revertDomByMutations, type MutationsController } from '../mutations';
+import { type MutationsController } from '../mutations';
 import assert from 'assert';
 
 type UseCommandControllerOptions = {
@@ -46,17 +46,11 @@ export const useCommandsController = ({
       'useCommandsController: ref should be attached to a node',
     );
 
+    const element = ref.current;
     const handle = (event: KeyboardEvent) => {
       let range = getRange();
-      const startContainer = range?.startContainer;
 
-      if (!startContainer) {
-        return;
-      }
-
-      let current: Node | null = startContainer;
       const results: Record<string, unknown> = {};
-      let hasDomChanges = false;
 
       const getOrUpdateResults: ResultsCallback = (nameOrOptions) => {
         if (typeof nameOrOptions === 'string') {
@@ -76,7 +70,10 @@ export const useCommandsController = ({
       };
 
       changesController.startBatch();
+      mutationsController.clear();
       logger?.log('Command detection is started');
+
+      let current: Node | null = range?.startContainer ?? null;
 
       while (current && range && isElementWithinRange(current, range)) {
         while (current) {
@@ -91,18 +88,16 @@ export const useCommandsController = ({
           break;
         }
 
-        const handler = subscribersRef.current.get(current);
+        const handleCommand = subscribersRef.current.get(current);
 
-        if (handler) {
+        if (handleCommand) {
           try {
-            const hasNewDomChanges = handler({
+            handleCommand({
               event,
               results: getOrUpdateResults,
               range: getOrUpdateRange,
               element: current,
-            }) || false;
-
-            hasDomChanges = hasDomChanges || hasNewDomChanges;
+            });
           } catch (error) {
             logger?.error('Cannot handle keyboard event', error);
           }
@@ -112,22 +107,20 @@ export const useCommandsController = ({
           ?? current.parentNode;
       }
 
-      if (hasDomChanges) {
-        if (range) {
-          rangesController.saveAfter(range);
-        }
+      if (range) {
+        addRange(range);
+      }
+
+      if (mutationsController.handle(mutationsController.clear() ?? [])) {
         logger?.log('Commands were handled. Run apply fn for components');
-        revertDomByMutations(mutationsController.clear() ?? []);
-        mutationsController.clear();
-        changesController.applyBatch();
       } else {
         logger?.log('There are no commands to handle');
-        changesController.endBatch();
       }
+      changesController.applyBatch();
     };
-    const element = ref.current;
 
     element.addEventListener('keydown', handle);
+
     return () => element.removeEventListener('keydown', handle);
   }, [changesController, rangesController, logger, mutationsController]);
 

@@ -7,7 +7,7 @@ import assert from 'assert';
 export type Command<Name extends string> = {
   name: Name;
   shortcuts?: string[];
-  handle?: (options: HandleCommandOptions) => boolean;
+  handle?: (options: HandleCommandOptions) => void;
 };
 
 export type Commands<C extends Command<string>> = {

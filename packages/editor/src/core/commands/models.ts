@@ -18,6 +18,6 @@ export type HandleCommandResults = {
   hasDomChanges: boolean;
 };
 
-export type HandleCommand = (options: HandleCommandOptions) => boolean | void;
+export type HandleCommand = (options: HandleCommandOptions) => void;
 
 

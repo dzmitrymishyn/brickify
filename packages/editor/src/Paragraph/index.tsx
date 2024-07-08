@@ -77,29 +77,23 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
   });
 
   const commandRef = useCommands(flow(
-    (options) => pipe(
-      bricks,
-      A.reduce(false, (hasDomChanges, brick) => {
-        if (!hasShortcuts(brick)) {
-          return hasDomChanges;
-        }
+    (options) => {
+      bricks
+        .flatMap((brick) => (
+          hasShortcuts(brick)
+            ? Object.values(brick.commands)
+            : []
+        ))
+        .forEach(({ handle, shortcuts }) => {
+          const hasMatch = handle && shortcuts?.some(
+            (shortcut) => match(options.event, shortcut),
+          );
 
-        return Object
-          .values(brick.commands)
-          .reduce((hasNewDomChanges, { handle, shortcuts }) => {
-            const hasMatch = handle && shortcuts?.some(
-              (shortcut) => match(options.event, shortcut),
-            );
-
-            if (hasMatch) {
-              return handle(options);
-            }
-
-            return hasNewDomChanges;
-          }, hasDomChanges);
-      }),
-    ),
-    tap(() => emitNewValue(mutationRef.current)),
+          if (hasMatch) {
+            handle(options);
+          }
+        });
+    },
   ));
 
   const ref = useMergedRefs(mutationRef, commandRef, refProp, rootRef);

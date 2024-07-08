@@ -34,8 +34,6 @@ export default extend(
         }
 
         results({ reshape: type });
-
-        return true;
       },
     },
   }),

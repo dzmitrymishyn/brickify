@@ -37,6 +37,84 @@ export const useMutationsController = ({
     mutate: MutationHandler;
   }[]>([]);
 
+  const handle = useCallback((mutations: MutationRecord[]) => {
+    let wereChanges = false;
+    try {
+      const defaultOptions: Mutation = {
+        remove: false,
+        removedNodes: [],
+        addedNodes: [],
+      };
+      const handleOptions = new Map<Node, Mutation>();
+
+      mutations.forEach((mutation) => {
+        mutation.removedNodes.forEach((node) => {
+          if (subscribersRef.current.has(node as HTMLElement)) {
+            const options = handleOptions.get(node)
+              ?? { ...defaultOptions };
+            options.remove = true;
+            handleOptions.set(node, options);
+          }
+        });
+
+        let current: Node | null = mutation.target;
+
+        while (current) {
+          if (subscribersRef.current.has(current as HTMLElement)) {
+            const options = handleOptions.get(current)
+              ?? { ...defaultOptions };
+
+            options.removedNodes.push(
+              ...Array.from(mutation.removedNodes),
+            );
+            options.addedNodes.push(...Array.from(mutation.addedNodes));
+
+            handleOptions.set(current, options);
+          }
+
+          current = current.parentNode ?? null;
+        }
+      });
+
+      handleOptions.forEach(
+        (options, node) => {
+          try {
+            const result = subscribersRef.current.get(
+              node as HTMLElement,
+            )?.(options);
+
+            if (result) {
+              wereChanges = wereChanges || result;
+            }
+          } catch (error) {
+            logger?.error('Current mutation handler was broken', error);
+          }
+        },
+      );
+
+      if (wereChanges) {
+        rangesController.saveAfter();
+        revertDomByMutations(mutations);
+        pipe(
+          rangesController.getBefore(),
+          fromRangeLike,
+          addRange,
+          () => rangesController.clearBefore(),
+        );
+        logger?.log('The DOM was restored since there are mutations');
+      } else {
+        logger?.log(
+          'Mutations were ignored since there are no registered changes',
+        );
+      }
+    } catch (error) {
+      logger?.error('The mutations observer works incorrect', error);
+    } finally {
+      observerRef.current?.takeRecords();
+    }
+    return wereChanges;
+  }, [logger, rangesController]);
+
   useEffect(() => {
     if (hasInheritedContext) {
       return;
@@ -47,87 +125,12 @@ export const useMutationsController = ({
       'useMutationsController: ref should be attached to a node',
     );
 
-    let wereChanges = false;
     const observer = new MutationObserver((mutations) => {
-      wereChanges = false;
-      try {
-        changesController.startBatch();
-        logger?.log(`Mutations were detected at ${Date.now()}`);
-
-        const defaultOptions: Mutation = {
-          remove: false,
-          removedNodes: [],
-          addedNodes: [],
-        };
-        const handleOptions = new Map<Node, Mutation>();
-
-        mutations.forEach((mutation) => {
-          mutation.removedNodes.forEach((node) => {
-            if (subscribersRef.current.has(node as HTMLElement)) {
-              const options = handleOptions.get(node)
-                ?? { ...defaultOptions };
-              options.remove = true;
-              handleOptions.set(node, options);
-            }
-          });
-
-          let current: Node | null = mutation.target;
-
-          while (current) {
-            if (subscribersRef.current.has(current as HTMLElement)) {
-              const options = handleOptions.get(current)
-                ?? { ...defaultOptions };
-
-              options.removedNodes.push(
-                ...Array.from(mutation.removedNodes),
-              );
-              options.addedNodes.push(...Array.from(mutation.addedNodes));
-
-              handleOptions.set(current, options);
-            }
-
-            current = current.parentNode ?? null;
-          }
-        });
-
-        handleOptions.forEach(
-          (options, node) => {
-            try {
-              const result = subscribersRef.current.get(
-                node as HTMLElement,
-              )?.(options);
-
-              if (result) {
-                wereChanges = wereChanges || result;
-              }
-            } catch (error) {
-              logger?.error('Current mutation handler was broken', error);
-            }
-          },
-        );
-
-        if (wereChanges) {
-          rangesController.saveAfter();
-          revertDomByMutations(mutations);
-          pipe(
-            rangesController.getBefore(),
-            fromRangeLike,
-            addRange,
-            () => rangesController.clearBefore(),
-          );
-          logger?.log('The DOM was restored since there are mutations');
-        } else {
-          logger?.log(
-            'Mutations were ignored since there are no registered changes',
-          );
-        }
-      } catch (error) {
-        logger?.error('The mutations observer works incorrect', error);
-      } finally {
-        observer.takeRecords();
-        changesController.applyBatch();
-        logger?.groupEnd?.();
-      }
+      changesController.startBatch();
+      logger?.log(`Mutations were detected at ${Date.now()}`);
+      handle(mutations);
+      changesController.applyBatch();
+      logger?.groupEnd?.();
     });
 
     observer.observe(ref.current, {
@@ -142,7 +145,7 @@ export const useMutationsController = ({
     observerRef.current = observer;
 
     return () => observer.disconnect();
-  }, [hasInheritedContext, rangesController, changesController, logger]);
+  }, [hasInheritedContext, changesController, logger, handle]);
 
   const subscribe = useCallback(
     (element: HTMLElement, mutate: MutationHandler) => {
@@ -181,6 +184,7 @@ export const useMutationsController = ({
   return {
     subscribe,
     clear,
+    handle,
     ref,
   };
 };
