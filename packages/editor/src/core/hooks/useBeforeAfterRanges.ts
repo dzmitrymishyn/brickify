@@ -5,7 +5,6 @@ import {
   type RangeLike,
   toCustomRange,
 } from '@brickifyio/browser/selection';
-import { pipe } from 'fp-ts/lib/function';
 import { useMemo, useRef } from 'react';
 
 export const useBeforeAfterRanges = () => {
@@ -25,11 +24,8 @@ export const useBeforeAfterRanges = () => {
     clearBefore() {
       ranges.current.before = undefined;
     },
-    saveAfter() {
-      ranges.current.after = pipe(
-        getRange(),
-        toCustomRange(ref.current!),
-      );
+    saveAfter(range = getRange()) {
+      ranges.current.after = toCustomRange(ref.current!)(range);
     },
     getBefore() {
       return ranges.current.before;

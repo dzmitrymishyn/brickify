@@ -5,8 +5,9 @@ import { clearNodes } from './clearNodes';
 import { type Component } from './models';
 import { prepareRange } from './prepareRange';
 import { wrapToNode } from './wrapToNode';
-import { createRange } from '../selection';
+import { createRange, isElementWithinRange } from '../selection';
 import { getSibling } from '../traverse';
+import { getFirstDeepLeaf, getLastDeepLeaf, isText } from '../utils';
 
 const surroundAscendedUntilPath = (
   startNode: Node,
@@ -57,8 +58,45 @@ const surroundAscendedUntilPath = (
 export const surround = (
   component: Component,
   inputRange: Range,
+  container?: HTMLElement | null,
 ) => (inputRange.collapsed ? inputRange : pipe(
-  prepareRange(inputRange),
+  container,
+  () => {
+    if (!container) {
+      return inputRange;
+    }
+
+    const firstNode = getFirstDeepLeaf(container)!;
+    const lastNode = getLastDeepLeaf(container)!;
+
+    const newRange = new Range();
+
+    if (isElementWithinRange(firstNode, inputRange)) {
+      newRange.setStart(
+        firstNode,
+        firstNode === inputRange.startContainer ? inputRange.startOffset : 0,
+      );
+    } else {
+      newRange.setStart(inputRange.startContainer, inputRange.startOffset);
+    }
+
+    if (isElementWithinRange(lastNode, inputRange)) {
+      newRange.setEnd(
+        lastNode,
+        // eslint-disable-next-line no-nested-ternary -- test
+        lastNode === inputRange.endContainer
+          ? inputRange.endOffset
+          : isText(lastNode)
+            ? lastNode.textContent?.length ?? 0
+            : lastNode.childNodes.length - 1,
+      );
+    } else {
+      newRange.setEnd(inputRange.endContainer, inputRange.endOffset);
+    }
+
+    return newRange;
+  },
+  prepareRange,
   ({ startContainer, endContainer, commonAncestorContainer }) => pipe(
     I.Do,
     I.bind('start', () => surroundAscendedUntilPath(

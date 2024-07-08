@@ -50,3 +50,17 @@ export const addRange = flow(
   }),
   O.getOrElse(() => false),
 );
+
+export const isElementWithinRange = (element: Node, range: Range) => {
+  if (isText(element)) {
+    return (
+      range.comparePoint(element, 0) <= 0 &&
+      range.comparePoint(element, element.textContent?.length ?? 0) >= 0
+    );
+  }
+
+  return (
+    range.comparePoint(element, 0) <= 0 &&
+    range.comparePoint(element, element.childNodes.length) >= 0
+  );
+};

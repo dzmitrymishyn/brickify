@@ -3,24 +3,24 @@ import { pipe } from 'fp-ts/lib/function';
 import { useCallback, useEffect, useRef } from 'react';
 
 import {
+  type Mutation,
   type MutationHandler,
-  type MutationMutate,
 } from './mutations';
 import { revertDomByMutations } from './revertDomByMutations';
+import { type ChangesController } from '../changes';
 import { type BeforeAfterRangesController } from '../hooks/useBeforeAfterRanges';
 import { useBrickContextUnsafe } from '../hooks/useBrickContext';
-import { type BrickState } from '../hooks/useBrickState';
 import { type Logger } from '../logger';
 
 type UseMutationsControllerOptions = {
-  rangesController: BeforeAfterRangesController,
-  state: BrickState,
+  rangesController: BeforeAfterRangesController;
+  changesController: ChangesController;
   logger?: Logger;
 };
 
 export const useMutationsController = ({
   rangesController,
-  state,
+  changesController,
   logger,
 }: UseMutationsControllerOptions) => {
   const inheritedContext = useBrickContextUnsafe();
@@ -47,25 +47,14 @@ export const useMutationsController = ({
       try {
         logger?.group?.(`Mutations were detected at ${Date.now()}`);
 
-        state.updateChangesState('browser');
-        sortedElements.current.forEach(({ mutate }) => {
-          try {
-            mutate({ type: 'before' });
-          } catch (error) {
-            logger?.error(
-              'Something was broken before mutations handler',
-              error,
-            );
-          }
-        });
+        changesController.startBatch();
 
-        const defaultOptions: MutationMutate = {
+        const defaultOptions: Mutation = {
           remove: false,
           removedNodes: [],
           addedNodes: [],
-          type: 'mutate',
         };
-        const handleOptions = new Map<Node, MutationMutate>();
+        const handleOptions = new Map<Node, Mutation>();
 
         mutations.forEach((mutation) => {
           mutation.removedNodes.forEach((node) => {
@@ -112,17 +101,6 @@ export const useMutationsController = ({
           },
         );
 
-        sortedElements.current.forEach(({ mutate }) => {
-          try {
-            mutate({ type: 'after' });
-          } catch (error) {
-            logger?.error(
-              'Something was broken after mutations handler',
-              error,
-            );
-          }
-        });
-
         if (wereChanges) {
           rangesController.saveAfter();
           revertDomByMutations(mutations);
@@ -142,7 +120,7 @@ export const useMutationsController = ({
         logger?.error('The mutations observer works incorrect', error);
       } finally {
         observer.takeRecords();
-        state.updateChangesState('interaction');
+        changesController.applyBatch();
         logger?.groupEnd?.();
       }
     });
@@ -159,7 +137,7 @@ export const useMutationsController = ({
     observerRef.current = observer;
 
     return () => observer.disconnect();
-  }, [hasInheritedContext, rangesController, state, logger]);
+  }, [hasInheritedContext, rangesController, changesController, logger]);
 
   const subscribe = useCallback(
     (element: HTMLElement, mutate: MutationHandler) => {

@@ -19,8 +19,8 @@ export const useDisallowHotkeys = (disallowList: string[] = []) => {
         return false;
       });
     };
-    element.addEventListener('keydown', handleKeydown);
 
+    element.addEventListener('keydown', handleKeydown);
     return () => element.removeEventListener('keydown', handleKeydown);
   }, [disallowList]);
 

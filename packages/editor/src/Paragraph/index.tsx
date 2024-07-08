@@ -1,9 +1,14 @@
+import { match } from '@brickifyio/browser/hotkeys';
+import { tap } from '@brickifyio/operators';
+import * as A from 'fp-ts/lib/Array';
+import { flow, pipe } from 'fp-ts/lib/function';
 import { parseDocument } from 'htmlparser2';
 import {
   type ElementType,
   forwardRef,
   type ReactNode,
   type RefObject,
+  useCallback,
   useMemo,
   useRef,
 } from 'react';
@@ -15,6 +20,8 @@ import {
   type PropsWithBrick,
   type PropsWithChange,
 } from '../bricks';
+import { hasShortcuts } from '../bricks/utils/shortcuts';
+import { useCommands } from '../core/commands';
 import { useBrickContext } from '../core/hooks/useBrickContext';
 import { useMutation } from '../core/mutations/useMutation';
 import useMergedRefs from '../Editor/useMergedRef';
@@ -35,8 +42,9 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
   component: Component = 'div',
   onChange,
 }, refProp) => {
+  const rootRef = useRef<HTMLElement>(null);
   const oldComponents = useRef<ReactNode>();
-  const { state } = useBrickContext();
+  const { editable } = useBrickContext();
 
   const domToReact = useMemo(() => domToReactFactory(
     bricks,
@@ -47,29 +55,54 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
     [value, domToReact],
   );
 
-  const mutationRef: RefObject<HTMLElement> = useMutation({
-    mutate: ({ remove }) => {
-      if (remove) {
-        return onChange?.({ type: 'remove' });
-      }
+  const emitNewValue = useCallback((element?: HTMLElement | null) => {
+    const newHtml = element?.innerHTML ?? '&nbsp;';
 
-      // const newHtml = mutationRef.current?.children[0]?.innerHTML ?? '';
-      const newHtml = mutationRef.current?.innerHTML ?? '&nbsp;';
+    const formattedHtml = /^.&nbsp;$/.test(newHtml)
+      ? newHtml[0]
+      : newHtml;
 
-      const formattedHtml = /^.&nbsp;$/.test(newHtml)
-        ? newHtml[0]
-        : newHtml;
+    return onChange?.({
+      type: 'update',
+      value: formattedHtml === '<br>' ? '&nbsp;' : formattedHtml,
+    });
+  }, [onChange]);
 
-      return onChange?.({
-        type: 'update',
-        value: formattedHtml === '<br>' ? '&nbsp;' : formattedHtml,
-      });
-    },
+  const mutationRef: RefObject<HTMLElement> = useMutation(({ remove }) => {
+    if (remove) {
+      return onChange?.({ type: 'remove' });
+    }
+
+    return emitNewValue(mutationRef.current);
   });
 
-  // useCommands(() => console.log('handle'));
+  const commandRef = useCommands(flow(
+    (options) => pipe(
+      bricks,
+      A.reduce(false, (hasDomChanges, brick) => {
+        if (!hasShortcuts(brick)) {
+          return hasDomChanges;
+        }
 
-  const ref = useMergedRefs(mutationRef, refProp);
+        return Object
+          .values(brick.commands)
+          .reduce((hasNewDomChanges, { handle, shortcuts }) => {
+            const hasMatch = handle && shortcuts?.some(
+              (shortcut) => match(options.event, shortcut),
+            );
+
+            if (hasMatch) {
+              return handle(options);
+            }
+
+            return hasNewDomChanges;
+          }, hasDomChanges);
+      }),
+    ),
+    tap(() => emitNewValue(mutationRef.current)),
+  ));
+
+  const ref = useMergedRefs(mutationRef, commandRef, refProp, rootRef);
 
   oldComponents.current = <>{components}</>;
 
@@ -77,7 +110,7 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
     <Component
       data-brick="paragraph"
       ref={ref}
-      {...state().editable && {
+      {...editable && {
         contentEditable: true,
         suppressContentEditableWarning: true,
       }}

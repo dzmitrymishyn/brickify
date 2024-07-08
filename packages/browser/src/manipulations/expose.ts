@@ -6,9 +6,9 @@ import { clearSiblings } from './clearSiblings';
 import { type Component } from './models';
 import { prepareRange } from './prepareRange';
 import { wrapToNode } from './wrapToNode';
-import { createRange } from '../selection';
+import { createRange, isElementWithinRange } from '../selection';
 import { getSibling } from '../traverse';
-import { createPath } from '../utils';
+import { createPath, getFirstDeepLeaf, getLastDeepLeaf } from '../utils';
 
 const exposeSiblings = (
   component: Component,
@@ -86,7 +86,32 @@ export const expose = (
   inputRange: Range,
   container?: HTMLElement | null,
 ) => (inputRange.collapsed ? inputRange : pipe(
-  prepareRange(inputRange),
+  container,
+  () => {
+    if (!container) {
+      return inputRange;
+    }
+
+    const firstNode = getFirstDeepLeaf(container)!;
+    const lastNode = getLastDeepLeaf(container)!;
+
+    const newRange = new Range();
+
+    if (isElementWithinRange(firstNode, inputRange)) {
+      newRange.setStart(firstNode, inputRange.startOffset);
+    } else {
+      newRange.setStart(inputRange.startContainer, inputRange.startOffset);
+    }
+
+    if (isElementWithinRange(lastNode, inputRange)) {
+      newRange.setEnd(lastNode, inputRange.endOffset);
+    } else {
+      newRange.setEnd(inputRange.endContainer, inputRange.endOffset);
+    }
+
+    return newRange;
+  },
+  prepareRange,
   ({ startContainer, endContainer }) => ({ startContainer, endContainer }),
   I.bind('leftPath', ({ startContainer }) =>
     createPath(startContainer, container)),

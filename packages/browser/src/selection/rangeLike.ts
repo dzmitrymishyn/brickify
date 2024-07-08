@@ -32,12 +32,12 @@ export const fromRangeLike = flow(
 );
 
 export const toRangeLike = flow(
-  O.fromNullable<RangeLike | null | undefined>,
-  O.map((rangeLike: RangeLike) => {
-    const range = new Range();
-    range.setStart(rangeLike.startContainer, rangeLike.startOffset);
-    range.setEnd(rangeLike.endContainer, rangeLike.endOffset);
-    return range;
-  }),
+  O.fromNullable<Range | null | undefined>,
+  O.map(({ startContainer, startOffset, endContainer, endOffset}) => ({
+    startContainer,
+    startOffset,
+    endContainer,
+    endOffset,
+  })),
   O.toNullable,
 );

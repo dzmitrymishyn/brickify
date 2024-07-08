@@ -1,29 +1,17 @@
 import {
   type RefObject,
-  useCallback,
   useEffect,
   useRef,
 } from 'react';
 
 import {
   type MutationHandler,
-  type MutationMutate,
 } from './mutations';
 import { useBrickContext } from '../hooks/useBrickContext';
 import assert from 'assert';
 
-type Options = Partial<{
-  after: () => void;
-  before: () => void;
-  /**
-   * Return value notify do we need to restore the DOM. If no return Falsy
-   * value
-   */
-  mutate: (mutation: MutationMutate) => unknown;
-}>;
-
 export const useMutation = <Element extends HTMLElement>(
-  mutations: Options,
+  mutate: MutationHandler,
 ): RefObject<Element> => {
   const { subscribeMutation } = useBrickContext();
 
@@ -32,27 +20,18 @@ export const useMutation = <Element extends HTMLElement>(
     'You cannot subscribe on new mutations without the context',
   );
 
-  const mutationsRef = useRef(mutations);
+  const mutateRef = useRef(mutate);
   const ref = useRef<Element>(null);
 
-  mutationsRef.current = mutations;
-
-  const mutate = useCallback<MutationHandler>(
-    (mutation) => {
-      if (mutation.type === 'mutate') {
-        return mutationsRef.current[mutation.type]?.(mutation);
-      }
-      return mutationsRef.current[mutation.type]?.();
-    },
-    [],
-  );
+  mutateRef.current = mutate;
 
   useEffect(() => {
-    if (!ref.current) {
-      return;
-    }
+    assert(ref.current, 'useMutation: ref should be attached to a node');
 
-    return subscribeMutation(ref.current, mutate);
+    return subscribeMutation(
+      ref.current,
+      (mutation) => mutateRef.current?.(mutation),
+    );
   }, [mutate, subscribeMutation]);
 
   return ref;

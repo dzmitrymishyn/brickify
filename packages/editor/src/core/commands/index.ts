@@ -1,1 +1,2 @@
-export * from './useCommand';
+export * from './models';
+export * from './useCommands';

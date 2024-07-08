@@ -1,11 +1,9 @@
-import { expose, reshape, surround } from '@brickifyio/browser/manipulations';
+import { reshape } from '@brickifyio/browser/manipulations';
 import { compile } from 'css-select';
 import React, { type PropsWithChildren } from 'react';
 
 import { extend } from '../bricks';
-import { type Command, type Commands } from '../core/commands';
-
-type EmCommand = Command<'reshape'>;
+import { shortcuts } from '../bricks/utils/shortcuts';
 
 const Em: React.FC<PropsWithChildren> = ({ children }) => (
   <em>{children}</em>
@@ -14,29 +12,32 @@ const Em: React.FC<PropsWithChildren> = ({ children }) => (
 export default extend(
   Em,
   { is: compile('em') },
-  {
-    commands: {
-      reshape: {
-        shortcut: ['ctrl + i', 'cmd + i'],
-        handle: reshape.bind(null, {
-          selector: 'em',
-          create: () => document.createElement('em'),
-        }),
+  shortcuts({
+    reshape: {
+      shortcuts: ['ctrl + i', 'cmd + i'],
+      handle: ({ range, element, results }) => {
+        const previousReshape = results('reshape');
+
+        const { type, range: newRange } = reshape(
+          {
+            selector: 'em',
+            create: () => document.createElement('em'),
+          },
+          range()!,
+          element as HTMLElement,
+          previousReshape as 'expose' | 'surround',
+        );
+
+        if (newRange) {
+          range(newRange);
+        }
+
+        results({ reshape: type });
+
+        return true;
       },
-      surround: {
-        handle: surround.bind(null, {
-          selector: 'em',
-          create: () => document.createElement('em'),
-        }),
-      },
-      expose: {
-        handle: expose.bind(null, {
-          selector: 'em',
-          create: () => document.createElement('em'),
-        }),
-      },
-    } as Commands<EmCommand>,
-  },
+    },
+  }),
 );
 
 // /**

@@ -11,12 +11,10 @@ import { useMutation } from '../core';
 type Props = PropsWithChildren & PropsWithBrick & PropsWithChange;
 
 const Container: React.FC<Props> = ({ children, onChange }) => {
-  const mutationRef = useMutation<HTMLDivElement>({
-    mutate({ remove }) {
-      if (remove) {
-        return onChange?.({ type: 'remove' });
-      }
-    },
+  const mutationRef = useMutation<HTMLDivElement>(({ remove }) => {
+    if (remove) {
+      return onChange?.({ type: 'remove' });
+    }
   });
 
   return (

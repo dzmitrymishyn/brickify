@@ -2,7 +2,6 @@ import { type Node, patch } from '@brickifyio/utils/slots-tree';
 import { pipe } from 'fp-ts/lib/function';
 import {
   forwardRef,
-  type RefObject,
   useCallback,
   useRef,
 } from 'react';
@@ -14,9 +13,9 @@ import {
 } from '../bricks';
 import {
   type Change,
+  useBatchChanges,
   useBrickContext,
   useLogger,
-  useMutation,
   withBrickContext,
 } from '../core';
 
@@ -32,7 +31,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   bricks = [],
   onChange,
 }, refProp) => {
-  const { state } = useBrickContext();
+  const { editable, changes: changesController } = useBrickContext();
   const logger = useLogger();
   const editorChangesRef = useRef<Change[]>([]);
   const onChangeRef = useRef<(value: unknown) => void>();
@@ -58,7 +57,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
       return;
     }
 
-    if (state().changes === 'interaction') {
+    if (changesController.state() === 'interaction') {
       emitChange(changes, treeRef.current ?? undefined);
       return;
     }
@@ -67,20 +66,20 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
     return changes;
   });
 
-  const mutationRef: RefObject<HTMLElement> = useMutation({
-    after: () => {
+  const batchChangesRef = useBatchChanges({
+    apply: () => {
       emitChange(editorChangesRef.current, treeRef.current ?? undefined);
       editorChangesRef.current = [];
     },
   });
 
-  const ref = useMergedRefs(mutationRef, refProp);
+  const ref = useMergedRefs(batchChangesRef, refProp);
 
   return (
     <div
       ref={ref}
       data-brick="editor"
-      {...state().editable && {
+      {...editable && {
         contentEditable: true,
         suppressContentEditableWarning: true,
       }}

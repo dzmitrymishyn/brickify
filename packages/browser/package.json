@@ -4,7 +4,8 @@
   "exports": {
     "./hotkeys": "./hotkeys",
     "./manipulations": "./manipulations",
-    "./selection": "./selection"
+    "./selection": "./selection",
+    "./utils": "./utils"
   },
   "scripts": {
     "lint": "eslint .",

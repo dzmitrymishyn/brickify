@@ -8,8 +8,9 @@ import {
 
 import { BrickContext } from './BrickContext';
 import useMergedRefs from '../../Editor/useMergedRef';
+import { useChangesController } from '../changes';
+import { useCommandsController } from '../commands/useCommandsController';
 import { useBeforeAfterRanges } from '../hooks/useBeforeAfterRanges';
-import { useBrickState } from '../hooks/useBrickState';
 import { useDisallowHotkeys } from '../hooks/useDisallowHotkeys';
 import { useRangeSaver } from '../hooks/useRangeSaver';
 import { EmptyLogger, type Logger } from '../logger';
@@ -36,10 +37,10 @@ export function withBrickContext<P extends { value: object }>(
 ) {
   const WithBrickContext: React.FC<P & Props> = ({
     logger = EmptyLogger,
-    editable: initialEditable = false,
+    editable = false,
     ...props
   }) => {
-    const state = useBrickState(initialEditable);
+    const changesController = useChangesController();
     const [rangesControllerRef, rangesController] = useBeforeAfterRanges();
     const rangeSaverElementRef = useRangeSaver(rangesController);
     const disalowKeyboardRef = useDisallowHotkeys(metaKeyDisallowList);
@@ -47,11 +48,18 @@ export function withBrickContext<P extends { value: object }>(
       ref: mutationsRef,
       subscribe: subscribeMutation,
       clear: clearMutations,
-    } = useMutationsController({ rangesController, state, logger });
+    } = useMutationsController({
+      rangesController,
+      changesController,
+      logger,
+    });
+    const {
+      subscribe: subscribeCommand,
+    } = useCommandsController({ changesController, rangesController });
 
     // When the value is updated we need to clear our MutationsArray.
     // It will be performed after all the React's mutations in the DOM.
-    useEffect(clearMutations, [props.value, clearMutations]);
+    useEffect(clearMutations, [props.value, clearMutations, editable]);
     useEffect(function restoreRange() {
       pipe(rangesController.getAfter(), fromCustomRange, addRange);
     }, [rangesController, props.value]);
@@ -59,13 +67,17 @@ export function withBrickContext<P extends { value: object }>(
     const contextValue = useMemo(() => ({
       logger,
       ranges: rangesController,
+      changes: changesController,
       subscribeMutation,
-      state: state.get,
+      subscribeCommand,
+      editable,
     }), [
       logger,
+      changesController,
       subscribeMutation,
-      state,
+      subscribeCommand,
       rangesController,
+      editable,
     ]);
 
     const ref = useMergedRefs(

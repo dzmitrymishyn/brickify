@@ -1,3 +1,5 @@
+import { type ChangesController } from '../changes';
+import { type HandleCommand } from '../commands';
 import {
   type BeforeAfterRangesController,
 } from '../hooks/useBeforeAfterRanges';
@@ -16,10 +18,13 @@ export type BrickContextType = {
 
   ranges: BeforeAfterRangesController;
 
-  state: () => {
-    changes: 'interaction' | 'browser';
-    editable: boolean;
-  };
+  editable: boolean;
+  // state: () => {
+  //   changes: 'interaction' | 'batch';
+  //   editable: boolean;
+  // };
 
+  changes: ChangesController;
   subscribeMutation: ElementSubscribe<(mutation: Mutation) => void>;
+  subscribeCommand: ElementSubscribe<HandleCommand>;
 };
