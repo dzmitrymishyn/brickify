@@ -55,18 +55,18 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
     [value, domToReact],
   );
 
-  const emitNewValue = useCallback((element?: HTMLElement | null) => {
-    const newHtml = element?.innerHTML ?? '&nbsp;';
-
-    const formattedHtml = /^.&nbsp;$/.test(newHtml)
-      ? newHtml[0]
-      : newHtml;
-
-    return onChange?.({
-      type: 'update',
-      value: formattedHtml === '<br>' ? '&nbsp;' : formattedHtml,
-    });
-  }, [onChange]);
+  const emitNewValue = useCallback(
+    (element?: HTMLElement | null) => pipe(
+      element?.innerHTML ?? '&nbsp;',
+      (html) => /^.&nbsp;$/.test(html) ? html[0] : html,
+      (html) => html === '<br>' ? '&nbsp;' : html,
+      (newValue) => newValue === value ? undefined : onChange?.({
+        type: 'update',
+        value: newValue,
+      })
+    ),
+    [onChange, value],
+  );
 
   const mutationRef: RefObject<HTMLElement> = useMutation(({ remove }) => {
     if (remove) {

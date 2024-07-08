@@ -9,7 +9,7 @@ export const useBrickContextUnsafe = () => useContext(BrickContext);
 export const useBrickContext = () => {
   const context = useBrickContextUnsafe();
 
-  assert(context, 'Brick context should be specify');
+  assert(context, 'Brick context should be specified');
 
   return context;
 };

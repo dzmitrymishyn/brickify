@@ -40,7 +40,7 @@ export function withBrickContext<P extends { value: object }>(
     editable = false,
     ...props
   }) => {
-    const changesController = useChangesController();
+    const changesController = useChangesController({ logger });
     const [rangesControllerRef, rangesController] = useBeforeAfterRanges();
     const rangeSaverElementRef = useRangeSaver(rangesController);
     const disalowKeyboardRef = useDisallowHotkeys(metaKeyDisallowList);
@@ -55,7 +55,8 @@ export function withBrickContext<P extends { value: object }>(
     });
     const {
       subscribe: subscribeCommand,
-    } = useCommandsController({ changesController, rangesController });
+      ref: commandsRef,
+    } = useCommandsController({ changesController, rangesController, logger });
 
     // When the value is updated we need to clear our MutationsArray.
     // It will be performed after all the React's mutations in the DOM.
@@ -85,6 +86,7 @@ export function withBrickContext<P extends { value: object }>(
       rangeSaverElementRef,
       mutationsRef,
       disalowKeyboardRef,
+      commandsRef,
     );
 
     return (

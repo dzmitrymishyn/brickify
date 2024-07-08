@@ -11,6 +11,7 @@ import { type ChangesController } from '../changes';
 import { type BeforeAfterRangesController } from '../hooks/useBeforeAfterRanges';
 import { useBrickContextUnsafe } from '../hooks/useBrickContext';
 import { type Logger } from '../logger';
+import assert from 'assert';
 
 type UseMutationsControllerOptions = {
   rangesController: BeforeAfterRangesController;
@@ -37,17 +38,21 @@ export const useMutationsController = ({
   }[]>([]);
 
   useEffect(() => {
-    if (hasInheritedContext || !ref.current) {
+    if (hasInheritedContext) {
       return;
     }
+
+    assert(
+      ref.current,
+      'useMutationsController: ref should be attached to a node',
+    );
 
     let wereChanges = false;
     const observer = new MutationObserver((mutations) => {
       wereChanges = false;
       try {
-        logger?.group?.(`Mutations were detected at ${Date.now()}`);
-
         changesController.startBatch();
+        logger?.log(`Mutations were detected at ${Date.now()}`);
 
         const defaultOptions: Mutation = {
           remove: false,

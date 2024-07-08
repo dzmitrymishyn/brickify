@@ -14,16 +14,10 @@ type ElementSubscribe<Fn> = (
 ) => Unsubscribe;
 
 export type BrickContextType = {
-  logger: Logger;
-
-  ranges: BeforeAfterRangesController;
-
   editable: boolean;
-  // state: () => {
-  //   changes: 'interaction' | 'batch';
-  //   editable: boolean;
-  // };
 
+  logger: Logger;
+  ranges: BeforeAfterRangesController;
   changes: ChangesController;
   subscribeMutation: ElementSubscribe<(mutation: Mutation) => void>;
   subscribeCommand: ElementSubscribe<HandleCommand>;

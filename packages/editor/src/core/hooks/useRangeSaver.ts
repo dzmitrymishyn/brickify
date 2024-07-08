@@ -2,18 +2,20 @@ import { useEffect, useRef } from 'react';
 
 import { type BeforeAfterRangesController } from './useBeforeAfterRanges';
 import { useBrickContextUnsafe } from './useBrickContext';
+import assert from 'assert';
 
 export const useRangeSaver = (
   rangesController: BeforeAfterRangesController,
 ) => {
-  const inheritedContext = useBrickContextUnsafe();
-  const hasInheritedContext = Boolean(inheritedContext);
+  const hasInheritedContext = Boolean(useBrickContextUnsafe());
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (!ref.current || hasInheritedContext) {
+    if (hasInheritedContext) {
       return;
     }
+
+    assert(ref.current, 'useRangeSaver: ref should be attached to a node');
 
     const element: Element = ref.current;
     const events = [

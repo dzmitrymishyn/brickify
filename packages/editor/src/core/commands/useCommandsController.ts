@@ -9,16 +9,21 @@ import {
 } from './models';
 import { type ChangesController } from '../changes';
 import { type BeforeAfterRangesController } from '../hooks';
+import { type Logger } from '../logger';
+import assert from 'assert';
 
 type UseCommandControllerOptions = {
   changesController: ChangesController;
   rangesController: BeforeAfterRangesController;
+  logger?: Logger;
 };
 
 export const useCommandsController = ({
   changesController,
   rangesController,
+  logger,
 }: UseCommandControllerOptions) => {
+  const ref = useRef<HTMLElement>(null);
   const subscribersRef = useRef(new Map<Node, HandleCommand>());
 
   const subscribe = useCallback((
@@ -33,6 +38,11 @@ export const useCommandsController = ({
   }, []);
 
   useEffect(() => {
+    assert(
+      ref.current,
+      'useCommandsController: ref should be attached to a node',
+    );
+
     const handle = (event: KeyboardEvent) => {
       let range = getRange();
       const startContainer = range?.startContainer;
@@ -63,6 +73,7 @@ export const useCommandsController = ({
       };
 
       changesController.startBatch();
+      logger?.log('Command detection is started');
 
       while (current && range && isElementWithinRange(current, range)) {
         while (current) {
@@ -80,14 +91,18 @@ export const useCommandsController = ({
         const handler = subscribersRef.current.get(current);
 
         if (handler) {
-          const hasNewDomChanges = handler({
-            event,
-            results: getOrUpdateResults,
-            range: getOrUpdateRange,
-            element: current,
-          }) || false;
+          try {
+            const hasNewDomChanges = handler({
+              event,
+              results: getOrUpdateResults,
+              range: getOrUpdateRange,
+              element: current,
+            }) || false;
 
-          hasDomChanges = hasDomChanges || hasNewDomChanges;
+            hasDomChanges = hasDomChanges || hasNewDomChanges;
+          } catch (error) {
+            logger?.error('Cannot handle keyboard event', error);
+          }
         }
 
         current = getFirstDeepLeaf(current.nextSibling)
@@ -98,15 +113,18 @@ export const useCommandsController = ({
         if (range) {
           rangesController.saveAfter(range);
         }
-
+        logger?.log('Commands were handled. Run apply fn for components');
         changesController.applyBatch();
+      } else {
+        logger?.log('There are no commands to handle');
+        changesController.endBatch();
       }
     };
-    window.addEventListener('keydown', handle);
-    return () => window.removeEventListener('keydown', handle);
-  }, [changesController, rangesController]);
+    const element = ref.current;
 
-  return {
-    subscribe,
-  };
+    element.addEventListener('keydown', handle);
+    return () => element.removeEventListener('keydown', handle);
+  }, [changesController, rangesController, logger]);
+
+  return { subscribe, ref };
 };
