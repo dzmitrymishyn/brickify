@@ -44,23 +44,26 @@ export function withBrickContext<P extends { value: object }>(
     const [rangesControllerRef, rangesController] = useBeforeAfterRanges();
     const rangeSaverElementRef = useRangeSaver(rangesController);
     const disalowKeyboardRef = useDisallowHotkeys(metaKeyDisallowList);
-    const {
-      ref: mutationsRef,
-      subscribe: subscribeMutation,
-      clear: clearMutations,
-    } = useMutationsController({
+    const mutationsController = useMutationsController({
       rangesController,
       changesController,
       logger,
     });
-    const {
-      subscribe: subscribeCommand,
-      ref: commandsRef,
-    } = useCommandsController({ changesController, rangesController, logger });
+    const commandsController = useCommandsController({
+      changesController,
+      rangesController,
+      logger,
+      mutationsController,
+    });
 
     // When the value is updated we need to clear our MutationsArray.
     // It will be performed after all the React's mutations in the DOM.
-    useEffect(clearMutations, [props.value, clearMutations, editable]);
+    useEffect(
+      () => {
+        mutationsController.clear();
+      },
+      [props.value, mutationsController, editable]
+    );
     useEffect(function restoreRange() {
       pipe(rangesController.getAfter(), fromCustomRange, addRange);
     }, [rangesController, props.value]);
@@ -69,14 +72,14 @@ export function withBrickContext<P extends { value: object }>(
       logger,
       ranges: rangesController,
       changes: changesController,
-      subscribeMutation,
-      subscribeCommand,
+      subscribeMutation: mutationsController.subscribe,
+      subscribeCommand: commandsController.subscribe,
       editable,
     }), [
       logger,
       changesController,
-      subscribeMutation,
-      subscribeCommand,
+      mutationsController.subscribe,
+      commandsController.subscribe,
       rangesController,
       editable,
     ]);
@@ -84,9 +87,9 @@ export function withBrickContext<P extends { value: object }>(
     const ref = useMergedRefs(
       rangesControllerRef,
       rangeSaverElementRef,
-      mutationsRef,
+      mutationsController.ref,
       disalowKeyboardRef,
-      commandsRef,
+      commandsController.ref,
     );
 
     return (

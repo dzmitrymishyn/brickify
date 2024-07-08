@@ -175,7 +175,7 @@ export const useMutationsController = ({
   );
 
   const clear = useCallback(() => {
-    observerRef.current?.takeRecords();
+    return observerRef.current?.takeRecords();
   }, []);
 
   return {
@@ -184,3 +184,5 @@ export const useMutationsController = ({
     ref,
   };
 };
+
+export type MutationsController = ReturnType<typeof useMutationsController>;

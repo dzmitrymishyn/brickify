@@ -10,17 +10,20 @@ import {
 import { type ChangesController } from '../changes';
 import { type BeforeAfterRangesController } from '../hooks';
 import { type Logger } from '../logger';
+import { revertDomByMutations, type MutationsController } from '../mutations';
 import assert from 'assert';
 
 type UseCommandControllerOptions = {
   changesController: ChangesController;
   rangesController: BeforeAfterRangesController;
+  mutationsController: MutationsController;
   logger?: Logger;
 };
 
 export const useCommandsController = ({
   changesController,
   rangesController,
+  mutationsController,
   logger,
 }: UseCommandControllerOptions) => {
   const ref = useRef<HTMLElement>(null);
@@ -114,6 +117,8 @@ export const useCommandsController = ({
           rangesController.saveAfter(range);
         }
         logger?.log('Commands were handled. Run apply fn for components');
+        revertDomByMutations(mutationsController.clear() ?? []);
+        mutationsController.clear();
         changesController.applyBatch();
       } else {
         logger?.log('There are no commands to handle');
@@ -124,7 +129,7 @@ export const useCommandsController = ({
 
     element.addEventListener('keydown', handle);
     return () => element.removeEventListener('keydown', handle);
-  }, [changesController, rangesController, logger]);
+  }, [changesController, rangesController, logger, mutationsController]);
 
   return { subscribe, ref };
 };
