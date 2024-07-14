@@ -1,4 +1,4 @@
-import { defaultProps, displayName, extend } from '../bricks';
+import { defaultProps, displayName, extend } from '../core';
 import Paragraph from '../Paragraph';
 
 export default extend(

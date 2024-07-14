@@ -3,8 +3,7 @@ import { isText } from '@brickifyio/browser/utils';
 import { compile } from 'css-select';
 import React from 'react';
 
-import { extend } from '../bricks';
-import { shortcuts } from '../bricks/utils/shortcuts';
+import { extend, shortcuts } from '../core';
 import { type HandleCommandOptions } from '../core/commands';
 
 const Br: React.FC = () => <br />;

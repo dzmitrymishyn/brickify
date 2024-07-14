@@ -1,6 +1,6 @@
 import { type FC, forwardRef } from 'react';
 
-import { type Component } from '../brick';
+import { type Component } from '../../bricks';
 
 /* eslint @typescript-eslint/no-explicit-any: off -- it's ok */
 export const extend = <C extends Component<any>, Parts extends object[]>(

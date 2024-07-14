@@ -4,17 +4,13 @@
 /* eslint no-unused-vars: off -- TODO: check */
 /* eslint @typescript-eslint/no-unused-vars: off -- TODO: check */
 
-import {
-  defaultProps,
-  extend,
-  slots,
-} from '@brickifyio/editor/bricks';
 import { ShiftEnterBr } from '@brickifyio/editor/components/Br';
 import Container from '@brickifyio/editor/components/Container';
 import Em from '@brickifyio/editor/components/Em';
 import Heading from '@brickifyio/editor/components/Heading';
 import Profile from '@brickifyio/editor/components/Profile';
 import Strong from '@brickifyio/editor/components/Strong';
+import { defaultProps, extend, slots } from '@brickifyio/editor/core';
 import Editor from '@brickifyio/editor/Editor';
 import Paragraph from '@brickifyio/editor/Paragraph';
 import React, { useMemo, useState } from 'react';

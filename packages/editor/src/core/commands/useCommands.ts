@@ -4,8 +4,8 @@ import { flow } from 'fp-ts/lib/function';
 import { type HandleCommandOptions } from './models';
 import { useCustomCommands } from './useCustomCommands';
 import { type Component } from '../../bricks';
-import { hasShortcuts } from '../../bricks/utils/shortcuts';
 import { type ChangeEvent } from '../changes';
+import { hasShortcuts } from '../extensions';
 
 export type Command<Name extends string> = {
   name: Name;

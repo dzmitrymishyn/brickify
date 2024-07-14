@@ -1,4 +1,4 @@
-import { type Command, type Commands } from '../../core/commands';
+import { type Command, type Commands } from '../commands';
 
 export const shortcuts = <C extends Command<string>>(
   commands: Commands<C>,

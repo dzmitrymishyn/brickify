@@ -14,11 +14,9 @@ import { domToReactFactory } from './domToReactFactory';
 import {
   type Component as BrickComponent,
   type BrickValue,
-  extend,
   type PropsWithBrick,
 } from '../bricks';
-import { shortcuts as addShortcuts } from '../bricks/utils/shortcuts';
-import { type PropsWithChange, useBrickContext, useMutation } from '../core';
+import { extend, type PropsWithChange, shortcuts, useBrickContext, useMutation } from '../core';
 import { useCommands } from '../core/commands';
 import { useMergedRefs } from '../utils';
 
@@ -110,7 +108,7 @@ Paragraph.displayName = 'Paragraph';
 
 export default extend(
   Paragraph,
-  addShortcuts({
+  shortcuts({
     newLine: {
       shortcuts: ['enter'],
       handle: ({ onChange, element, range }) => {

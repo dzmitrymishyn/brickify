@@ -9,6 +9,7 @@
   ],
   "exports": {
     "./components/*": "./components/*",
+    "./core": "./core",
     "./bricks": "./bricks",
     "./Editor": "./Editor",
     "./Paragraph": "./Paragraph"
