@@ -1,16 +1,14 @@
-import { NamedComponent, bricksToMap } from '../../bricks';
+import { bricksToMap, type NamedComponent } from '../../bricks';
 
 export type Slot = [string, 'inherit' | NamedComponent[]];
 export type Slots = Record<Slot[0], Slot[1]>;
 
-const addSlots = <S extends Slots>(slots: S) => ({
+export const withSlots = <S extends Slots>(slots: S) => ({
   slots: Object.entries(slots).reduce((acc, [key, bricks]) => ({
     ...acc,
     [key]: bricksToMap(bricks),
   }), {}),
 });
-
-export { addSlots as slots };
 
 type WithSlots = {
   slots: Record<string, 'inherit' | Record<string, NamedComponent>>;

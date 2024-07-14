@@ -3,7 +3,7 @@ import React, { type PropsWithChildren } from 'react';
 import {
   type PropsWithBrick,
 } from '../bricks';
-import { extend, type PropsWithChange, slots, useMutation } from '../core';
+import { extend, type PropsWithChange, useMutation, withSlots } from '../core';
 
 type Props = PropsWithChildren & PropsWithBrick & PropsWithChange;
 
@@ -25,5 +25,5 @@ Container.displayName = 'Container';
 
 export default extend(
   Container,
-  slots({ children: 'inherit' }),
+  withSlots({ children: 'inherit' }),
 );

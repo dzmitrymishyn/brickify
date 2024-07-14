@@ -3,7 +3,7 @@ import { compile } from 'css-select';
 import React from 'react';
 import { type PropsWithChildren } from 'react';
 
-import { extend, shortcuts } from '../core';
+import { extend, withShortcuts } from '../core';
 
 const Strong: React.FC<PropsWithChildren> = ({ children }) => (
   <strong>{children}</strong>
@@ -12,7 +12,7 @@ const Strong: React.FC<PropsWithChildren> = ({ children }) => (
 export default extend(
   Strong,
   { is: compile('strong') },
-  shortcuts({
+  withShortcuts({
     reshape: {
       shortcuts: ['ctrl + b', 'cmd + b'],
       handle: ({ range, element, results }) => {

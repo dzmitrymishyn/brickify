@@ -3,7 +3,7 @@ import { isText } from '@brickifyio/browser/utils';
 import { compile } from 'css-select';
 import React from 'react';
 
-import { extend, shortcuts } from '../core';
+import { extend, withShortcuts } from '../core';
 import { type HandleCommandOptions } from '../core/commands';
 
 const Br: React.FC = () => <br />;
@@ -44,7 +44,7 @@ const addBr = ({ range, results, element }: HandleCommandOptions) => {
 export default extend(
   Br,
   { is: compile('br') },
-  shortcuts({
+  withShortcuts({
     reshape: {
       shortcuts: ['enter'],
       handle: addBr,
@@ -55,7 +55,7 @@ export default extend(
 export const ShiftEnterBr = extend(
   Br,
   { is: compile('br') },
-  shortcuts({
+  withShortcuts({
     reshape: {
       shortcuts: ['shift + enter'],
       handle: addBr,

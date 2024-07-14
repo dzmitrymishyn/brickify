@@ -10,7 +10,7 @@ import Em from '@brickifyio/editor/components/Em';
 import Heading from '@brickifyio/editor/components/Heading';
 import Profile from '@brickifyio/editor/components/Profile';
 import Strong from '@brickifyio/editor/components/Strong';
-import { defaultProps, extend, slots } from '@brickifyio/editor/core';
+import { extend, withProps, withSlots } from '@brickifyio/editor/core';
 import Editor from '@brickifyio/editor/Editor';
 import Paragraph from '@brickifyio/editor/Paragraph';
 import React, { useMemo, useState } from 'react';
@@ -116,16 +116,16 @@ const Page = () => {
         bricks={[
           extend(
             Editor,
-            defaultProps({
+            withProps({
               bricks: [
-                extend(Paragraph, defaultProps({ component: 'div', bricks: [] })),
+                extend(Paragraph, withProps({ component: 'div', bricks: [] })),
                 Container,
               ] ,
             }),
           ),
           Heading,
-          extend(Paragraph, defaultProps({ component: 'article', bricks: [Em, Strong, ShiftEnterBr] })),
-          extend(Container, slots({ children: 'inherit' })),
+          extend(Paragraph, withProps({ component: 'article', bricks: [Em, Strong, ShiftEnterBr] })),
+          extend(Container, withSlots({ children: 'inherit' })),
           Profile,
         ]}
       />

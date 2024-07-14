@@ -3,14 +3,14 @@ import { type FC, forwardRef } from 'react';
 import { type Component } from '../../bricks';
 
 /* eslint @typescript-eslint/no-explicit-any: off -- it's ok */
-export const extend = <C extends Component<any>, Parts extends object[]>(
+export const extend = <C extends Component<any>, Enhancer extends object[]>(
   brick: C,
-  ...parts: Parts
-): C & Parts[number] => {
+  ...enhancers: Enhancer
+): C & Enhancer[number] => {
   // eslint-disable-next-line -- TODO: Check it
   const config = Object.assign(
     { displayName: brick.displayName ?? brick.name },
-    ...parts,
+    ...enhancers,
   );
 
   const newBrick = typeof brick === 'function'

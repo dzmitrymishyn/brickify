@@ -17,7 +17,7 @@ import {
   type NamedComponent,
 } from './brick';
 import { type BrickValue, isBrickValue } from './utils';
-import { type Change, type ChangeEvent, hasSlots } from '../core';
+import { type Change, type ChangeEvent, hasSlots, hasProps } from '../core';
 
 type PathRef = MutableRefObject<() => string[]>;
 
@@ -160,6 +160,7 @@ export const build = (deps: Dependencies) => flow(
     const key = `${id || index}`;
 
     const props = {
+      ...hasProps(Component) && Component.props,
       ...rest,
       ...slotProps,
       onChange: change,

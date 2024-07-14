@@ -16,7 +16,7 @@ import {
   type BrickValue,
   type PropsWithBrick,
 } from '../bricks';
-import { extend, type PropsWithChange, shortcuts, useBrickContext, useMutation } from '../core';
+import { extend, type PropsWithChange, useBrickContext, useMutation, withShortcuts } from '../core';
 import { useCommands } from '../core/commands';
 import { useMergedRefs } from '../utils';
 
@@ -108,7 +108,7 @@ Paragraph.displayName = 'Paragraph';
 
 export default extend(
   Paragraph,
-  shortcuts({
+  withShortcuts({
     newLine: {
       shortcuts: ['enter'],
       handle: ({ onChange, element, range }) => {

@@ -2,7 +2,7 @@ import { reshape } from '@brickifyio/browser/manipulations';
 import { compile } from 'css-select';
 import React, { type PropsWithChildren } from 'react';
 
-import { extend, shortcuts } from '../core';
+import { extend, withShortcuts } from '../core';
 
 const Em: React.FC<PropsWithChildren> = ({ children }) => (
   <em>{children}</em>
@@ -11,7 +11,7 @@ const Em: React.FC<PropsWithChildren> = ({ children }) => (
 export default extend(
   Em,
   { is: compile('em') },
-  shortcuts({
+  withShortcuts({
     reshape: {
       shortcuts: ['ctrl + i', 'cmd + i'],
       handle: ({ range, element, results }) => {

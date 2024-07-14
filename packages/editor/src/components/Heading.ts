@@ -1,10 +1,10 @@
-import { defaultProps, displayName, extend } from '../core';
+import { extend, withName, withProps } from '../core';
 import Paragraph from '../Paragraph';
 
 export default extend(
   Paragraph,
-  displayName('Heading'),
-  defaultProps({
+  withName('Heading'),
+  withProps({
     component: 'h1',
   }),
 );
