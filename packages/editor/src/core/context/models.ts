@@ -3,6 +3,7 @@ import { type HandleCommand } from '../commands';
 import {
   type BeforeAfterRangesController,
 } from '../hooks/useBeforeAfterRanges';
+import { type Cache } from '../hooks/useBrickCache';
 import { type Logger } from '../logger';
 import { type Mutation } from '../mutations';
 
@@ -15,6 +16,7 @@ type ElementSubscribe<Fn> = (
 
 export type BrickContextType = {
   editable: boolean;
+  cache: Cache;
   pathRef: { current: () => string[] };
 
   logger: Logger;

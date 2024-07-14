@@ -15,7 +15,7 @@ import {
   useBricksBuilder,
   useLogger,
   withBrickContext,
-  withName,
+  withBrickName,
 } from '../core';
 import { useCommands } from '../core/commands';
 import { useMergedRefs } from '../utils';
@@ -104,12 +104,8 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
 Editor.displayName = 'Editor';
 
 export default pipe(
-  Editor,
+  extend(Editor, withBrickName('Editor')),
   withBrickContext,
-  (EditorWithContext) => extend(
-    EditorWithContext,
-    withName('Editor'),
-  ),
 );
 
 export { Editor as EditorWithoutContext };

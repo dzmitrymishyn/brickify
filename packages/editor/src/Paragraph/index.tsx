@@ -68,6 +68,7 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
   const ref = useMergedRefs(
     rootRef,
     refProp,
+    useCommands(bricks),
     useMutation(({ remove, target }) => {
       if (remove) {
         return onChange?.({ type: 'remove' });
@@ -75,7 +76,6 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
 
       return emitNewValue(target as HTMLElement);
     }),
-    useCommands(bricks),
   );
 
   oldComponents.current = <>{components}</>;

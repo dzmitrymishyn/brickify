@@ -6,7 +6,7 @@ import {
   useRef,
 } from 'react';
 
-import { type CacheItem, objectToReact } from './objectToReact';
+import { objectToReact } from './objectToReact';
 import { type ChangeEvent } from '../../changes';
 import { bricksToMap, type Component } from '../../components';
 import { useBrickContext } from '../useBrickContext';
@@ -16,12 +16,8 @@ export const useBricksBuilder = (
   bricks: Component[],
   onChange: (...changes: ChangeEvent[]) => void,
 ): [ReactNode, RefObject<SlotsTreeNode | undefined>] => {
-  const { pathRef } = useBrickContext();
+  const { pathRef, cache } = useBrickContext();
   const rootValueRef = useRef<SlotsTreeNode | undefined>(undefined);
-
-  const cacheRef = useRef<WeakMap<object, CacheItem>>(
-    new WeakMap(),
-  );
 
   const element = useMemo(() => {
     const oldParent = rootValueRef.current;
@@ -29,13 +25,13 @@ export const useBricksBuilder = (
 
     return objectToReact(children)({
       onChange,
-      cache: cacheRef.current,
+      cache,
       slots: bricksToMap(bricks) as Record<string, Component>,
       parentPathRef: pathRef,
       parent: rootValueRef.current,
       oldParent,
     });
-  }, [bricks, children, onChange, pathRef]);
+  }, [bricks, children, onChange, pathRef, cache]);
 
   return [element, rootValueRef];
 };

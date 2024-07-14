@@ -4,7 +4,7 @@ import { flow, pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
 import * as O from 'fp-ts/lib/Option';
 import * as R from 'fp-ts/lib/Reader';
-import React, {
+import {
   cloneElement,
   createRef,
   type MutableRefObject,
@@ -20,6 +20,7 @@ import {
   type NamedComponent,
 } from '../../components';
 import { hasProps, hasSlots } from '../../extensions';
+import { type Cache } from '../useBrickCache';
 
 type PathRef = MutableRefObject<() => string[]>;
 
@@ -31,7 +32,7 @@ export type CacheItem = {
 
 type Dependencies = {
   onChange: (...changes: ChangeEvent[]) => void;
-  cache: WeakMap<object, CacheItem>;
+  cache: Cache;
   slots: Record<string, ComponentType>;
   parentPathRef: PathRef;
   parent: Node;
@@ -174,7 +175,7 @@ export const build = (deps: Dependencies) => flow(
     }
 
     return (
-      <Component {...props} key={id || index} />
+    <Component {...props} key={id || index} />
     );
   }),
 );

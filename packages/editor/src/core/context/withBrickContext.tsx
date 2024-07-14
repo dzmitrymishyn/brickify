@@ -14,8 +14,10 @@ import { useMergedRefs } from '../../utils';
 import { type PropsWithChange, useChangesController } from '../changes';
 import { useCommandsController } from '../commands/useCommandsController';
 import { getName, type PropsWithBrick } from '../components';
+import { extend, withDisplayName } from '../extensions';
 import { useBrickContextUnsafe } from '../hooks';
 import { useBeforeAfterRanges } from '../hooks/useBeforeAfterRanges';
+import { useBrickCache } from '../hooks/useBrickCache';
 import { useDisallowHotkeys } from '../hooks/useDisallowHotkeys';
 import { useRangeSaver } from '../hooks/useRangeSaver';
 import { EmptyLogger, type Logger } from '../logger';
@@ -57,6 +59,7 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
       />;
     }
 
+    const cache = useBrickCache();
     const changesController = useChangesController({ logger });
     const [rangesControllerRef, rangesController] = useBeforeAfterRanges();
     const rangeSaverElementRef = useRangeSaver(rangesController);
@@ -93,6 +96,7 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
       subscribeCommand: commandsController.subscribe,
       editable,
       pathRef: props.brick?.pathRef || { current: () => ['children'] },
+      cache,
     }), [
       logger,
       changesController,
@@ -101,6 +105,7 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
       rangesController,
       editable,
       props.brick?.pathRef,
+      cache,
     ]);
 
     const ref = useMergedRefs(
@@ -129,9 +134,9 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
     );
   };
 
-  WithBrickContext.displayName = (
-    `WithBrickContext(${getName(Component) ?? 'Unnamed'})`
+  return extend(
+    WithBrickContext,
+    Component,
+    withDisplayName(`WithBrickContext(${getName(Component) ?? 'Unnamed'})`),
   );
-
-  return WithBrickContext;
 };

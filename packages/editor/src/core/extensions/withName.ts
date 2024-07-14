@@ -1,4 +1,7 @@
+import { withBrickName } from './withBrickName';
+import { withDisplayName } from './withDisplayName';
+
 export const withName = (name: string) => ({
-  displayName: name,
-  brick: name,
+  ...withDisplayName(name),
+  ...withBrickName(name),
 });
