@@ -34,10 +34,6 @@ const Page = () => {
     {
       brick: 'Editor',
       id: newKey(),
-      bricks: [
-        extend(Paragraph, defaultProps({ component: 'article', bricks: [] })),
-        Container,
-      ],
       value: [
         { brick: 'Paragraph', id: newKey(), value: '1Lorem <strong>ipsum</strong> dolar sit amet' },
         {
@@ -122,7 +118,15 @@ const Page = () => {
         logger={console}
         onChange={(newValue) => { setState(newValue); }}
         bricks={[
-          Editor,
+          extend(
+            Editor,
+            defaultProps({
+              bricks: [
+                extend(Paragraph, defaultProps({ component: 'div', bricks: [] })),
+                Container,
+              ] ,
+            }),
+          ),
           Heading,
           extend(Paragraph, defaultProps({ component: 'article', bricks: [Em, Strong, ShiftEnterBr] })),
           extend(Container, slots({ children: 'inherit' })),
