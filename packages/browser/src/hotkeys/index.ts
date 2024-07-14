@@ -101,18 +101,31 @@ export const match = (event: Event, shortcut: string) => {
   }
 
   const keys = splitAndTrim(shortcut, '+');
-  const matchedKeysCount = keys.reduce<number>((acc, key) => {
+  const notVisitedModifires = new Set([shift, ctrl, cmd, option]);
+  let matchedKeysCount = keys.reduce<number>((acc, key) => {
+    if (SPECIAL_KEYS[key]) {
+      return acc + (code(event) === SPECIAL_KEYS[key] ? 1 : 0);
+    }
+
+    const modifierApplied = MODIFIER_CHECKS[key]?.(event);
+
+    if (modifierApplied) {
+      notVisitedModifires.delete(MODIFIER_CHECKS[key]!);
+    }
+
     const matched = Boolean(
-      SPECIAL_KEYS[key]
-        ? code(event) === SPECIAL_KEYS[key]
-        : (
-          MODIFIER_CHECKS[key]?.(event)
-          || code(event) === key.toUpperCase().charCodeAt(0)
-        )
+      modifierApplied
+      || code(event) === key.toUpperCase().charCodeAt(0)
     );
 
     return acc + (matched ? 1 : 0);
   }, 0);
+
+  notVisitedModifires.forEach((isModifier) => {
+    if (isModifier(event)) {
+      matchedKeysCount -= 1;
+    }
+  });
 
   return keys.length === matchedKeysCount;
 };
