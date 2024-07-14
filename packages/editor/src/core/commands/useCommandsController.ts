@@ -97,14 +97,17 @@ export const useCommandsController = ({
               results: getOrUpdateResults,
               range: getOrUpdateRange,
               element: current,
+              onChange: () => {
+                throw new Error('You should specify onChange');
+              },
             });
           } catch (error) {
             logger?.error('Cannot handle keyboard event', error);
           }
         }
 
-        current = getFirstDeepLeaf(current.nextSibling)
-          ?? current.parentNode;
+        current = isElementWithinRange(getFirstDeepLeaf(current.nextSibling)!, range)
+          && getFirstDeepLeaf(current.nextSibling) || current.parentNode;
       }
 
       if (range) {

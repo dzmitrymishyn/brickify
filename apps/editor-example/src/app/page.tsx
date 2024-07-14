@@ -31,24 +31,15 @@ const Page = () => {
   //   { brick: 'Paragraph', id: newKey(), value: '1Lorem <strong style="color: red"><strong>i<em>ps</em>um</strong></strong> dolar sit <strong>amet</strong>' },
   // ]);
   const [state, setState] = useState<unknown>(() => Array.from({ length: 1 }, () => [
-    { brick: 'Heading', id: newKey(), value: 'Heading' },
-    { brick: 'Paragraph', id: newKey(), value: 'First line start <strong style="color: red"><strong>11str str<em>12st em</em>13str str</strong></strong> 14 <strong>15 st</strong>' },
-    { brick: 'Paragraph', id: newKey(), value: 'Second line start <strong>21 st</strong> 22' },
-    { brick: 'Paragraph', id: newKey(), value: ['3rd line 31', ' 32 ', '33'] },
     {
-      brick: 'Paragraph', id: newKey(), value: '4th line lorem <em>ipsum dolar sit amet</em>', attributes: { test: true },
-    },
-    {
-      brick: 'Container',
+      brick: 'Editor',
       id: newKey(),
-      children: [
-        // 'test',
-        // 'test',
-        // 'test',
-        { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
-        { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
-        { brick: 'Paragraph', id: newKey(), value: '2hello world' },
-        { brick: 'Paragraph', id: newKey(), value: ['3one child', ' ', 'another child'] },
+      bricks: [
+        extend(Paragraph, defaultProps({ component: 'article', bricks: [] })),
+        Container,
+      ],
+      value: [
+        { brick: 'Paragraph', id: newKey(), value: '1Lorem <strong>ipsum</strong> dolar sit amet' },
         {
           brick: 'Container',
           id: newKey(),
@@ -56,38 +47,58 @@ const Page = () => {
             // 'test',
             // 'test',
             // 'test',
-            { brick: 'Paragraph', id: newKey(), value: '----------' },
             { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
             { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
             { brick: 'Paragraph', id: newKey(), value: '2hello world' },
-            { brick: 'Paragraph', id: newKey(), value: '----------' },
+            { brick: 'Paragraph', id: newKey(), value: ['3one child', ' ', 'another child'] },
+            {
+              brick: 'Container',
+              id: newKey(),
+              children: [
+                // 'test',
+                // 'test',
+                // 'test',
+                { brick: 'Paragraph', id: newKey(), value: '----------' },
+                { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
+                { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
+                { brick: 'Paragraph', id: newKey(), value: '2hello world' },
+                { brick: 'Paragraph', id: newKey(), value: '----------' },
+              ],
+            },
           ],
         },
       ],
     },
-    {
-      brick: 'Container',
-      id: newKey(),
-      children: [
-        // 'test',
-        // 'test',
-        // 'test',
-        { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
-        { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
-        { brick: 'Paragraph', id: newKey(), value: '2hello world' },
-        { brick: 'Paragraph', id: newKey(), value: ['<strong>3one child</strong>', ' ', 'another child'] },
-      ],
-    },
-    {
-      brick: 'Profile',
-      id: newKey(),
-      children: 'Hi <strong>everyone</strong>!',
-      visible: true,
-      // children: [
-      //   { brick: 'Paragraph', id: newKey(), children: 'Hi <strong>everyone</strong>!' },
-      // ],
-    },
-    { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
+    { brick: 'Heading', id: newKey(), value: 'Heading' },
+    { brick: 'Paragraph', id: newKey(), value: 'First line start <strong style="color: red"><strong>11str str<em>12st em</em>13str str</strong></strong> 14 <strong>15 st</strong>' },
+    { brick: 'Paragraph', id: newKey(), value: 'Second line start <strong>21 st</strong> 22' },
+    { brick: 'Paragraph', id: newKey(), value: ['3rd line 31', ' 32 ', '33'] },
+    // {
+    //   brick: 'Paragraph', id: newKey(), value: '4th line lorem <em>ipsum dolar sit amet</em>', attributes: { test: true },
+    // },
+    // {
+    //   brick: 'Container',
+    //   id: newKey(),
+    //   children: [
+    //     // 'test',
+    //     // 'test',
+    //     // 'test',
+    //     { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
+    //     { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
+    //     { brick: 'Paragraph', id: newKey(), value: '2hello world' },
+    //     { brick: 'Paragraph', id: newKey(), value: ['<strong>3one child</strong>', ' ', 'another child'] },
+    //   ],
+    // },
+    // {
+    //   brick: 'Profile',
+    //   id: newKey(),
+    //   children: 'Hi <strong>everyone</strong>!',
+    //   visible: true,
+    //   // children: [
+    //   //   { brick: 'Paragraph', id: newKey(), children: 'Hi <strong>everyone</strong>!' },
+    //   // ],
+    // },
+    // { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
     // ...Array.from({ length: 2000 }, () => ({
     //   brick: 'Paragraph', id: newKey(), value: `${newKey()} hello world`,
     // })),
@@ -111,6 +122,7 @@ const Page = () => {
         logger={console}
         onChange={(newValue) => { setState(newValue); }}
         bricks={[
+          Editor,
           Heading,
           extend(Paragraph, defaultProps({ component: 'article', bricks: [Em, Strong, ShiftEnterBr] })),
           extend(Container, slots({ children: 'inherit' })),

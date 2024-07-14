@@ -1,5 +1,6 @@
+import { match } from '@brickifyio/browser/hotkeys';
 import { type Node, patch } from '@brickifyio/utils/slots-tree';
-import { pipe } from 'fp-ts/lib/function';
+import { flow, pipe } from 'fp-ts/lib/function';
 import {
   forwardRef,
   useCallback,
@@ -8,9 +9,13 @@ import {
 
 import useMergedRefs from './useMergedRef';
 import {
+  type BrickValue,
+  type ChangeProps,
   type Component,
+  type NamedComponent,
   useBricksBuilder,
 } from '../bricks';
+import { hasShortcuts } from '../bricks/utils/shortcuts';
 import {
   type Change,
   useBatchChanges,
@@ -18,6 +23,7 @@ import {
   useLogger,
   withBrickContext,
 } from '../core';
+import { useCommands } from '../core/commands';
 
 type Props = {
   value: unknown[];
@@ -33,38 +39,45 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
 }, refProp) => {
   const { editable, changes: changesController } = useBrickContext();
   const logger = useLogger();
-  const editorChangesRef = useRef<Change[]>([]);
+  const editorChangesRef = useRef<ChangeProps<BrickValue>[]>([]);
   const onChangeRef = useRef<(value: unknown) => void>();
 
   onChangeRef.current = onChange;
 
-  const emitChange = useCallback((changes: Change[], root?: Node) => {
+  const emitChange = useCallback((
+    changes: ChangeProps<BrickValue>[],
+    root?: Node,
+  ) => {
     if (!changes.length || !root) {
       return;
     }
 
-    const newValue = patch(root, changes) as {
+    const newValue = patch(root, changes as Change[]) as {
       children: unknown;
     };
 
     logger.log('Editor value is updated', newValue.children);
 
-    onChangeRef.current?.(newValue.children);
+    onChangeRef.current?.({ type: 'update', value: newValue.children });
   }, [logger]);
 
-  const [components, treeRef] = useBricksBuilder(value, bricks, (...changes) => {
-    if (!changes.length) {
-      return;
-    }
+  const [components, treeRef] = useBricksBuilder(
+    value,
+    bricks,
+    (...changes) => {
+      if (!changes.length) {
+        return;
+      }
 
-    if (changesController.state() === 'interaction') {
-      emitChange(changes, treeRef.current ?? undefined);
-      return;
-    }
+      if (changesController.state() === 'interaction') {
+        emitChange(changes, treeRef.current ?? undefined);
+        return;
+      }
 
-    editorChangesRef.current.push(...changes);
-    return changes;
-  });
+      editorChangesRef.current.push(...changes);
+      return changes;
+    },
+  );
 
   const batchChangesRef = useBatchChanges({
     apply: () => {
@@ -73,7 +86,32 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
     },
   });
 
-  const ref = useMergedRefs(batchChangesRef, refProp);
+  const commandsRef = useCommands(flow(
+    (options) => {
+      bricks
+        .flatMap((brick) => (
+          hasShortcuts(brick)
+            ? Object.values(brick.commands)
+            : []
+        ))
+        .forEach(({ handle, shortcuts }) => {
+          const hasMatch = handle && shortcuts?.some(
+            (shortcut) => match(options.event, shortcut),
+          );
+
+          if (hasMatch) {
+            handle({
+              ...options,
+              onChange: (...changes) => {
+                editorChangesRef.current.push(...changes);
+              },
+            });
+          }
+        });
+    },
+  ));
+
+  const ref = useMergedRefs(commandsRef, batchChangesRef, refProp);
 
   return (
     <div
@@ -91,7 +129,14 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
 
 Editor.displayName = 'Editor';
 
-export default pipe(
+const EditorWithContext = pipe(
   Editor,
   withBrickContext,
+  (editor) => {
+    (editor as NamedComponent).brick = 'Editor';
+    return editor;
+  },
 );
+
+export { Editor as EditorWithoutContext };
+export default EditorWithContext;

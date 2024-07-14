@@ -1,6 +1,5 @@
 import { match } from '@brickifyio/browser/hotkeys';
-import { tap } from '@brickifyio/operators';
-import * as A from 'fp-ts/lib/Array';
+import { isElementWithinRange } from '@brickifyio/browser/selection';
 import { flow, pipe } from 'fp-ts/lib/function';
 import { parseDocument } from 'htmlparser2';
 import {
@@ -17,10 +16,11 @@ import { domToReactFactory } from './domToReactFactory';
 import {
   type Component as BrickComponent,
   type BrickValue,
+  extend,
   type PropsWithBrick,
   type PropsWithChange,
 } from '../bricks';
-import { hasShortcuts } from '../bricks/utils/shortcuts';
+import { shortcuts as addShortcuts, hasShortcuts } from '../bricks/utils/shortcuts';
 import { useCommands } from '../core/commands';
 import { useBrickContext } from '../core/hooks/useBrickContext';
 import { useMutation } from '../core/mutations/useMutation';
@@ -127,4 +127,28 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
 
 Paragraph.displayName = 'Paragraph';
 
-export default Paragraph;
+export default extend(
+  Paragraph,
+  addShortcuts({
+    newLine: {
+      shortcuts: ['enter'],
+      handle: ({ onChange, element, range }) => {
+        const currentRange = range();
+
+        if (currentRange && isElementWithinRange(element, currentRange)) {
+          onChange?.({
+            type: 'add',
+            ...{
+              path: ['children', '2'],
+              value: {
+                brick: 'Paragraph',
+                id: Math.random(),
+                value: 'test',
+              },
+            },
+          });
+        }
+      }
+    },
+  }),
+);

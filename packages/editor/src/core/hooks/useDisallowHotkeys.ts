@@ -5,14 +5,15 @@ import { useBrickContextUnsafe } from './useBrickContext';
 import assert from 'assert';
 
 export const useDisallowHotkeys = (disallowList: string[] = []) => {
-  const hasInheritedContext = Boolean(useBrickContextUnsafe());
   const ref = useRef<HTMLElement>(null);
+  const hasInheritedContext = Boolean(useBrickContextUnsafe());
+
+  assert(
+    !hasInheritedContext,
+    'Usage of useDisallowHotkeys inside BrickContext can cause unpredictable behavior',
+  );
 
   useEffect(() => {
-    if (hasInheritedContext) {
-      return;
-    }
-
     assert(ref.current, 'useRangeSaver: ref should be attached to a node');
 
     const element = ref.current;
@@ -28,7 +29,7 @@ export const useDisallowHotkeys = (disallowList: string[] = []) => {
 
     element.addEventListener('keydown', handleKeydown);
     return () => element.removeEventListener('keydown', handleKeydown);
-  }, [disallowList, hasInheritedContext]);
+  }, [disallowList]);
 
   return ref;
 };

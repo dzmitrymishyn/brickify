@@ -10,11 +10,12 @@ export const useRangeSaver = (
   const hasInheritedContext = Boolean(useBrickContextUnsafe());
   const ref = useRef<HTMLElement>(null);
 
-  useEffect(() => {
-    if (hasInheritedContext) {
-      return;
-    }
+  assert(
+    !hasInheritedContext,
+    'Usage of useRangeSaver inside BrickContext can cause unpredictable behavior',
+  );
 
+  useEffect(() => {
     assert(ref.current, 'useRangeSaver: ref should be attached to a node');
 
     const element: Element = ref.current;
@@ -37,7 +38,7 @@ export const useRangeSaver = (
         (event) => element.removeEventListener(event, saveSelection, true),
       );
     };
-  }, [hasInheritedContext, rangesController]);
+  }, [rangesController]);
 
   return ref;
 };

@@ -22,6 +22,7 @@ export const getRangeLike = flow(
 
 export const fromRangeLike = flow(
   O.fromNullable<RangeLike | null | undefined>,
+  O.chain(O.fromPredicate((a) => Boolean(a.startContainer ?? a.endContainer))),
   O.map((rangeLike: RangeLike) => {
     const range = new Range();
     range.setStart(rangeLike.startContainer, rangeLike.startOffset);

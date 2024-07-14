@@ -14,6 +14,7 @@ export type Component<Props = object> =
 export type NamedComponent = {
   displayName?: string;
   name: string;
+  brick?: string;
 };
 
 export type PropsWithBrick<Value extends BrickValue = BrickValue> = {

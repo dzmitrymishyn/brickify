@@ -8,6 +8,6 @@ export const bricksToMap = (
     : bricks.reduce((slotAcc, brick) => ({
       ...slotAcc,
       // TODO: Check this place
-      [brick.displayName ?? '']: brick,
+      [brick?.brick ?? brick.displayName ?? '']: brick,
     }), {})
 );

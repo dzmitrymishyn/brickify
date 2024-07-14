@@ -15,6 +15,7 @@ type ElementSubscribe<Fn> = (
 
 export type BrickContextType = {
   editable: boolean;
+  pathRef: { current: () => string[] };
 
   logger: Logger;
   ranges: BeforeAfterRangesController;

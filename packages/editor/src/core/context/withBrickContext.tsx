@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks -- tets */
 import { addRange, fromCustomRange } from '@brickifyio/browser/selection';
 import { pipe } from 'fp-ts/lib/function';
 import {
@@ -7,9 +8,11 @@ import {
 } from 'react';
 
 import { BrickContext } from './BrickContext';
+import { type PropsWithBrick, type PropsWithChange } from '../../bricks';
 import useMergedRefs from '../../Editor/useMergedRef';
 import { useChangesController } from '../changes';
 import { useCommandsController } from '../commands/useCommandsController';
+import { useBrickContextUnsafe } from '../hooks';
 import { useBeforeAfterRanges } from '../hooks/useBeforeAfterRanges';
 import { useDisallowHotkeys } from '../hooks/useDisallowHotkeys';
 import { useRangeSaver } from '../hooks/useRangeSaver';
@@ -27,19 +30,31 @@ const metaKeyDisallowList = [
   ].map((key) => [`ctrl+${key}`, `cmd+${key}`]),
 ].flat();
 
-type Props = {
+type Props = Partial<PropsWithBrick> & {
   logger?: Logger;
   editable?: boolean;
+  onChange: (value: unknown) => void;
 };
 
-export function withBrickContext<P extends { value: object }>(
+export function withBrickContext<P extends { value: object } & PropsWithChange>(
   Component: ForwardRefExoticComponent<P>,
 ) {
   const WithBrickContext: React.FC<P & Props> = ({
     logger = EmptyLogger,
     editable = false,
+    onChange,
     ...props
   }) => {
+    const inheritedContext = useBrickContextUnsafe();
+    const hasInheritedContext = Boolean(inheritedContext);
+
+    if (hasInheritedContext) {
+      return <Component
+        {...props as P}
+        onChange={onChange}
+      />;
+    }
+
     const changesController = useChangesController({ logger });
     const [rangesControllerRef, rangesController] = useBeforeAfterRanges();
     const rangeSaverElementRef = useRangeSaver(rangesController);
@@ -75,6 +90,7 @@ export function withBrickContext<P extends { value: object }>(
       subscribeMutation: mutationsController.subscribe,
       subscribeCommand: commandsController.subscribe,
       editable,
+      pathRef: props.brick?.pathRef || { current: () => ['children'] },
     }), [
       logger,
       changesController,
@@ -82,6 +98,7 @@ export function withBrickContext<P extends { value: object }>(
       commandsController.subscribe,
       rangesController,
       editable,
+      props.brick?.pathRef,
     ]);
 
     const ref = useMergedRefs(
@@ -93,8 +110,24 @@ export function withBrickContext<P extends { value: object }>(
     );
 
     return (
-      <BrickContext.Provider value={contextValue}>
-        <Component ref={ref} {...props as P} />
+      <BrickContext.Provider value={inheritedContext ?? contextValue}>
+        <Component
+          ref={ref}
+          {...props as P}
+          onChange={(change) => {
+            const { type, ...brickValue } = change;
+            let newValue = brickValue as { value: unknown } | null;
+
+            if (type === 'remove') {
+              newValue = null;
+            } else if (type === 'add') {
+              // I'm not sure what I need to do with add type
+              newValue = null;
+            }
+
+            onChange?.(newValue?.value);
+          }}
+        />
       </BrickContext.Provider>
     );
   };

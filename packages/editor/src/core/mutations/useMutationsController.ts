@@ -9,7 +9,6 @@ import {
 import { revertDomByMutations } from './revertDomByMutations';
 import { type ChangesController } from '../changes';
 import { type BeforeAfterRangesController } from '../hooks/useBeforeAfterRanges';
-import { useBrickContextUnsafe } from '../hooks/useBrickContext';
 import { type Logger } from '../logger';
 import assert from 'assert';
 
@@ -24,8 +23,6 @@ export const useMutationsController = ({
   changesController,
   logger,
 }: UseMutationsControllerOptions) => {
-  const inheritedContext = useBrickContextUnsafe();
-  const hasInheritedContext = Boolean(inheritedContext);
   const ref = useRef<Element>(null);
 
   const observerRef = useRef<MutationObserver>();
@@ -116,10 +113,6 @@ export const useMutationsController = ({
   }, [logger, rangesController]);
 
   useEffect(() => {
-    if (hasInheritedContext) {
-      return;
-    }
-
     assert(
       ref.current,
       'useMutationsController: ref should be attached to a node',
@@ -145,7 +138,7 @@ export const useMutationsController = ({
     observerRef.current = observer;
 
     return () => observer.disconnect();
-  }, [hasInheritedContext, changesController, logger, handle]);
+  }, [changesController, logger, handle]);
 
   const subscribe = useCallback(
     (element: HTMLElement, mutate: MutationHandler) => {

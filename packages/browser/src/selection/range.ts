@@ -52,6 +52,10 @@ export const addRange = flow(
 );
 
 export const isElementWithinRange = (element: Node, range: Range) => {
+  if (!element) {
+    return false;
+  }
+
   if (isText(element)) {
     return (
       range.comparePoint(element, 0) <= 0 &&
