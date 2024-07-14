@@ -9,15 +9,12 @@ import {
 import { type Component } from './brick';
 import { type CacheItem, objectToReact } from './objectToReact';
 import { bricksToMap } from './utils';
-import { useBrickContext } from '../core';
-import { type Change } from '../core/changes';
-
-export type BricksBuilderChange = (change: Change) => void;
+import { type ChangeEvent, useBrickContext } from '../core';
 
 export const useBricksBuilder = (
   children: unknown,
   bricks: Component[],
-  onChange: (change: Change) => void,
+  onChange: (...changes: ChangeEvent[]) => void,
 ): [ReactNode, RefObject<SlotsTreeNode | undefined>] => {
   const { pathRef } = useBrickContext();
   const rootValueRef = useRef<SlotsTreeNode | undefined>(undefined);

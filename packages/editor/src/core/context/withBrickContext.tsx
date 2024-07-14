@@ -1,4 +1,6 @@
-/* eslint-disable react-hooks/rules-of-hooks -- tets */
+// If we have inherited context it means that we don't need to apply the same
+// rules for all the actions. Parent component already added it
+/* eslint-disable react-hooks/rules-of-hooks -- it's justified */
 import { addRange, fromCustomRange } from '@brickifyio/browser/selection';
 import { pipe } from 'fp-ts/lib/function';
 import {
@@ -8,9 +10,9 @@ import {
 } from 'react';
 
 import { BrickContext } from './BrickContext';
-import { type PropsWithBrick, type PropsWithChange } from '../../bricks';
-import useMergedRefs from '../../Editor/useMergedRef';
-import { useChangesController } from '../changes';
+import { type PropsWithBrick } from '../../bricks';
+import { useMergedRefs } from '../../utils';
+import { type PropsWithChange, useChangesController } from '../changes';
 import { useCommandsController } from '../commands/useCommandsController';
 import { useBrickContextUnsafe } from '../hooks';
 import { useBeforeAfterRanges } from '../hooks/useBeforeAfterRanges';
@@ -115,17 +117,12 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
           ref={ref}
           {...props as P}
           onChange={(change) => {
-            const { type, ...brickValue } = change;
-            let newValue = brickValue as { value: unknown } | null;
-
-            if (type === 'remove') {
-              newValue = null;
-            } else if (type === 'add') {
-              // I'm not sure what I need to do with add type
-              newValue = null;
+            // It should be impossible that the wrapped component will emit
+            // multiple changes or it's own removals
+            // TODO: Check it
+            if (change.type === 'update') {
+              onChange?.(change.value);
             }
-
-            onChange?.(newValue?.value);
           }}
         />
       </BrickContext.Provider>

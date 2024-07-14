@@ -51,7 +51,7 @@ export const traverseArray = (
     [...currentPath, nodes.length].join('/'),
     (lastElementsPath) => changesMap[lastElementsPath] ?? [],
     A.reduce<Change, object[]>([], (acc, change) => {
-      if (change.type === 'add') {
+      if (change.value && change.type === 'add') {
         acc.push(change.value);
       }
       return acc;
@@ -95,13 +95,15 @@ export const handleChangeInArray = (
 ) => {
   switch (change.type) {
     case 'update': {
-      if (acc.value !== 'removed') {
+      if (acc.value !== 'removed' && change.value) {
         acc.value = change.value;
       }
       break;
     }
     case 'add': {
-      acc.previousValues.push(change.value);
+      if (change.value) {
+        acc.previousValues.push(change.value);
+      }
       break;
     }
     case 'remove': {

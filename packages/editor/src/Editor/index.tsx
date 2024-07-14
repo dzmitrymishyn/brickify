@@ -1,29 +1,25 @@
-import { match } from '@brickifyio/browser/hotkeys';
 import { type Node, patch } from '@brickifyio/utils/slots-tree';
-import { flow, pipe } from 'fp-ts/lib/function';
+import { pipe } from 'fp-ts/lib/function';
 import {
   forwardRef,
   useCallback,
   useRef,
 } from 'react';
 
-import useMergedRefs from './useMergedRef';
 import {
-  type BrickValue,
-  type ChangeProps,
   type Component,
   type NamedComponent,
   useBricksBuilder,
 } from '../bricks';
-import { hasShortcuts } from '../bricks/utils/shortcuts';
 import {
-  type Change,
+  type ChangeEvent,
   useBatchChanges,
   useBrickContext,
   useLogger,
   withBrickContext,
 } from '../core';
 import { useCommands } from '../core/commands';
+import { useMergedRefs } from '../utils';
 
 type Props = {
   value: unknown[];
@@ -39,20 +35,20 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
 }, refProp) => {
   const { editable, changes: changesController } = useBrickContext();
   const logger = useLogger();
-  const editorChangesRef = useRef<ChangeProps<BrickValue>[]>([]);
+  const editorChangesRef = useRef<ChangeEvent[]>([]);
   const onChangeRef = useRef<(value: unknown) => void>();
 
   onChangeRef.current = onChange;
 
   const emitChange = useCallback((
-    changes: ChangeProps<BrickValue>[],
+    changes: ChangeEvent[],
     root?: Node,
   ) => {
     if (!changes.length || !root) {
       return;
     }
 
-    const newValue = patch(root, changes as Change[]) as {
+    const newValue = patch(root, changes) as {
       children: unknown;
     };
 
@@ -86,30 +82,9 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
     },
   });
 
-  const commandsRef = useCommands(flow(
-    (options) => {
-      bricks
-        .flatMap((brick) => (
-          hasShortcuts(brick)
-            ? Object.values(brick.commands)
-            : []
-        ))
-        .forEach(({ handle, shortcuts }) => {
-          const hasMatch = handle && shortcuts?.some(
-            (shortcut) => match(options.event, shortcut),
-          );
-
-          if (hasMatch) {
-            handle({
-              ...options,
-              onChange: (...changes) => {
-                editorChangesRef.current.push(...changes);
-              },
-            });
-          }
-        });
-    },
-  ));
+  const commandsRef = useCommands(bricks, (...changes) => {
+    editorChangesRef.current.push(...changes);
+  });
 
   const ref = useMergedRefs(commandsRef, batchChangesRef, refProp);
 

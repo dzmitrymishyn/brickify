@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 
 // Keep in mind that the length of the array should be always the same
-const useMergedRefs = <T>(...refs: React.Ref<T>[]): React.RefCallback<T> =>
+export const useMergedRefs = <T>(...refs: React.Ref<T>[]): React.RefCallback<T> =>
   useCallback(
     (element: T) => {
       refs.forEach((ref) => {
@@ -15,5 +15,3 @@ const useMergedRefs = <T>(...refs: React.Ref<T>[]): React.RefCallback<T> =>
     // eslint-disable-next-line -- here could be any array of deps
     refs,
   );
-
-export default useMergedRefs;

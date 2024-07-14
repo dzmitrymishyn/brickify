@@ -1,4 +1,4 @@
-import { type PropsWithChange } from '../../bricks';
+import { type ChangeEvent } from '../changes';
 
 export type ResultsCallback = {
   (name: string): unknown;
@@ -11,7 +11,7 @@ export type HandleCommandOptions = {
   event: KeyboardEvent,
   results: ResultsCallback,
   range: RangeCallback;
-  onChange: PropsWithChange['onChange'];
+  onChange: (...changes: ChangeEvent[]) => void;
   element: Node;
 };
 

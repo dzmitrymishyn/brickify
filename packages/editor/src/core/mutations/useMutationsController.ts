@@ -37,7 +37,7 @@ export const useMutationsController = ({
   const handle = useCallback((mutations: MutationRecord[]) => {
     let wereChanges = false;
     try {
-      const defaultOptions: Mutation = {
+      const defaultOptions: Omit<Mutation, 'target'> = {
         remove: false,
         removedNodes: [],
         addedNodes: [],
@@ -48,7 +48,7 @@ export const useMutationsController = ({
         mutation.removedNodes.forEach((node) => {
           if (subscribersRef.current.has(node as HTMLElement)) {
             const options = handleOptions.get(node)
-              ?? { ...defaultOptions };
+              ?? { ...defaultOptions, target: node };
             options.remove = true;
             handleOptions.set(node, options);
           }
@@ -59,7 +59,7 @@ export const useMutationsController = ({
         while (current) {
           if (subscribersRef.current.has(current as HTMLElement)) {
             const options = handleOptions.get(current)
-              ?? { ...defaultOptions };
+              ?? { ...defaultOptions, target: current };
 
             options.removedNodes.push(
               ...Array.from(mutation.removedNodes),

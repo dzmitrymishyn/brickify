@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 
 import Br from './Br';
 import Strong from './Strong';
-import { type BrickValue, type PropsWithBrick, type PropsWithChange } from '../bricks';
-import { useBrickContext, useMutation } from '../core';
+import { type BrickValue, type PropsWithBrick } from '../bricks';
+import { type PropsWithChange, useBrickContext, useMutation } from '../core';
 import Paragraph from '../Paragraph';
 
 type Value = BrickValue & {
@@ -13,7 +13,7 @@ type Value = BrickValue & {
 
 type Props =
   & PropsWithBrick<Value>
-  & PropsWithChange<Value>
+  & PropsWithChange
   & {
     children: string | number;
   };

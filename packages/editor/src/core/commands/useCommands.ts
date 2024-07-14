@@ -1,8 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { match } from '@brickifyio/browser/hotkeys';
+import { flow } from 'fp-ts/lib/function';
 
-import { type HandleCommand, type HandleCommandOptions } from './models';
-import { useBrickContext } from '../hooks';
-import assert from 'assert';
+import { type HandleCommandOptions } from './models';
+import { useCustomCommands } from './useCustomCommands';
+import { type Component } from '../../bricks';
+import { hasShortcuts } from '../../bricks/utils/shortcuts';
+import { type ChangeEvent } from '../changes';
 
 export type Command<Name extends string> = {
   name: Name;
@@ -15,21 +18,27 @@ export type Commands<C extends Command<string>> = {
 };
 
 export const useCommands = (
-  handle: HandleCommand,
-) => {
-  const ref = useRef<HTMLElement>();
-  const { subscribeCommand } = useBrickContext();
-  const commandHandleRef = useRef(handle);
+  bricks: Component[],
+  trackChanges?: (...changes: ChangeEvent[]) => void,
+) => useCustomCommands(flow(
+  (options) => {
+    bricks
+      .flatMap((brick) => (
+        hasShortcuts(brick)
+          ? Object.values(brick.commands)
+          : []
+      ))
+      .forEach(({ handle, shortcuts }) => {
+        const hasMatch = handle && shortcuts?.some(
+          (shortcut) => match(options.event, shortcut),
+        );
 
-  commandHandleRef.current = handle;
-
-  useEffect(() => {
-    assert(ref.current, 'useCommands: ref should be attached to a node');
-    return subscribeCommand(
-      ref.current,
-      (options) => commandHandleRef.current?.(options),
-    );
-  }, [subscribeCommand]);
-
-  return ref;
-};
+        if (hasMatch) {
+          handle({
+            ...options,
+            onChange: trackChanges ?? options.onChange,
+          });
+        }
+      });
+  },
+));

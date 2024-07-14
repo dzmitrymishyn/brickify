@@ -17,7 +17,7 @@ import {
   type NamedComponent,
 } from './brick';
 import { type BrickValue, hasSlots, isBrickValue } from './utils';
-import { type Change } from '../core/changes';
+import { type Change, type ChangeEvent } from '../core';
 
 type PathRef = MutableRefObject<() => string[]>;
 
@@ -28,7 +28,7 @@ export type CacheItem = {
 };
 
 type Dependencies = {
-  onChange: (...changes: Change[]) => void;
+  onChange: (...changes: ChangeEvent[]) => void;
   cache: WeakMap<object, CacheItem>;
   slots: Record<string, ComponentType>;
   parentPathRef: PathRef;
@@ -94,10 +94,10 @@ export const addPathRef = ({ parentPathRef }: PickedDeps<'parentPathRef'>) =>
 export const addChange = ({ onChange }: PickedDeps<'onChange'>) =>
   <T extends PickedData<'value' | 'pathRef'>>(data: T) => ({
     ...data,
-    change: (...changes: Change[]) => onChange(
-      ...changes.map(({ type, ...newValue }) => ({
+    change: (...changes: Partial<Change>[]) => onChange(
+      ...changes.map(({ type = 'update', ...value }) => ({
         type,
-        value: { ...data.value, ...newValue },
+        value: { ...data.value, ...value },
         path: data.pathRef.current(),
       }))
     ),
@@ -161,7 +161,8 @@ export const build = (deps: Dependencies) => flow(
 
     const props = {
       ...rest,
-      ...slotProps,onChange: change,
+      ...slotProps,
+      onChange: change,
       brick: { value, pathRef },
     };
 

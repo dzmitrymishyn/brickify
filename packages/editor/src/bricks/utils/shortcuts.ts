@@ -6,7 +6,7 @@ export const shortcuts = <C extends Command<string>>(
 
 export type WithCommands = {
   commands: Commands<Command<string>>;
-}
+};
 
 export const hasShortcuts = (value: unknown): value is WithCommands => (
   (typeof value === 'object' || typeof value === 'function')

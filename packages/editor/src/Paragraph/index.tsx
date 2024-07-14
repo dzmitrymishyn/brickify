@@ -1,12 +1,10 @@
-import { match } from '@brickifyio/browser/hotkeys';
 import { isElementWithinRange } from '@brickifyio/browser/selection';
-import { flow, pipe } from 'fp-ts/lib/function';
+import { pipe } from 'fp-ts/lib/function';
 import { parseDocument } from 'htmlparser2';
 import {
   type ElementType,
   forwardRef,
   type ReactNode,
-  type RefObject,
   useCallback,
   useMemo,
   useRef,
@@ -18,19 +16,17 @@ import {
   type BrickValue,
   extend,
   type PropsWithBrick,
-  type PropsWithChange,
 } from '../bricks';
-import { shortcuts as addShortcuts, hasShortcuts } from '../bricks/utils/shortcuts';
+import { shortcuts as addShortcuts } from '../bricks/utils/shortcuts';
+import { type PropsWithChange, useBrickContext, useMutation } from '../core';
 import { useCommands } from '../core/commands';
-import { useBrickContext } from '../core/hooks/useBrickContext';
-import { useMutation } from '../core/mutations/useMutation';
-import useMergedRefs from '../Editor/useMergedRef';
+import { useMergedRefs } from '../utils';
 
 type Value = BrickValue & {
   value: string | number;
 };
 
-type Props = PropsWithChange<Value> & Partial<PropsWithBrick<Value>> & {
+type Props = PropsWithChange & Partial<PropsWithBrick<Value>> & {
   bricks?: BrickComponent[];
   component?: ElementType;
   value: Value['value'];
@@ -61,42 +57,24 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
       (html) => /^.&nbsp;$/.test(html) ? html[0] : html,
       (html) => html === '<br>' ? '&nbsp;' : html,
       (newValue) => newValue === value ? undefined : onChange?.({
-        type: 'update',
         value: newValue,
       })
     ),
     [onChange, value],
   );
 
-  const mutationRef: RefObject<HTMLElement> = useMutation(({ remove }) => {
-    if (remove) {
-      return onChange?.({ type: 'remove' });
-    }
+  const ref = useMergedRefs(
+    rootRef,
+    refProp,
+    useMutation(({ remove, target }) => {
+      if (remove) {
+        return onChange?.({ type: 'remove' });
+      }
 
-    return emitNewValue(mutationRef.current);
-  });
-
-  const commandRef = useCommands(flow(
-    (options) => {
-      bricks
-        .flatMap((brick) => (
-          hasShortcuts(brick)
-            ? Object.values(brick.commands)
-            : []
-        ))
-        .forEach(({ handle, shortcuts }) => {
-          const hasMatch = handle && shortcuts?.some(
-            (shortcut) => match(options.event, shortcut),
-          );
-
-          if (hasMatch) {
-            handle(options);
-          }
-        });
-    },
-  ));
-
-  const ref = useMergedRefs(mutationRef, commandRef, refProp, rootRef);
+      return emitNewValue(target as HTMLElement);
+    }),
+    useCommands(bricks),
+  );
 
   oldComponents.current = <>{components}</>;
 
@@ -111,14 +89,17 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
     >
       {/* <span> */}
       {components}
-      {/* </span> */}
-      {/* <span>
+      {/* </span>
+      <span>
         {' '}
         <span
+          role="button"
+          tabIndex={-1}
+          onKeyDown={() => null}
           style={{ background: '#efefef', fontStyle: 'italic' }}
-          onClick={() => console.log(brick?.path())}
+          onClick={() => console.log(brick?.pathRef.current?.())}
         >
-          {brick?.path().join('/')}
+          {brick?.pathRef.current?.().join('/')}
         </span>
       </span> */}
     </Component>
