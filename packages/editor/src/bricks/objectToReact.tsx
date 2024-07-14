@@ -17,7 +17,7 @@ import {
   type NamedComponent,
 } from './brick';
 import { type BrickValue, isBrickValue } from './utils';
-import { type Change, type ChangeEvent, hasSlots, hasProps } from '../core';
+import { type Change, type ChangeEvent, hasProps, hasSlots } from '../core';
 
 type PathRef = MutableRefObject<() => string[]>;
 
