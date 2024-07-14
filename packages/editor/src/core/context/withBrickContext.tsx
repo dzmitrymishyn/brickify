@@ -10,10 +10,10 @@ import {
 } from 'react';
 
 import { BrickContext } from './BrickContext';
-import { type PropsWithBrick } from '../../bricks';
 import { useMergedRefs } from '../../utils';
 import { type PropsWithChange, useChangesController } from '../changes';
 import { useCommandsController } from '../commands/useCommandsController';
+import { getName, type PropsWithBrick } from '../components';
 import { useBrickContextUnsafe } from '../hooks';
 import { useBeforeAfterRanges } from '../hooks/useBeforeAfterRanges';
 import { useDisallowHotkeys } from '../hooks/useDisallowHotkeys';
@@ -130,7 +130,7 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
   };
 
   WithBrickContext.displayName = (
-    `WithBrickContext(${Component.displayName ?? 'Unnamed'})`
+    `WithBrickContext(${getName(Component) ?? 'Unnamed'})`
   );
 
   return WithBrickContext;

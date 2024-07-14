@@ -1,6 +1,8 @@
-import { bricksToMap, type NamedComponent } from '../../bricks';
+import { type NamedExoticComponent } from 'react';
 
-export type Slot = [string, 'inherit' | NamedComponent[]];
+import { bricksToMap, type NamedComponent } from '../components';
+
+export type Slot = [string, 'inherit' | NamedExoticComponent[]];
 export type Slots = Record<Slot[0], Slot[1]>;
 
 export const withSlots = <S extends Slots>(slots: S) => ({

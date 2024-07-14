@@ -1,9 +1,12 @@
 import React, { type PropsWithChildren } from 'react';
 
 import {
+  extend,
   type PropsWithBrick,
-} from '../bricks';
-import { extend, type PropsWithChange, useMutation, withSlots } from '../core';
+  type PropsWithChange,
+  useMutation,
+  withSlots,
+} from '../core';
 
 type Props = PropsWithChildren & PropsWithBrick & PropsWithChange;
 

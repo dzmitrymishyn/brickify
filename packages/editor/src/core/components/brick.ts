@@ -4,7 +4,7 @@ import {
   type MutableRefObject,
 } from 'react';
 
-import { type BrickValue } from './utils/values';
+import { type BrickValue } from './values';
 
 export type Component<Props = object> =
   | FC<Props>

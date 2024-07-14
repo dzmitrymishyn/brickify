@@ -2,7 +2,6 @@ import { type Node, of } from '@brickifyio/utils/slots-tree';
 import * as O from 'fp-ts/lib/Option';
 import { createElement, type MutableRefObject } from 'react';
 
-import { type Component } from './brick';
 import {
   addCached,
   addChange,
@@ -11,7 +10,7 @@ import {
   safeComponent,
   safeValue,
 } from './objectToReact';
-import { type BrickValue } from './utils';
+import { type BrickValue, type Component } from '../../components';
 
 const testBrick: BrickValue = {
   brick: 'test',

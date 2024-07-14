@@ -1,4 +1,5 @@
-import { type NamedComponent } from '../brick';
+import { type NamedComponent } from './brick';
+import { getName } from './getName';
 
 export const bricksToMap = (
   bricks: NamedComponent[] | 'inherit',
@@ -8,6 +9,6 @@ export const bricksToMap = (
     : bricks.reduce((slotAcc, brick) => ({
       ...slotAcc,
       // TODO: Check this place
-      [brick?.brick ?? brick.displayName ?? '']: brick,
+      [getName(brick) ?? '']: brick,
     }), {})
 );

@@ -3,8 +3,8 @@ import { flow } from 'fp-ts/lib/function';
 
 import { type HandleCommandOptions } from './models';
 import { useCustomCommands } from './useCustomCommands';
-import { type Component } from '../../bricks';
 import { type ChangeEvent } from '../changes';
+import { type Component } from '../components';
 import { hasShortcuts } from '../extensions';
 
 export type Command<Name extends string> = {

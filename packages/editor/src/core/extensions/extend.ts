@@ -1,6 +1,6 @@
 import { type FC, forwardRef } from 'react';
 
-import { type Component } from '../../bricks';
+import { type Component, getName } from '../components';
 
 /* eslint @typescript-eslint/no-explicit-any: off -- it's ok */
 export const extend = <C extends Component<any>, Enhancer extends object[]>(
@@ -9,7 +9,7 @@ export const extend = <C extends Component<any>, Enhancer extends object[]>(
 ): C & Enhancer[number] => {
   // eslint-disable-next-line -- TODO: Check it
   const config = Object.assign(
-    { displayName: brick.displayName ?? brick.name },
+    { displayName: getName(brick) },
     ...enhancers,
   );
 

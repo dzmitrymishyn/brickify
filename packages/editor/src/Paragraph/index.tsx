@@ -14,9 +14,13 @@ import { domToReactFactory } from './domToReactFactory';
 import {
   type Component as BrickComponent,
   type BrickValue,
+  extend,
   type PropsWithBrick,
-} from '../bricks';
-import { extend, type PropsWithChange, useBrickContext, useMutation, withShortcuts } from '../core';
+  type PropsWithChange,
+  useBrickContext,
+  useMutation,
+  withShortcuts,
+} from '../core';
 import { useCommands } from '../core/commands';
 import { useMergedRefs } from '../utils';
 

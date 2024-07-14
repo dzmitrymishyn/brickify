@@ -7,14 +7,12 @@ import {
 } from 'react';
 
 import {
-  type Component,
-  useBricksBuilder,
-} from '../bricks';
-import {
   type ChangeEvent,
+  type Component,
   extend,
   useBatchChanges,
   useBrickContext,
+  useBricksBuilder,
   useLogger,
   withBrickContext,
   withName,

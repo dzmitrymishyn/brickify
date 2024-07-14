@@ -12,12 +12,14 @@ import React, {
   type ReactNode,
 } from 'react';
 
+import { type Change, type ChangeEvent } from '../../changes';
 import {
+  type BrickValue,
   type Component as ComponentType,
+  isBrickValue,
   type NamedComponent,
-} from './brick';
-import { type BrickValue, isBrickValue } from './utils';
-import { type Change, type ChangeEvent, hasProps, hasSlots } from '../core';
+} from '../../components';
+import { hasProps, hasSlots } from '../../extensions';
 
 type PathRef = MutableRefObject<() => string[]>;
 

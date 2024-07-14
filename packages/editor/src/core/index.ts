@@ -1,4 +1,5 @@
 export * from './changes';
+export * from './components';
 export * from './context';
 export { BrickContext } from './context/BrickContext';
 export * from './extensions';

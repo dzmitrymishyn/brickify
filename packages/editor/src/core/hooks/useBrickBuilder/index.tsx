@@ -6,10 +6,10 @@ import {
   useRef,
 } from 'react';
 
-import { type Component } from './brick';
 import { type CacheItem, objectToReact } from './objectToReact';
-import { bricksToMap } from './utils';
-import { type ChangeEvent, useBrickContext } from '../core';
+import { type ChangeEvent } from '../../changes';
+import { bricksToMap, type Component } from '../../components';
+import { useBrickContext } from '../useBrickContext';
 
 export const useBricksBuilder = (
   children: unknown,
