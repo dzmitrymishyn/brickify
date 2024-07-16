@@ -5,10 +5,12 @@ const project = path.resolve(process.cwd(), 'tsconfig.json');
 /*
  * This is a custom ESLint configuration for use with
  * Next.js apps.
- *
  * This config extends the Vercel Engineering Style Guide.
  * For more information, see https://github.com/vercel/style-guide
  *
+ * Also it will be good to rewrite it into flat config. Follow the
+ * thread here https://github.com/eslint/eslint/issues/18093 to find out
+ * the perfect timing for migration
  */
 
 module.exports = {
