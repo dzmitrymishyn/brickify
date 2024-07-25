@@ -33,7 +33,6 @@ type Props = PropsWithChange & {
   bricks?: AnyComponent[];
   component?: ElementType;
   value: Value['value'];
-  brick: object;
 };
 
 const Paragraph = forwardRef<HTMLElement, Props>(({

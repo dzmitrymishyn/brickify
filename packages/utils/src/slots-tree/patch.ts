@@ -12,6 +12,8 @@ type NewValue = 'unhandled' | 'removed' | object;
 export const makeChangesMap = (changes: Change[]) => pipe(
   changes,
   A.reduce<Change, Record<string, Change[]>>({}, (changesMap, change) => {
+    assert(Array.isArray(change.path), 'path must be provided into update');
+
     // To understand next children updates path we need to populate changesMap
     // with all the keys, it gives us an opportunity to go only into updated
     // path
