@@ -1,33 +1,30 @@
 import { useEffect, useRef } from 'react';
 
-import { type HandleCommand, type HandleCommandOptions } from './models';
+import { type Command } from './models';
+import { type OnChange } from '../changes';
 import { useBrickContext } from '../hooks';
 import assert from 'assert';
 
-export type Command<Name extends string> = {
-  name: Name;
-  shortcuts?: string[];
-  handle?: (options: HandleCommandOptions) => void;
-};
-
-export type Commands<C extends Command<string>> = {
-  [K in C['name']]: Omit<Extract<C, { name: K }>, 'name'>;
-};
-
 export const useCustomCommands = (
-  handle: HandleCommand,
+  handlers: Command[],
+  onChange?: OnChange,
 ) => {
   const ref = useRef<HTMLElement>();
   const { subscribeCommand } = useBrickContext();
-  const commandHandleRef = useRef(handle);
+  const commandsRef = useRef(handlers);
+  commandsRef.current = handlers;
 
-  commandHandleRef.current = handle;
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
   useEffect(() => {
     assert(ref.current, 'useCommands: ref should be attached to a node');
     return subscribeCommand(
       ref.current,
-      (options) => commandHandleRef.current?.(options),
+      () => ({
+        handlers: commandsRef.current,
+        onChange: onChangeRef.current,
+      }),
     );
   }, [subscribeCommand]);
 

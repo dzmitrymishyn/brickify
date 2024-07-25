@@ -1,14 +1,21 @@
-import { addRange, getRange, isElementWithinRange } from '@brickifyio/browser/selection';
+import { match } from '@brickifyio/browser/hotkeys';
+import {
+  addRange,
+  getRange,
+  isElementWithinRange,
+} from '@brickifyio/browser/selection';
 import { getFirstDeepLeaf } from '@brickifyio/browser/utils';
 import { useCallback, useEffect, useRef } from 'react';
 
 import {
-  type HandleCommand,
+  type Command,
   type RangeCallback,
   type ResultsCallback,
 } from './models';
-import { type ChangesController } from '../changes';
+import { type ChangesController, type OnChange } from '../changes';
+import { type BrickContextType } from '../context';
 import { type BeforeAfterRangesController } from '../hooks';
+import { type Cache } from '../hooks/useBrickCache';
 import { type Logger } from '../logger';
 import { type MutationsController } from '../mutations';
 import assert from 'assert';
@@ -18,22 +25,29 @@ type UseCommandControllerOptions = {
   rangesController: BeforeAfterRangesController;
   mutationsController: MutationsController;
   logger?: Logger;
+  cache: Cache;
 };
 
 export const useCommandsController = ({
   changesController,
   rangesController,
   mutationsController,
+  cache,
   logger,
 }: UseCommandControllerOptions) => {
   const ref = useRef<HTMLElement>(null);
-  const subscribersRef = useRef(new Map<Node, HandleCommand>());
+  const subscribersRef = useRef(
+    new Map<Node, () => {
+      onChange?: OnChange;
+      handlers: Command[];
+    }>(),
+  );
 
-  const subscribe = useCallback((
-    element: HTMLElement,
-    execute: HandleCommand,
+  const subscribe = useCallback<BrickContextType['subscribeCommand']>((
+    element,
+    getHandlers,
   ) => {
-    subscribersRef.current.set(element, execute);
+    subscribersRef.current.set(element, getHandlers);
 
     return () => {
       subscribersRef.current.delete(element);
@@ -47,11 +61,10 @@ export const useCommandsController = ({
     );
 
     const element = ref.current;
-    const handle = (event: KeyboardEvent) => {
+    const handle = (originalEvent: KeyboardEvent) => {
       let range = getRange();
 
       const results: Record<string, unknown> = {};
-
       const getOrUpdateResults: ResultsCallback = (nameOrOptions) => {
         if (typeof nameOrOptions === 'string') {
           return results[nameOrOptions];
@@ -61,7 +74,6 @@ export const useCommandsController = ({
           Object.assign(results, nameOrOptions || {});
         }
       };
-
       const getOrUpdateRange: RangeCallback = (newRange?: Range) => {
         if (newRange instanceof Range) {
           range = newRange;
@@ -71,11 +83,13 @@ export const useCommandsController = ({
 
       changesController.startBatch();
       mutationsController.clear();
-      logger?.log('Command detection is started');
 
-      let current: Node | null = range?.startContainer ?? null;
+      let current: Node | null = getFirstDeepLeaf(
+        range?.startContainer ?? null,
+      );
+      let descendants: Node[] = [];
 
-      while (current && range && isElementWithinRange(current, range)) {
+      while (range) {
         while (current) {
           if (subscribersRef.current.has(current)) {
             break;
@@ -88,44 +102,68 @@ export const useCommandsController = ({
           break;
         }
 
-        const handleCommand = subscribersRef.current.get(current);
+        const { onChange, handlers } = subscribersRef.current.get(current)?.()
+          ?? { handlers: [] };
 
-        if (handleCommand) {
-          try {
-            handleCommand({
-              event,
-              results: getOrUpdateResults,
-              range: getOrUpdateRange,
-              element: current,
-              onChange: () => {
-                throw new Error('You should specify onChange');
-              },
-            });
-          } catch (error) {
-            logger?.error('Cannot handle keyboard event', error);
-          }
+        assert(Array.isArray(handlers), 'Commands should be array of Command');
+
+        if (handlers.length) {
+          const options = {
+            originalEvent,
+            target: current,
+            descendants,
+
+            results: getOrUpdateResults,
+            range: getOrUpdateRange,
+            cache: cache.get,
+
+            onChange: onChange ?? (() => {
+              throw new Error('You should specify onChange');
+            }),
+          };
+
+          handlers.find((handler) => {
+            if (typeof handler === 'function') {
+              handler(options);
+            } else if (
+              handler.shortcuts
+                ?.some((shortcut) => match(originalEvent, shortcut))
+            ) {
+              handler.handle?.(options);
+            }
+
+            return false;
+          });
         }
 
-        current = isElementWithinRange(getFirstDeepLeaf(current.nextSibling)!, range)
-          && getFirstDeepLeaf(current.nextSibling) || current.parentNode;
+        if (results.stop) {
+          break;
+        }
+
+        const nextDeepSiblingLeaf = getFirstDeepLeaf(current.nextSibling);
+        if (isElementWithinRange(range,nextDeepSiblingLeaf)) {
+          current = nextDeepSiblingLeaf;
+          descendants = [];
+        } else {
+          descendants.unshift(current);
+          current = current.parentNode;
+        }
       }
 
       if (range) {
         addRange(range);
       }
 
-      if (mutationsController.handle(mutationsController.clear() ?? [])) {
-        logger?.log('Commands were handled. Run apply fn for components');
-      } else {
-        logger?.log('There are no commands to handle');
-      }
+      const mutationsAfterCommands = mutationsController.clear() ?? [];
+
+      mutationsController.handle(mutationsAfterCommands);
       changesController.applyBatch();
     };
 
     element.addEventListener('keydown', handle);
 
     return () => element.removeEventListener('keydown', handle);
-  }, [changesController, rangesController, logger, mutationsController]);
+  }, [changesController, rangesController, logger, mutationsController, cache]);
 
   return { subscribe, ref };
 };

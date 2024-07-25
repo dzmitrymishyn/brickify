@@ -4,16 +4,18 @@
 import { addRange, fromCustomRange } from '@brickifyio/browser/selection';
 import { pipe } from 'fp-ts/lib/function';
 import {
+  forwardRef,
   type ForwardRefExoticComponent,
   useEffect,
   useMemo,
+  useRef,
 } from 'react';
 
 import { BrickContext } from './BrickContext';
 import { useMergedRefs } from '../../utils';
 import { type PropsWithChange, useChangesController } from '../changes';
 import { useCommandsController } from '../commands/useCommandsController';
-import { getName, type PropsWithBrick } from '../components';
+import { getName } from '../components';
 import { extend, withDisplayName } from '../extensions';
 import { useBrickContextUnsafe } from '../hooks';
 import { useBeforeAfterRanges } from '../hooks/useBeforeAfterRanges';
@@ -34,7 +36,7 @@ const metaKeyDisallowList = [
   ].map((key) => [`ctrl+${key}`, `cmd+${key}`]),
 ].flat();
 
-type Props = Partial<PropsWithBrick> & {
+type Props = {
   logger?: Logger;
   editable?: boolean;
   onChange: (value: unknown) => void;
@@ -43,18 +45,24 @@ type Props = Partial<PropsWithBrick> & {
 export function withBrickContext<P extends { value: object } & PropsWithChange>(
   Component: ForwardRefExoticComponent<P>,
 ) {
-  const WithBrickContext: React.FC<P & Props> = ({
+  const WithBrickContext = forwardRef<Node, Props & P>(({
     logger = EmptyLogger,
     editable = false,
     onChange,
     ...props
-  }) => {
+  }, refProp) => {
     const inheritedContext = useBrickContextUnsafe();
     const hasInheritedContext = Boolean(inheritedContext);
+    const internalRef = useRef<Element>();
 
     if (hasInheritedContext) {
+      const ref = useMergedRefs(refProp, internalRef);
+      // return Component({
+      //   ...props,
+      // })
       return <Component
         {...props as P}
+        ref={ref}
         onChange={onChange}
       />;
     }
@@ -73,6 +81,7 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
       changesController,
       rangesController,
       logger,
+      cache,
       mutationsController,
     });
 
@@ -95,7 +104,8 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
       subscribeMutation: mutationsController.subscribe,
       subscribeCommand: commandsController.subscribe,
       editable,
-      pathRef: props.brick?.pathRef || { current: () => ['children'] },
+      pathRef: cache.get(internalRef.current!)?.pathRef
+        || { current: () => ['children'] },
       cache,
     }), [
       logger,
@@ -104,11 +114,12 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
       commandsController.subscribe,
       rangesController,
       editable,
-      props.brick?.pathRef,
       cache,
     ]);
 
     const ref = useMergedRefs(
+      refProp,
+      internalRef,
       rangesControllerRef,
       rangeSaverElementRef,
       mutationsController.ref,
@@ -132,11 +143,14 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
         />
       </BrickContext.Provider>
     );
-  };
+  });
+
+  WithBrickContext.displayName = `WithBrickContext(${getName(Component) ?? 'Unnamed'})`;
 
   return extend(
     WithBrickContext,
     Component,
+    // withBrickName(getName(Component)),
     withDisplayName(`WithBrickContext(${getName(Component) ?? 'Unnamed'})`),
   );
 };

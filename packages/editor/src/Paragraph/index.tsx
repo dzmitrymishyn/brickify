@@ -1,4 +1,4 @@
-import { isElementWithinRange } from '@brickifyio/browser/selection';
+import { getLastDeepLeaf } from '@brickifyio/browser/utils';
 import { pipe } from 'fp-ts/lib/function';
 import { parseDocument } from 'htmlparser2';
 import {
@@ -12,26 +12,28 @@ import {
 
 import { domToReactFactory } from './domToReactFactory';
 import {
-  type Component as BrickComponent,
+  type AnyComponent,
   type BrickValue,
   extend,
-  type PropsWithBrick,
   type PropsWithChange,
   useBrickContext,
   useMutation,
   withShortcuts,
 } from '../core';
 import { useCommands } from '../core/commands';
+import { next } from '../core/utils/path';
 import { useMergedRefs } from '../utils';
+import assert from 'assert';
 
 type Value = BrickValue & {
   value: string | number;
 };
 
-type Props = PropsWithChange & Partial<PropsWithBrick<Value>> & {
-  bricks?: BrickComponent[];
+type Props = PropsWithChange & {
+  bricks?: AnyComponent[];
   component?: ElementType;
   value: Value['value'];
+  brick: object;
 };
 
 const Paragraph = forwardRef<HTMLElement, Props>(({
@@ -60,6 +62,7 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
       (html) => html === '<br>' ? '&nbsp;' : html,
       (newValue) => newValue === value ? undefined : onChange?.({
         value: newValue,
+        type: 'update',
       })
     ),
     [onChange, value],
@@ -112,26 +115,49 @@ Paragraph.displayName = 'Paragraph';
 
 export default extend(
   Paragraph,
-  withShortcuts({
-    newLine: {
+  withShortcuts([
+    {
+      name: 'newLine',
       shortcuts: ['enter'],
-      handle: ({ onChange, element, range }) => {
+      handle: ({ onChange, range, cache, results, descendants }) => {
         const currentRange = range();
+        const target = descendants[0];
 
-        if (currentRange && isElementWithinRange(element, currentRange)) {
+        assert(target, 'This handler should be called by it\'s parent and descendants should be defined');
+
+        if (currentRange) {
+          const cacheItem = cache(target);
+          assert(cacheItem, 'Cache item should exist');
+
+          currentRange.extractContents();
+          results({ stop: true });
+
+          const tempDiv = document.createElement('div');
+          const tempRange = new Range();
+          tempRange.setStart(currentRange.startContainer, currentRange.startOffset);
+          tempRange.setEnd(
+            getLastDeepLeaf(target)!,
+            getLastDeepLeaf(target)?.textContent?.length
+              ?? getLastDeepLeaf(target)?.childNodes?.length
+              ?? 0,
+          );
+
+          if (!tempRange.collapsed) {
+            tempDiv.append(tempRange.extractContents());
+          }
+
           onChange?.({
             type: 'add',
-            ...{
-              path: ['children', '2'],
-              value: {
-                brick: 'Paragraph',
-                id: Math.random(),
-                value: 'test',
-              },
+            path: next(cacheItem.pathRef.current()),
+            value: {
+              brick: 'Paragraph',
+              id: Math.random(),
+              // BR is a native browser behaviour to make an empty new line
+              value: tempDiv.innerHTML || '<br>',
             },
           });
         }
       }
     },
-  }),
+  ]),
 );

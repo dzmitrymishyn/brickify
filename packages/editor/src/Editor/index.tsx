@@ -7,7 +7,7 @@ import {
 } from 'react';
 
 import {
-  type ChangeEvent,
+  type Change,
   type Component,
   extend,
   useBatchChanges,
@@ -22,8 +22,7 @@ import { useMergedRefs } from '../utils';
 
 type Props = {
   value: unknown[];
-  // eslint-disable-next-line -- TODO: check it
-  bricks?: Component<any>[];
+  bricks?: Component[];
   onChange?: (value: unknown) => void;
 };
 
@@ -34,13 +33,13 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
 }, refProp) => {
   const { editable, changes: changesController } = useBrickContext();
   const logger = useLogger();
-  const editorChangesRef = useRef<ChangeEvent[]>([]);
+  const editorChangesRef = useRef<Change[]>([]);
   const onChangeRef = useRef<(value: unknown) => void>();
 
   onChangeRef.current = onChange;
 
   const emitChange = useCallback((
-    changes: ChangeEvent[],
+    changes: Change[],
     root?: Node,
   ) => {
     if (!changes.length || !root) {

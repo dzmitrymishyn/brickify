@@ -97,13 +97,13 @@ export const expose = (
 
     const newRange = new Range();
 
-    if (isElementWithinRange(firstNode, inputRange)) {
+    if (isElementWithinRange(inputRange, firstNode)) {
       newRange.setStart(firstNode, inputRange.startOffset);
     } else {
       newRange.setStart(inputRange.startContainer, inputRange.startOffset);
     }
 
-    if (isElementWithinRange(lastNode, inputRange)) {
+    if (isElementWithinRange(inputRange, lastNode)) {
       newRange.setEnd(lastNode, inputRange.endOffset);
     } else {
       newRange.setEnd(inputRange.endContainer, inputRange.endOffset);

@@ -8,11 +8,10 @@ import {
   cloneElement,
   createRef,
   type MutableRefObject,
-  type ReactElement,
   type ReactNode,
 } from 'react';
 
-import { type Change, type ChangeEvent } from '../../changes';
+import { type Change } from '../../changes';
 import {
   type BrickValue,
   type Component as ComponentType,
@@ -20,18 +19,13 @@ import {
   type NamedComponent,
 } from '../../components';
 import { hasProps, hasSlots } from '../../extensions';
-import { type Cache } from '../useBrickCache';
+import { type Cache, type CacheItem } from '../useBrickCache';
+import assert from 'assert';
 
 type PathRef = MutableRefObject<() => string[]>;
 
-export type CacheItem = {
-  element: ReactElement;
-  node: Node;
-  pathRef: PathRef;
-};
-
 type Dependencies = {
-  onChange: (...changes: ChangeEvent[]) => void;
+  onChange: (...changes: Change[]) => void;
   cache: Cache;
   slots: Record<string, ComponentType>;
   parentPathRef: PathRef;
@@ -114,7 +108,7 @@ export const addSlotsMeta = <T extends PickedData<'Component'>>(value: T) => ({
 type AddTreeNodeData = PickedData<'value' | 'slotMap' | 'cached'>;
 export const addTreeNode = <T extends AddTreeNodeData>(data: T) => ({
   ...data,
-  node: data.cached?.node ?? of(data.value, Object.keys(data.slotMap)),
+  node: data.cached?.slotsTreeNode ?? of(data.value, Object.keys(data.slotMap)),
 });
 
 type AddOutdatedDataDeps = PickedDeps<'cache' | 'oldParent' | 'parentPathRef'>;
@@ -158,24 +152,34 @@ export const buildSlots = (deps: Dependencies) =>
 
 export const build = (deps: Dependencies) => flow(
   I.bind('slotProps', buildSlots(deps)),
-  I.map(({ slotProps, Component, change, value, index, pathRef, cachedOutdated }) => {
+  I.map(({ slotProps, Component, change, value, index, cachedOutdated }) => {
     const { id, brick: _brick, ...rest } = value;
-    const key = `${id || index}`;
+    const key = id || `${index}`;
 
     const props = {
       ...hasProps(Component) && Component.props,
       ...rest,
       ...slotProps,
       onChange: change,
-      brick: { value, pathRef },
+      brick: value,
+      ref: (node: Element) => {
+        if (node) {
+          const cached = deps.cache.get(value);
+
+          assert(cached, 'value in the cache should exist');
+
+          cached.domNode = node;
+          deps.cache.set(node, cached);
+        }
+      },
     };
 
-    if (cachedOutdated && cachedOutdated?.element.key === key) {
-      return cloneElement(cachedOutdated.element, props);
+    if (cachedOutdated && cachedOutdated?.react?.key === key) {
+      return cloneElement(cachedOutdated.react, props);
     }
 
     return (
-    <Component {...props} key={id || index} />
+      <Component key={key} {...props} />
     );
   }),
 );
@@ -202,13 +206,18 @@ export const objectToReact = flow(
         )),
       )),
       O.chain((data) => pipe(
-        O.fromNullable(data.cached?.element),
+        O.fromNullable(data.cached?.react),
         O.alt(flow(
           () => data,
           build(deps),
-          tap((element) => deps.cache.set(
+          tap((react) => deps.cache.set(
             data.value,
-            { element, node: data.node, pathRef: data.pathRef },
+            {
+              slotsTreeNode: data.node,
+              pathRef: data.pathRef,
+              value: data.value,
+              react,
+            },
           )),
           O.some,
         )),

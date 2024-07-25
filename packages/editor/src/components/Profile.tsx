@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { forwardRef, useRef, useState } from 'react';
 
 import Br from './Br';
 import Strong from './Strong';
@@ -10,6 +10,7 @@ import {
   useMutation,
 } from '../core';
 import Paragraph from '../Paragraph';
+import { useMergedRefs } from '../utils';
 
 type Value = BrickValue & {
   children: string | number;
@@ -23,66 +24,75 @@ type Props =
     children: string | number;
   };
 
-const Profile: React.FC<Props> = ({ children, brick, onChange }) => {
-  const { editable } = useBrickContext();
-  const [isDescriptionVisible, setIsDescriptionVisible] = useState(
-    brick.value.visible,
-  );
+const Profile = forwardRef<HTMLDivElement, Props>(
+  ({ children, onChange, brick }, refProp) => {
+    const { editable } = useBrickContext();
+    const internalRef = useRef<HTMLDivElement>();
 
-  const visible = editable
-    ? brick.value.visible
-    : isDescriptionVisible;
+    const [isDescriptionVisible, setIsDescriptionVisible] = useState(
+      brick?.visible,
+    );
 
-  const mutationRef = useMutation<HTMLDivElement>(({ remove }) => {
-    if (remove) {
-      return onChange?.({ type: 'remove' });
-    }
-  });
+    const visible = editable
+      ? brick?.visible
+      : isDescriptionVisible;
 
-  return (
-    <div
-      ref={mutationRef}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 16,
-      }}
-      contentEditable={false}
-    >
-      <img
-        src="https://placehold.co/400"
-        alt="avatar"
-        style={{ borderRadius: '50%', width: 50, height: 50 }}
-      />
-      <button
-        type="button"
-        onClick={() => {
-          if (editable) {
-            onChange?.({
-              type: 'update',
-              visible: !visible,
-            });
-          } else {
-            setIsDescriptionVisible((oldValue) => !oldValue);
-          }
+    const mutationRef = useMutation<HTMLDivElement>(({ remove }) => {
+      if (remove) {
+        return onChange?.({ type: 'remove' });
+      }
+    });
+
+    const ref = useMergedRefs(refProp, internalRef, mutationRef);
+
+    return (
+      <div
+        ref={ref}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 16,
         }}
+        contentEditable={false}
       >
-        {visible ? 'Hide' : 'Show'}
-        {' '}
-        description
-      </button>
-      {visible ? <Paragraph
-        value={children}
-        bricks={[Strong, Br]}
-        onChange={(newValue) => onChange?.({
-          children: newValue.type === 'update' ? newValue.value ?? '' : '',
-          type: 'update',
-        })}
-      /> : null}
-    </div>
-  );
-};
+        <img
+          src="https://placehold.co/400"
+          alt="avatar"
+          style={{ borderRadius: '50%', width: 50, height: 50 }}
+        />
+        <button
+          type="button"
+          onClick={() => {
+            if (editable) {
+              onChange?.({
+                type: 'update',
+                visible: !visible,
+              });
+            } else {
+              setIsDescriptionVisible((oldValue) => !oldValue);
+            }
+          }}
+        >
+          {visible ? 'Hide' : 'Show'}
+          {' '}
+          description
+        </button>
+        {visible ? <Paragraph
+          value={children}
+          bricks={[Strong, Br]}
+          onChange={(newValue) => {
+            return onChange?.({
+              children: newValue.type === 'update' ? newValue.value ?? '' : '',
+              type: 'update',
+            });
+          }
+        }
+        /> : null}
+      </div>
+    );
+  },
+);
 
 Profile.displayName = 'Profile';
 

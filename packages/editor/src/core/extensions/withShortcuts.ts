@@ -1,11 +1,11 @@
-import { type Command, type Commands } from '../commands';
+import { type Command } from '../commands';
 
-export const withShortcuts = <C extends Command<string>>(
-  commands: Commands<C>,
+export const withShortcuts = (
+  commands: Command[],
 ) => ({ commands });
 
 export type WithCommands = {
-  commands: Commands<Command<string>>;
+  commands: Command[];
 };
 
 export const hasShortcuts = (value: unknown): value is WithCommands => (

@@ -6,11 +6,11 @@ import {
   addCached,
   addChange,
   addPathRef,
-  type CacheItem,
   safeComponent,
   safeValue,
 } from './objectToReact';
 import { type BrickValue, type Component } from '../../components';
+import { type CacheItem } from '../useBrickCache';
 
 const testBrick: BrickValue = {
   brick: 'test',

@@ -1,4 +1,4 @@
-import { fromRangeLike, isElementWithinRange } from '@brickifyio/browser/selection';
+import { fromRangeLike } from '@brickifyio/browser/selection';
 import { isText } from '@brickifyio/browser/utils';
 import { compile } from 'css-select';
 import React from 'react';
@@ -8,10 +8,10 @@ import { type HandleCommandOptions } from '../core/commands';
 
 const Br: React.FC = () => <br />;
 
-const addBr = ({ range, results, element }: HandleCommandOptions) => {
+const addBr = ({ range, results }: HandleCommandOptions) => {
   const newRange = fromRangeLike(range());
 
-  if (newRange && isElementWithinRange(element, newRange)) {
+  if (newRange) {
     const brNode = document.createElement('br');
 
     // Make sure we'll not lose the range element after extracting the content
@@ -44,21 +44,23 @@ const addBr = ({ range, results, element }: HandleCommandOptions) => {
 export default extend(
   Br,
   { is: compile('br') },
-  withShortcuts({
-    reshape: {
+  withShortcuts([
+    {
+      name: 'addBr',
       shortcuts: ['enter'],
       handle: addBr,
     },
-  }),
+  ]),
 );
 
 export const ShiftEnterBr = extend(
   Br,
   { is: compile('br') },
-  withShortcuts({
-    reshape: {
+  withShortcuts([
+    {
+      name: 'addBr',
       shortcuts: ['shift + enter'],
       handle: addBr,
     },
-  }),
+  ]),
 );

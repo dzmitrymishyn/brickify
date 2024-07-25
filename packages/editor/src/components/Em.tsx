@@ -11,10 +11,11 @@ const Em: React.FC<PropsWithChildren> = ({ children }) => (
 export default extend(
   Em,
   { is: compile('em') },
-  withShortcuts({
-    reshape: {
+  withShortcuts([
+    {
+      name: 'reshape',
       shortcuts: ['ctrl + i', 'cmd + i'],
-      handle: ({ range, element, results }) => {
+      handle: ({ range, target, results }) => {
         const previousReshape = results('reshape');
 
         const { type, range: newRange } = reshape(
@@ -23,7 +24,7 @@ export default extend(
             create: () => document.createElement('em'),
           },
           range()!,
-          element as HTMLElement,
+          target as HTMLElement,
           previousReshape as 'expose' | 'surround',
         );
 
@@ -34,5 +35,5 @@ export default extend(
         results({ reshape: type });
       },
     },
-  }),
+  ]),
 );

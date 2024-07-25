@@ -1,5 +1,6 @@
 export type Change = {
   type: 'add' | 'remove' | 'update';
-  value?: object;
-  path: string[];
+  value?: unknown;
+  path?: string[];
+  [key: string]: unknown;
 };

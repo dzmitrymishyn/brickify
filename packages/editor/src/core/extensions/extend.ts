@@ -2,8 +2,7 @@ import { type FC, forwardRef } from 'react';
 
 import { type Component } from '../components';
 
-/* eslint @typescript-eslint/no-explicit-any: off -- it's ok */
-export const extend = <C extends Component<any>, Enhancer extends object[]>(
+export const extend = <C extends Component | FC, Enhancer extends object[]>(
   brick: C,
   ...enhancers: Enhancer
 ): C & Enhancer[number] => {
@@ -23,10 +22,12 @@ export const extend = <C extends Component<any>, Enhancer extends object[]>(
     );
 
   // We need to exclude render fn from the old ForwardedRef component
-  const { render: _, ...oldBrick } = brick as unknown as {
+  const { render: _componentRender, ...oldBrick } = brick as unknown as {
     render: FC<unknown>;
   };
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- 1
+  const { render: _configRender, ...restConfig } = config;
 
   // eslint-disable-next-line -- TODO: Check it
-  return Object.assign(newBrick, oldBrick, config);
+  return Object.assign(newBrick, oldBrick, restConfig);
 };

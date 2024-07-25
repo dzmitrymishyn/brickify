@@ -1,4 +1,5 @@
-import { type ChangeEvent } from '../changes';
+import { type Change } from '../changes';
+import { type Cache } from '../hooks';
 
 export type ResultsCallback = {
   (name: string): unknown;
@@ -7,20 +8,28 @@ export type ResultsCallback = {
 
 export type RangeCallback = (range?: Range) => Range | null;
 
-export type HandleCommandOptions = {
-  event: KeyboardEvent,
-  results: ResultsCallback,
-  range: RangeCallback;
-  onChange: (...changes: ChangeEvent[]) => void;
-  element: Node;
-};
+export type OnChange = (...changes: Change[]) => void;
 
-export type HandleCommandResults = {
-  results: Record<string, unknown>;
-  range?: Range;
-  hasDomChanges: boolean;
+export type HandleCommandOptions = {
+  originalEvent: KeyboardEvent,
+  target: Node;
+  descendants: Node[];
+  results: ResultsCallback;
+  range: RangeCallback;
+  cache: Cache['get'];
+  onChange: (...changes: Change[]) => void;
 };
 
 export type HandleCommand = (options: HandleCommandOptions) => void;
 
+export type CommandObject<Name extends string> = {
+  name: Name;
+  shortcuts?: string[];
+  handle?: HandleCommand;
+};
 
+export type CommandFn = HandleCommand;
+
+export type Command<Name extends string = string> =
+  | CommandObject<Name>
+  | CommandFn;

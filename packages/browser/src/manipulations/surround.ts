@@ -71,7 +71,7 @@ export const surround = (
 
     const newRange = new Range();
 
-    if (isElementWithinRange(firstNode, inputRange)) {
+    if (isElementWithinRange(inputRange, firstNode)) {
       newRange.setStart(
         firstNode,
         firstNode === inputRange.startContainer ? inputRange.startOffset : 0,
@@ -80,7 +80,7 @@ export const surround = (
       newRange.setStart(inputRange.startContainer, inputRange.startOffset);
     }
 
-    if (isElementWithinRange(lastNode, inputRange)) {
+    if (isElementWithinRange(inputRange, lastNode)) {
       newRange.setEnd(
         lastNode,
         // eslint-disable-next-line no-nested-ternary -- test
