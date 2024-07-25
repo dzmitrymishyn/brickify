@@ -12,13 +12,13 @@
   "dependencies": {
     "@brickifyio/operators": "*",
     "assert": "^2.1.0",
-    "fp-ts": "^2.16.8",
-    "typescript": "^5.5.3"
+    "fp-ts": "^2.16.9",
+    "typescript": "^5.5.4"
   },
   "devDependencies": {
     "@brickifyio/eslint-config": "*",
     "@brickifyio/tsconfig": "*",
     "@types/jest": "^29.5.12",
-    "ts-jest": "^29.2.2"
+    "ts-jest": "^29.2.3"
   }
 }
