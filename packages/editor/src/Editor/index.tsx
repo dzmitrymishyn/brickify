@@ -13,7 +13,6 @@ import {
   useBatchChanges,
   useBrickContext,
   useBricksBuilder,
-  useLogger,
   withBrickContext,
   withBrickName,
 } from '../core';
@@ -32,7 +31,6 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   onChange,
 }, refProp) => {
   const { editable, changes: changesController } = useBrickContext();
-  const logger = useLogger();
   const editorChangesRef = useRef<Change[]>([]);
   const onChangeRef = useRef<(value: unknown) => void>();
 
@@ -50,10 +48,8 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
       children: unknown;
     };
 
-    logger.log('Editor value is updated', newValue.children);
-
     onChangeRef.current?.({ type: 'update', value: newValue.children });
-  }, [logger]);
+  }, []);
 
   const [components, treeRef] = useBricksBuilder(
     value,

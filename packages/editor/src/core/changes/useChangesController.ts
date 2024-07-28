@@ -23,13 +23,11 @@ export const useChangesController = ({
 
   const endBatch = useCallback(() => {
     state.current = 'interaction';
-    logger?.groupEnd?.();
-  }, [logger]);
+  }, []);
 
   return useMemo(() => ({
     state: () => state.current,
     startBatch: () => {
-      logger?.group?.('Batch operation has started');
       state.current = 'batch';
       subscribersRef.current.forEach(({ before }) => before?.());
     },

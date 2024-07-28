@@ -150,6 +150,26 @@ export const buildSlots = (deps: Dependencies) =>
         {},
       );
 
+/**
+ * Additional function that doesn't cause any closures that can cause memory
+ * leaks. If we use a callback in-place it can cause that our values will
+ * not be removed from WeakMap.
+ */
+const addNodeToCacheRef = (
+  cache: Cache,
+  value: object,
+  node: Element | null,
+) => {
+  if (node) {
+    const cached = cache.get(value);
+
+    assert(cached, 'value in the cache should exist');
+
+    cached.domNode = node;
+    cache.set(node, cached);
+  }
+};
+
 export const build = (deps: Dependencies) => flow(
   I.bind('slotProps', buildSlots(deps)),
   I.map(({ slotProps, Component, change, value, index, cachedOutdated }) => {
@@ -157,21 +177,12 @@ export const build = (deps: Dependencies) => flow(
     const key = id || `${index}`;
 
     const props = {
-      ...hasProps(Component) && Component.props,
+      ...(hasProps(Component) && Component.props),
       ...rest,
       ...slotProps,
       onChange: change,
       brick: value,
-      ref: (node: Element) => {
-        if (node) {
-          const cached = deps.cache.get(value);
-
-          assert(cached, 'value in the cache should exist');
-
-          cached.domNode = node;
-          deps.cache.set(node, cached);
-        }
-      },
+      ref: addNodeToCacheRef.bind(null, deps.cache, value),
     };
 
     if (cachedOutdated && cachedOutdated?.react?.key === key) {
