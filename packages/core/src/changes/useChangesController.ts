@@ -10,7 +10,7 @@ type Subscriber = {
 export const useChangesController = () => {
   const state = useRef<ChangeState>('interaction');
 
-  const subscribersRef = useRef(new Map<HTMLElement, Subscriber>());
+  const subscribersRef = useRef(new Map<HTMLElement | object, Subscriber>());
   const sortedElements = useRef<{ depth: number; handle: Subscriber }[]>([]);
 
   const endBatch = useCallback(() => {
@@ -35,10 +35,11 @@ export const useChangesController = () => {
       endBatch();
     },
     endBatch,
-    subscribeBatch: (element: HTMLElement, subscriber: Subscriber) => {
-      subscribersRef.current.set(element, subscriber);
+    subscribeBatch: (element: HTMLElement | null, subscriber: Subscriber) => {
+      const key = element ?? {};
+      subscribersRef.current.set(key, subscriber);
 
-      let depth = 0;
+      let depth = element ? 0 : Infinity;
       let current: Node | null = element;
 
       while (current) {
@@ -53,7 +54,7 @@ export const useChangesController = () => {
       sortedElements.current.sort((a, b) => b.depth - a.depth);
 
       return () => {
-        subscribersRef.current.delete(element);
+        subscribersRef.current.delete(key);
 
         const index = sortedElements.current.indexOf(elementToSort);
         if (index >= 0) {

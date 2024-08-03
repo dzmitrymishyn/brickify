@@ -14,6 +14,7 @@ export type BrickContextType = {
   store: BrickStore;
   pathRef?: PathRef;
 
+  onChange: OnChange;
   rootTreeNode: Node;
   ranges: BeforeAfterRangesController;
   changes: ChangesController;

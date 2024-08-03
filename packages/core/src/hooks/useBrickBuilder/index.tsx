@@ -6,7 +6,7 @@ import {
 } from 'react';
 
 import { objectToReact } from './objectToReact';
-import { type Change } from '../../changes';
+import { type OnChange } from '../../changes';
 import { bricksToMap, type Component } from '../../components';
 import { useBrickContext } from '../useBrickContext';
 import assert from 'assert';
@@ -15,7 +15,7 @@ export const useBricksBuilder = (
   brick: object,
   value: object,
   bricks: Component[],
-  onChange: (...changes: Change[]) => void,
+  onChange: OnChange,
 ): ReactNode => {
   const { store } = useBrickContext();
   const rootValueRef = useRef<Node | undefined>(undefined);

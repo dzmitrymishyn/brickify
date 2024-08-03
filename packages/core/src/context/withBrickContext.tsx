@@ -2,13 +2,15 @@
 // rules for all the actions. Parent component already added it
 /* eslint-disable react-hooks/rules-of-hooks -- it's justified */
 import { addRange, fromCustomRange } from '@brickifyio/browser/selection';
-import { of } from '@brickifyio/utils/slots-tree';
+import { of, patch } from '@brickifyio/utils/slots-tree';
 import { pipe } from 'fp-ts/lib/function';
 import {
   forwardRef,
   type ForwardRefExoticComponent,
   useEffect,
   useMemo,
+  useRef,
+  useCallback,
 } from 'react';
 
 import { BrickContext } from './BrickContext';
@@ -16,7 +18,11 @@ import { useBeforeAfterRanges } from './useBeforeAfterRanges';
 import { useBrickStoreFactory } from './useBrickStoreFactory';
 import { useDisallowHotkeys } from './useDisallowHotkeys';
 import { useRangeSaver } from './useRangeSaver';
-import { type PropsWithChange, useChangesController } from '../changes';
+import {
+  type Change,
+  type PropsWithChange,
+  useChangesController,
+} from '../changes';
 import { useCommandsController } from '../commands/useCommandsController';
 import { getName } from '../components';
 import { extend, withDisplayName } from '../extensions';
@@ -113,6 +119,52 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
       commandsController.ref,
     );
 
+    const editorChangesRef = useRef<Change[]>([]);
+    const onChangeRef = useRef<(value: unknown) => void>();
+    onChangeRef.current = onChange;
+    const emitChange = useCallback((changes: Change[]) => {
+      if (!changes.length) {
+        return;
+      }
+
+      const newValue = patch(rootTreeNode, changes, []) as {
+        value: unknown;
+      };
+
+      onChangeRef.current?.(newValue.value);
+    }, [rootTreeNode]);
+
+    const change = useCallback((...changes: Change[]) => {
+      debugger;
+      if (!changes.length) {
+        return;
+      }
+
+      if (changesController.state() === 'interaction') {
+        emitChange(changes);
+        return;
+      }
+
+      // console.log('useBricksBuilder', changes, store.get(brick)?.pathRef.current());
+      editorChangesRef.current.push(...changes);
+      return changes;
+      // It should be impossible that the wrapped component will emit
+      // multiple changes or it's own removals
+      // TODO: Check it
+      // if (change.type === 'update') {
+      //   onChange?.(change.value);
+      // }
+    }, [changesController, emitChange]);
+
+    useEffect(() => {
+      return changesController.subscribeBatch(null, {
+        apply: () => {
+          emitChange(editorChangesRef.current);
+          editorChangesRef.current = [];
+        },
+      });
+    }, [emitChange, changesController]);
+
     const contextValue = useMemo(() => ({
       ranges: rangesController,
       changes: changesController,
@@ -121,6 +173,7 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
       editable,
       rootTreeNode,
       store,
+      onChange: change,
     }), [
       changesController,
       commandsController.subscribe,
@@ -129,6 +182,7 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
       mutationsController.subscribe,
       rangesController,
       store,
+      change,
     ]);
 
     return (
@@ -137,14 +191,7 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
           ref={ref}
           {...props as P}
           brick={props.value}
-          onChange={(change) => {
-            // It should be impossible that the wrapped component will emit
-            // multiple changes or it's own removals
-            // TODO: Check it
-            if (change.type === 'update') {
-              onChange?.(change.value);
-            }
-          }}
+          onChange={change}
         />
       </BrickContext.Provider>
     );
