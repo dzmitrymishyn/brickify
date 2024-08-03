@@ -25,7 +25,7 @@ const createDeps = ({
   cache = new WeakMap(),
   slots = {},
   parentPathRef = createPathRef(['children', '0']),
-  parent = of({}, ['children']),
+  parent = of({}),
 }: Partial<{
   onChange: () => void;
   cache: WeakMap<BrickValue, CacheItem>;

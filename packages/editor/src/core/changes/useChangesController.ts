@@ -1,25 +1,22 @@
 import { useCallback, useMemo, useRef } from 'react';
 
 import { type ChangeState } from './models';
-import { type Logger } from '../logger';
 
 type Subscriber = {
   before?: () => void;
   apply?: () => void;
 };
 
-type UseChangesControllerOptions = {
-  logger?: Logger;
-};
-
-export const useChangesController = ({
-  logger,
-}: UseChangesControllerOptions) => {
+export const useChangesController = () => {
   const state = useRef<ChangeState>('interaction');
 
   const subscribersRef = useRef(
     new Map<HTMLElement, Subscriber>(),
   );
+  const sortedElements = useRef<{
+    depth: number;
+    handle: Subscriber;
+  }[]>([]);
 
   const endBatch = useCallback(() => {
     state.current = 'interaction';
@@ -29,14 +26,14 @@ export const useChangesController = ({
     state: () => state.current,
     startBatch: () => {
       state.current = 'batch';
-      subscribersRef.current.forEach(({ before }) => before?.());
+      sortedElements.current.forEach(({ handle }) => handle?.before?.());
     },
     applyBatch: () => {
-      subscribersRef.current.forEach(({ apply }) => {
+      sortedElements.current.forEach(({ handle }) => {
         try {
-          apply?.();
+          handle?.apply?.();
         } catch (error) {
-          logger?.error('After batch apply operation has an error', error);
+          // logger?.error('After batch apply operation has an error', error);
         }
       });
 
@@ -45,11 +42,31 @@ export const useChangesController = ({
     endBatch,
     subscribeBatch: (element: HTMLElement, subscriber: Subscriber) => {
       subscribersRef.current.set(element, subscriber);
+
+      let depth = 0;
+      let current: Node | null = element;
+
+      while (current) {
+        depth += 1;
+        current = current.parentNode;
+      }
+
+      const elementToSort = { depth, handle: subscriber };
+
+      sortedElements.current.push(elementToSort);
+      // TODO: Use priority queue or a linked list
+      sortedElements.current.sort((a, b) => b.depth - a.depth);
+
       return () => {
         subscribersRef.current.delete(element);
+
+        const index = sortedElements.current.indexOf(elementToSort);
+        if (index >= 0) {
+          sortedElements.current.splice(index, 1);
+        }
       };
     },
-  }), [logger, endBatch]);
+  }), [endBatch]);
 };
 
 export type ChangesController = ReturnType<typeof useChangesController>;

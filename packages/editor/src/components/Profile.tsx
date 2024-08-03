@@ -7,6 +7,7 @@ import {
   type PropsWithBrick,
   type PropsWithChange,
   useBrickContext,
+  useBrickRegistry,
   useMutation,
 } from '../core';
 import Paragraph from '../Paragraph';
@@ -27,6 +28,11 @@ type Props =
 const Profile = forwardRef<HTMLDivElement, Props>(
   ({ children, onChange, brick }, refProp) => {
     const { editable } = useBrickContext();
+    const {
+      ref: brickRegistryRef,
+      useBrickChildRegistry,
+    } = useBrickRegistry(brick);
+    const paragraphBrick = useBrickChildRegistry('content', {});
     const internalRef = useRef<HTMLDivElement>();
 
     const [isDescriptionVisible, setIsDescriptionVisible] = useState(
@@ -43,7 +49,7 @@ const Profile = forwardRef<HTMLDivElement, Props>(
       }
     });
 
-    const ref = useMergedRefs(refProp, internalRef, mutationRef);
+    const ref = useMergedRefs(brickRegistryRef, refProp, internalRef, mutationRef);
 
     return (
       <div
@@ -80,6 +86,7 @@ const Profile = forwardRef<HTMLDivElement, Props>(
         </button>
         {visible ? <Paragraph
           value={children}
+          brick={paragraphBrick}
           bricks={[Strong, Br]}
           onChange={(newValue) => {
             return onChange?.({

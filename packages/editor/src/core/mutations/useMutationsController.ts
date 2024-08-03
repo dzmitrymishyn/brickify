@@ -9,19 +9,16 @@ import {
 import { revertDomByMutations } from './revertDomByMutations';
 import { type ChangesController } from '../changes';
 import { type BeforeAfterRangesController } from '../hooks/useBeforeAfterRanges';
-import { type Logger } from '../logger';
 import assert from 'assert';
 
 type UseMutationsControllerOptions = {
   rangesController: BeforeAfterRangesController;
   changesController: ChangesController;
-  logger?: Logger;
 };
 
 export const useMutationsController = ({
   rangesController,
   changesController,
-  logger,
 }: UseMutationsControllerOptions) => {
   const ref = useRef<Element>(null);
 
@@ -84,7 +81,7 @@ export const useMutationsController = ({
               wereChanges = wereChanges || result;
             }
           } catch (error) {
-            logger?.error('Current mutation handler was broken', error);
+            // logger?.error('Current mutation handler was broken', error);
           }
         },
       );
@@ -98,19 +95,19 @@ export const useMutationsController = ({
           addRange,
           () => rangesController.clearBefore(),
         );
-        logger?.log('The DOM was restored since there are mutations');
+        observerRef.current?.takeRecords();
+        // logger?.log('The DOM was restored since there are mutations');
       } else {
-        logger?.log(
-          'Mutations were ignored since there are no registered changes',
-        );
+        // logger?.log(
+        //   'Mutations were ignored since there are no registered changes',
+        // );
       }
     } catch (error) {
-      logger?.error('The mutations observer works incorrect', error);
-    } finally {
-      observerRef.current?.takeRecords();
+      // logger?.error('The mutations observer works incorrect', error);
     }
+
     return wereChanges;
-  }, [logger, rangesController]);
+  }, [rangesController]);
 
   useEffect(() => {
     assert(
@@ -120,10 +117,10 @@ export const useMutationsController = ({
 
     const observer = new MutationObserver((mutations) => {
       changesController.startBatch();
-      logger?.log(`Mutations were detected at ${Date.now()}`);
+      // logger?.log(`Mutations were detected at ${Date.now()}`);
       handle(mutations);
       changesController.applyBatch();
-      logger?.groupEnd?.();
+      // logger?.groupEnd?.();
     });
 
     observer.observe(ref.current, {
@@ -138,7 +135,7 @@ export const useMutationsController = ({
     observerRef.current = observer;
 
     return () => observer.disconnect();
-  }, [changesController, logger, handle]);
+  }, [changesController, handle]);
 
   const subscribe = useCallback(
     (element: HTMLElement, mutate: MutationHandler) => {

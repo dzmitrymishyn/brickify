@@ -10,7 +10,7 @@ import { type BrickValue } from './values';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- it's fine
 export type Component<Props extends object = any> =
-  ForwardRefExoticComponent<Props>;
+  ForwardRefExoticComponent<Props> | React.FC<Props>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- it's fine
 export type AnyComponent<Props extends object = any> =

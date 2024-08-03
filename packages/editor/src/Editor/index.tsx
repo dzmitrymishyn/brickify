@@ -1,8 +1,9 @@
-import { type Node, patch } from '@brickifyio/utils/slots-tree';
+import { patch } from '@brickifyio/utils/slots-tree';
 import { pipe } from 'fp-ts/lib/function';
 import {
   forwardRef,
   useCallback,
+  useEffect,
   useRef,
 } from 'react';
 
@@ -12,6 +13,7 @@ import {
   extend,
   useBatchChanges,
   useBrickContext,
+  useBrickRegistry,
   useBricksBuilder,
   withBrickContext,
   withBrickName,
@@ -20,38 +22,43 @@ import { useCommands } from '../core/commands';
 import { useMergedRefs } from '../utils';
 
 type Props = {
-  value: unknown[];
+  value: object[];
   bricks?: Component[];
   onChange?: (value: unknown) => void;
+  brick: object;
 };
 
 const Editor = forwardRef<HTMLDivElement, Props>(({
   value,
   bricks = [],
   onChange,
+  brick,
 }, refProp) => {
-  const { editable, changes: changesController } = useBrickContext();
+  const { editable, store, changes: changesController } = useBrickContext();
   const editorChangesRef = useRef<Change[]>([]);
   const onChangeRef = useRef<(value: unknown) => void>();
+  const { ref: brickRef } = useBrickRegistry(brick);
 
   onChangeRef.current = onChange;
 
   const emitChange = useCallback((
     changes: Change[],
-    root?: Node,
+    brickParam: object,
   ) => {
+    const { slotsTreeNode: root, pathRef } = store.get(brickParam)!;
     if (!changes.length || !root) {
       return;
     }
 
-    const newValue = patch(root, changes) as {
-      children: unknown;
+    const newValue = patch(root, changes, pathRef.current()) as {
+      value: unknown;
     };
 
-    onChangeRef.current?.({ type: 'update', value: newValue.children });
-  }, []);
+    onChangeRef.current?.({ type: 'update', value: newValue.value });
+  }, [store]);
 
-  const [components, treeRef] = useBricksBuilder(
+  const components = useBricksBuilder(
+    brick,
     value,
     bricks,
     (...changes) => {
@@ -60,10 +67,11 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
       }
 
       if (changesController.state() === 'interaction') {
-        emitChange(changes, treeRef.current ?? undefined);
+        emitChange(changes, brick);
         return;
       }
 
+      // console.log('useBricksBuilder', changes, store.get(brick)?.pathRef.current());
       editorChangesRef.current.push(...changes);
       return changes;
     },
@@ -71,16 +79,18 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
 
   const batchChangesRef = useBatchChanges({
     apply: () => {
-      emitChange(editorChangesRef.current, treeRef.current ?? undefined);
+      // console.log('batchChangesRef', editorChangesRef.current, store.get(brick)?.pathRef.current());
+      emitChange(editorChangesRef.current, brick);
       editorChangesRef.current = [];
     },
   });
 
   const commandsRef = useCommands(bricks, (...changes) => {
+    // console.log('commandsRef', editorChangesRef.current, store.get(brick)?.pathRef.current());
     editorChangesRef.current.push(...changes);
   });
 
-  const ref = useMergedRefs(commandsRef, batchChangesRef, refProp);
+  const ref = useMergedRefs(commandsRef, batchChangesRef, brickRef, refProp);
 
   return (
     <div

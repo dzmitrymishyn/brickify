@@ -78,11 +78,17 @@ export const prepareNewValue = (
   const keys = Object.keys(node.slots);
 
   keys.forEach((key) => {
-    newValue[key] = traverseArray(
-      node.slots[key],
-      changesMap,
-      [...currentPath, key],
-    );
+    const subPath = [...currentPath, key];
+    newValue[key] = !changesMap[subPath.join('/')]
+      && (
+        (typeof value === 'object' && (value as Record<string, object[]>)[key])
+        || (node.value as Record<string, object[]>)[key]
+      )
+      || traverseArray(
+        node.slots[key],
+        changesMap,
+        subPath,
+      );
   });
 
   return [newValue];
@@ -145,9 +151,9 @@ export const traverseAndApplyChanges = (
   );
 };
 
-export const patch = (root: Node, changes: Change[]) => pipe(
+export const patch = (root: Node, changes: Change[], basePath: string[] = []) => pipe(
   makeChangesMap(changes),
-  (changesMap) => traverseAndApplyChanges(root, changesMap),
+  (changesMap) => traverseAndApplyChanges(root, changesMap, basePath),
   ([newRootNode]) => {
     // TODO: do I really want to assert it? Maybe it's ok to return null?
     assert(newRootNode !== undefined, 'Unpredictable removal of root element');

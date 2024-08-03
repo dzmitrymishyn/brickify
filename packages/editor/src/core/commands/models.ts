@@ -1,5 +1,5 @@
 import { type Change } from '../changes';
-import { type Cache } from '../hooks';
+import { type BrickStore } from '../hooks';
 
 export type ResultsCallback = {
   (name: string): unknown;
@@ -16,7 +16,7 @@ export type HandleCommandOptions = {
   descendants: Node[];
   results: ResultsCallback;
   range: RangeCallback;
-  cache: Cache['get'];
+  cache: BrickStore['get'];
   onChange: (...changes: Change[]) => void;
 };
 

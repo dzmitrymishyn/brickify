@@ -2,13 +2,13 @@
 // rules for all the actions. Parent component already added it
 /* eslint-disable react-hooks/rules-of-hooks -- it's justified */
 import { addRange, fromCustomRange } from '@brickifyio/browser/selection';
+import { of } from '@brickifyio/utils/slots-tree';
 import { pipe } from 'fp-ts/lib/function';
 import {
   forwardRef,
   type ForwardRefExoticComponent,
   useEffect,
   useMemo,
-  useRef,
 } from 'react';
 
 import { BrickContext } from './BrickContext';
@@ -17,13 +17,12 @@ import { type PropsWithChange, useChangesController } from '../changes';
 import { useCommandsController } from '../commands/useCommandsController';
 import { getName } from '../components';
 import { extend, withDisplayName } from '../extensions';
-import { useBrickContextUnsafe } from '../hooks';
+import { useBrickContextUnsafe, useBrickStoreFactory } from '../hooks';
 import { useBeforeAfterRanges } from '../hooks/useBeforeAfterRanges';
-import { useBrickCache } from '../hooks/useBrickCache';
 import { useDisallowHotkeys } from '../hooks/useDisallowHotkeys';
 import { useRangeSaver } from '../hooks/useRangeSaver';
-import { EmptyLogger, type Logger } from '../logger';
 import { useMutationsController } from '../mutations';
+import assert from 'assert';
 
 const metaKeyDisallowList = [
   'enter',
@@ -37,51 +36,57 @@ const metaKeyDisallowList = [
 ].flat();
 
 type Props = {
-  logger?: Logger;
   editable?: boolean;
   onChange: (value: unknown) => void;
+  brick?: object;
 };
 
 export function withBrickContext<P extends { value: object } & PropsWithChange>(
   Component: ForwardRefExoticComponent<P>,
 ) {
-  const WithBrickContext = forwardRef<Node, Props & P>(({
-    logger = EmptyLogger,
+  const WithBrickContext = forwardRef<Node, Props & Omit<P, 'brick'>>(({
     editable = false,
     onChange,
+    brick,
     ...props
   }, refProp) => {
     const inheritedContext = useBrickContextUnsafe();
-    const hasInheritedContext = Boolean(inheritedContext);
-    const internalRef = useRef<Element>();
 
-    if (hasInheritedContext) {
-      const ref = useMergedRefs(refProp, internalRef);
-      // return Component({
-      //   ...props,
-      // })
-      return <Component
-        {...props as P}
-        ref={ref}
-        onChange={onChange}
-      />;
+    if (inheritedContext) {
+      assert(brick, 'brick value should be passed from the parent component');
+      return (
+        <Component
+          {...props as P}
+          brick={brick}
+          onChange={onChange}
+        />
+      );
     }
 
-    const cache = useBrickCache();
-    const changesController = useChangesController({ logger });
+    const store = useBrickStoreFactory();
+    const rootTreeNode = useMemo(() => of({}), []);
+
+    if (!store.get(props.value)) {
+      rootTreeNode.value = { value: props.value };
+      store.set(props.value, {
+        slotsTreeNode: rootTreeNode,
+        pathRef: { current: () => [] },
+        value: props.value,
+      });
+    }
+
+    const changesController = useChangesController();
     const [rangesControllerRef, rangesController] = useBeforeAfterRanges();
     const rangeSaverElementRef = useRangeSaver(rangesController);
     const disalowKeyboardRef = useDisallowHotkeys(metaKeyDisallowList);
     const mutationsController = useMutationsController({
       rangesController,
       changesController,
-      logger,
     });
     const commandsController = useCommandsController({
       changesController,
       rangesController,
-      logger,
-      cache,
+      store,
       mutationsController,
     });
 
@@ -93,33 +98,13 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
       },
       [props.value, mutationsController, editable]
     );
+
     useEffect(function restoreRange() {
       pipe(rangesController.getAfter(), fromCustomRange, addRange);
-    }, [rangesController, props.value]);
-
-    const contextValue = useMemo(() => ({
-      logger,
-      ranges: rangesController,
-      changes: changesController,
-      subscribeMutation: mutationsController.subscribe,
-      subscribeCommand: commandsController.subscribe,
-      editable,
-      pathRef: cache.get(internalRef.current!)?.pathRef
-        || { current: () => ['children'] },
-      cache,
-    }), [
-      logger,
-      changesController,
-      mutationsController.subscribe,
-      commandsController.subscribe,
-      rangesController,
-      editable,
-      cache,
-    ]);
+    }, [rangesController, props.value, store]);
 
     const ref = useMergedRefs(
       refProp,
-      internalRef,
       rangesControllerRef,
       rangeSaverElementRef,
       mutationsController.ref,
@@ -127,11 +112,30 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
       commandsController.ref,
     );
 
+    const contextValue = useMemo(() => ({
+      ranges: rangesController,
+      changes: changesController,
+      subscribeMutation: mutationsController.subscribe,
+      subscribeCommand: commandsController.subscribe,
+      editable,
+      rootTreeNode,
+      store,
+    }), [
+      changesController,
+      commandsController.subscribe,
+      editable,
+      rootTreeNode,
+      mutationsController.subscribe,
+      rangesController,
+      store,
+    ]);
+
     return (
-      <BrickContext.Provider value={inheritedContext ?? contextValue}>
+      <BrickContext.Provider value={contextValue}>
         <Component
           ref={ref}
           {...props as P}
+          brick={props.value}
           onChange={(change) => {
             // It should be impossible that the wrapped component will emit
             // multiple changes or it's own removals
@@ -150,7 +154,6 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
   return extend(
     WithBrickContext,
     Component,
-    // withBrickName(getName(Component)),
     withDisplayName(`WithBrickContext(${getName(Component) ?? 'Unnamed'})`),
   );
 };

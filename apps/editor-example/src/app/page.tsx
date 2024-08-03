@@ -27,6 +27,11 @@ const Page = () => {
   //   { brick: 'Paragraph', id: newKey(), value: '1Lorem <strong style="color: red"><strong>i<em>ps</em>um</strong></strong> dolar sit <strong>amet</strong>' },
   // ]);
   const [state, setState] = useState<unknown>(() => Array.from({ length: 1 }, () => [
+    { brick: 'Paragraph', id: newKey(), value: '1Lorem <strong>ipsum</strong> dolar sit amet' },
+    { brick: 'Paragraph', id: newKey(), value: '1Lorem <strong>ipsum</strong> dolar sit amet' },
+    { brick: 'Paragraph', id: newKey(), value: '1Lorem <strong>ipsum</strong> dolar sit amet' },
+    { brick: 'Paragraph', id: newKey(), value: '1Lorem <strong>ipsum</strong> dolar sit amet' },
+    { brick: 'Paragraph', id: newKey(), value: '1Lorem <strong>ipsum</strong> dolar sit amet' },
     {
       brick: 'Editor',
       id: newKey(),
@@ -61,35 +66,35 @@ const Page = () => {
         },
       ],
     },
-    { brick: 'Heading', id: newKey(), value: 'Heading' },
-    { brick: 'Paragraph', id: newKey(), value: 'First line start <strong style="color: red"><strong>11str str<em>12st em</em>13str str</strong></strong> 14 <strong>15 st</strong>' },
-    { brick: 'Paragraph', id: newKey(), value: 'Second line start <strong>21 st</strong> 22' },
-    { brick: 'Paragraph', id: newKey(), value: ['3rd line 31', ' 32 ', '33'] },
+    // { brick: 'Heading', id: newKey(), value: 'Heading' },
+    // { brick: 'Paragraph', id: newKey(), value: 'First line start <strong style="color: red"><strong>11str str<em>12st em</em>13str str</strong></strong> 14 <strong>15 st</strong>' },
+    // { brick: 'Paragraph', id: newKey(), value: 'Second line start <strong>21 st</strong> 22' },
+    // { brick: 'Paragraph', id: newKey(), value: ['3rd line 31', ' 32 ', '33'] },
+    // // {
+    // //   brick: 'Paragraph', id: newKey(), value: '4th line lorem <em>ipsum dolar sit amet</em>', attributes: { test: true },
+    // // },
+    // // {
+    // //   brick: 'Container',
+    // //   id: newKey(),
+    // //   children: [
+    // //     // 'test',
+    // //     // 'test',
+    // //     // 'test',
+    // //     { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
+    // //     { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
+    // //     { brick: 'Paragraph', id: newKey(), value: '2hello world' },
+    // //     { brick: 'Paragraph', id: newKey(), value: ['<strong>3one child</strong>', ' ', 'another child'] },
+    // //   ],
+    // // },
     // {
-    //   brick: 'Paragraph', id: newKey(), value: '4th line lorem <em>ipsum dolar sit amet</em>', attributes: { test: true },
-    // },
-    // {
-    //   brick: 'Container',
+    //   brick: 'Profile',
     //   id: newKey(),
-    //   children: [
-    //     // 'test',
-    //     // 'test',
-    //     // 'test',
-    //     { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
-    //     { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
-    //     { brick: 'Paragraph', id: newKey(), value: '2hello world' },
-    //     { brick: 'Paragraph', id: newKey(), value: ['<strong>3one child</strong>', ' ', 'another child'] },
-    //   ],
+    //   children: 'Hi <strong>everyone</strong>!',
+    //   visible: true,
+    //   // children: [
+    //   //   { brick: 'Paragraph', id: newKey(), children: 'Hi <strong>everyone</strong>!' },
+    //   // ],
     // },
-    {
-      brick: 'Profile',
-      id: newKey(),
-      children: 'Hi <strong>everyone</strong>!',
-      visible: true,
-      // children: [
-      //   { brick: 'Paragraph', id: newKey(), children: 'Hi <strong>everyone</strong>!' },
-      // ],
-    },
     // { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
     // ...Array.from({ length: 2000 }, () => ({
     //   brick: 'Paragraph', id: newKey(), value: `${newKey()} hello world`,
@@ -111,7 +116,6 @@ const Page = () => {
         // eslint-disable-next-line -- TODO: check it
         value={state as any}
         editable={editable}
-        logger={console}
         onChange={(newValue) => { setState(newValue); }}
         bricks={[
           extend(
@@ -129,9 +133,9 @@ const Page = () => {
           Profile,
         ]}
       />
-      <pre>
+      {/* <pre>
         {JSON.stringify(state, null, 2)}
-      </pre>
+      </pre> */}
     </div>
   );
 };

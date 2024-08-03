@@ -1,7 +1,5 @@
-import { of, type Node as SlotsTreeNode } from '@brickifyio/utils/slots-tree';
 import {
   type ReactNode,
-  type RefObject,
   useMemo,
   useRef,
 } from 'react';
@@ -10,28 +8,46 @@ import { objectToReact } from './objectToReact';
 import { type Change } from '../../changes';
 import { bricksToMap, type Component } from '../../components';
 import { useBrickContext } from '../useBrickContext';
+import assert from 'assert';
+import { Node } from '@brickifyio/utils/slots-tree';
 
 export const useBricksBuilder = (
-  children: unknown,
+  brick: object,
+  value: object,
   bricks: Component[],
   onChange: (...changes: Change[]) => void,
-): [ReactNode, RefObject<SlotsTreeNode | undefined>] => {
-  const { pathRef, cache } = useBrickContext();
-  const rootValueRef = useRef<SlotsTreeNode | undefined>(undefined);
+): ReactNode => {
+  const { store } = useBrickContext();
+  const rootValueRef = useRef<Node | undefined>(undefined);
 
   const element = useMemo(() => {
+    const storedItem = store.get(brick);
+
+    console.log('start building');
+
+    assert(storedItem, 'brick item should be stored in the store');
+
+    const parent = storedItem.slotsTreeNode;
     const oldParent = rootValueRef.current;
-    rootValueRef.current = of({ children }, pathRef.current());
+    parent.slots = {};
+    rootValueRef.current = { ...parent };
+    const pathRef = store.get(brick)!.pathRef;
+    const parentPathRef = {
+      current: () => [
+        ...pathRef.current() ?? [],
+        'value',
+      ],
+    };
 
-    return objectToReact(children)({
+    return objectToReact(value)({
       onChange,
-      cache,
       slots: bricksToMap(bricks) as Record<string, Component>,
-      parentPathRef: pathRef,
-      parent: rootValueRef.current,
+      parentPathRef,
+      parent,
       oldParent,
+      store,
     });
-  }, [bricks, children, onChange, pathRef, cache]);
+  }, [brick, bricks, value, onChange, store]);
 
-  return [element, rootValueRef];
+  return element;
 };

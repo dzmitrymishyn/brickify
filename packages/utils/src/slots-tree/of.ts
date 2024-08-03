@@ -2,12 +2,14 @@ import { type Node } from './node';
 
 export const of = (
   value: object,
-  slots: string[] = [],
-  slotValues: Record<string, Node[]> = {},
+  // slots: string[] = [],
+  _path: string[] = [],
 ): Node => ({
   value,
-  slots: slots.reduce((acc, key) => ({
-    ...acc,
-    [key]: slotValues[key] ?? [],
-  }), {}),
+  // path,
+  slots: {},
+  // slots: slots.reduce((acc, key) => ({
+  //   ...acc,
+  //   [key]: [],
+  // }), {}),
 });

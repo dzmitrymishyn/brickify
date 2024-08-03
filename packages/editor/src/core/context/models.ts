@@ -1,19 +1,20 @@
+import { type Node } from '@brickifyio/utils/slots-tree';
+
 import { type ChangesController } from '../changes';
 import { type Command, type OnChange } from '../commands';
+import { type BrickStore } from '../hooks';
 import {
   type BeforeAfterRangesController,
 } from '../hooks/useBeforeAfterRanges';
-import { type Cache } from '../hooks/useBrickCache';
-import { type Logger } from '../logger';
 import { type Mutation } from '../mutations';
 import { type ElementSubscribe, type PathRef } from '../utils';
 
 export type BrickContextType = {
   editable: boolean;
-  cache: Cache;
-  pathRef: PathRef;
+  store: BrickStore;
+  pathRef?: PathRef;
 
-  logger: Logger;
+  rootTreeNode: Node;
   ranges: BeforeAfterRangesController;
   changes: ChangesController;
   subscribeMutation: ElementSubscribe<(mutation: Mutation) => void>;

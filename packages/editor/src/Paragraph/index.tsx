@@ -3,7 +3,6 @@ import { pipe } from 'fp-ts/lib/function';
 import { parseDocument } from 'htmlparser2';
 import {
   type ElementType,
-  forwardRef,
   type ReactNode,
   useCallback,
   useMemo,
@@ -17,6 +16,7 @@ import {
   extend,
   type PropsWithChange,
   useBrickContext,
+  useBrickRegistry,
   useMutation,
   withShortcuts,
 } from '../core';
@@ -33,18 +33,21 @@ type Props = PropsWithChange & {
   bricks?: AnyComponent[];
   component?: ElementType;
   value: Value['value'];
+  brick: object;
 };
 
-const Paragraph = forwardRef<HTMLElement, Props>(({
+const Paragraph: React.FC<Props> = ({
   value,
   bricks = [],
   component: Component = 'div',
   onChange,
-}, refProp) => {
+  brick,
+}) => {
   const rootRef = useRef<HTMLElement>(null);
   const oldComponents = useRef<ReactNode>();
   const { editable } = useBrickContext();
 
+  const { ref: brickRef } = useBrickRegistry(brick);
   const domToReact = useMemo(() => domToReactFactory(
     bricks,
     oldComponents,
@@ -56,9 +59,8 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
 
   const emitNewValue = useCallback(
     (element?: HTMLElement | null) => pipe(
-      element?.innerHTML ?? '&nbsp;',
-      (html) => /^.&nbsp;$/.test(html) ? html[0] : html,
-      (html) => html === '<br>' ? '&nbsp;' : html,
+      element?.innerHTML ?? '',
+      (html) => html === '<br>' ? '' : html,
       (newValue) => newValue === value ? undefined : onChange?.({
         value: newValue,
         type: 'update',
@@ -67,9 +69,13 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
     [onChange, value],
   );
 
+  // useEffect(() => {
+  //   console.log(store.get(brick)?.pathRef.current());
+  // }, [brick, store]);
+
   const ref = useMergedRefs(
     rootRef,
-    refProp,
+    brickRef,
     useCommands(bricks),
     useMutation(({ remove, target }) => {
       if (remove) {
@@ -92,7 +98,7 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
       }}
     >
       {/* <span> */}
-      {components}
+      {components.length ? components : <br />}
       {/* </span>
       <span>
         {' '}
@@ -108,7 +114,7 @@ const Paragraph = forwardRef<HTMLElement, Props>(({
       </span> */}
     </Component>
   );
-});
+};
 
 Paragraph.displayName = 'Paragraph';
 

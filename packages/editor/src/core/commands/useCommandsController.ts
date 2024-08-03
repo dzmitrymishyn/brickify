@@ -14,9 +14,7 @@ import {
 } from './models';
 import { type ChangesController, type OnChange } from '../changes';
 import { type BrickContextType } from '../context';
-import { type BeforeAfterRangesController } from '../hooks';
-import { type Cache } from '../hooks/useBrickCache';
-import { type Logger } from '../logger';
+import { type BeforeAfterRangesController, type BrickStore } from '../hooks';
 import { type MutationsController } from '../mutations';
 import assert from 'assert';
 
@@ -24,16 +22,14 @@ type UseCommandControllerOptions = {
   changesController: ChangesController;
   rangesController: BeforeAfterRangesController;
   mutationsController: MutationsController;
-  logger?: Logger;
-  cache: Cache;
+  store: BrickStore;
 };
 
 export const useCommandsController = ({
   changesController,
   rangesController,
   mutationsController,
-  cache,
-  logger,
+  store,
 }: UseCommandControllerOptions) => {
   const ref = useRef<HTMLElement>(null);
   const subscribersRef = useRef(
@@ -115,7 +111,7 @@ export const useCommandsController = ({
 
             results: getOrUpdateResults,
             range: getOrUpdateRange,
-            cache: cache.get,
+            cache: store.get,
 
             onChange: onChange ?? (() => {
               throw new Error('You should specify onChange');
@@ -163,7 +159,7 @@ export const useCommandsController = ({
     element.addEventListener('keydown', handle);
 
     return () => element.removeEventListener('keydown', handle);
-  }, [changesController, rangesController, logger, mutationsController, cache]);
+  }, [changesController, rangesController, mutationsController, store]);
 
   return { subscribe, ref };
 };
