@@ -91,7 +91,13 @@ export const addChange = ({ onChange }: PickedDeps<'onChange'>) =>
       ...changes.map(({ type = 'update', path, ...value }) => ({
         type,
         path: path ?? data.pathRef.current(),
-        value: { ...data.value, ...value },
+        ...(
+          path
+            ? value
+            : {
+              value: { ...data.value, ...value },
+            }
+        ),
       })),
     ),
   });

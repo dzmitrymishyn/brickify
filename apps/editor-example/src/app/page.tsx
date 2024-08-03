@@ -9,6 +9,7 @@ import { ShiftEnterBr } from '@brickifyio/editor/components/Br';
 import Container from '@brickifyio/editor/components/Container';
 import Em from '@brickifyio/editor/components/Em';
 import Heading from '@brickifyio/editor/components/Heading';
+import List from '@brickifyio/editor/components/List';
 import Profile from '@brickifyio/editor/components/Profile';
 import Strong from '@brickifyio/editor/components/Strong';
 import Editor from '@brickifyio/editor/Editor';
@@ -27,65 +28,33 @@ const Page = () => {
   //   { brick: 'Paragraph', id: newKey(), value: '1Lorem <strong style="color: red"><strong>i<em>ps</em>um</strong></strong> dolar sit <strong>amet</strong>' },
   // ]);
   const [state, setState] = useState<unknown>(() => Array.from({ length: 1 }, () => [
-    { brick: 'Paragraph', id: newKey(), value: '1Lorem <strong>ipsum</strong> dolar sit amet' },
-    { brick: 'Paragraph', id: newKey(), value: '1Lorem <strong>ipsum</strong> dolar sit amet' },
-    { brick: 'Paragraph', id: newKey(), value: '1Lorem <strong>ipsum</strong> dolar sit amet' },
-    { brick: 'Paragraph', id: newKey(), value: '1Lorem <strong>ipsum</strong> dolar sit amet' },
-    { brick: 'Paragraph', id: newKey(), value: '1Lorem <strong>ipsum</strong> dolar sit amet' },
     {
-      brick: 'Editor',
+      brick: 'Heading',
       id: newKey(),
-      value: [
-        { brick: 'Paragraph', id: newKey(), value: '1Lorem <strong>ipsum</strong> dolar sit amet' },
+      value: 'Here is simple components that',
+    },
+    {
+      brick: 'List',
+      id: newKey(),
+      children: [
         {
-          brick: 'Container',
+          brick: 'ListItem',
           id: newKey(),
-          children: [
-            // 'test',
-            // 'test',
-            // 'test',
-            { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
-            { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
-            { brick: 'Paragraph', id: newKey(), value: '2hello world' },
-            { brick: 'Paragraph', id: newKey(), value: ['3one child', ' ', 'another child'] },
-            {
-              brick: 'Container',
-              id: newKey(),
-              children: [
-                // 'test',
-                // 'test',
-                // 'test',
-                { brick: 'Paragraph', id: newKey(), value: '----------' },
-                { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
-                { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
-                { brick: 'Paragraph', id: newKey(), value: '2hello world' },
-                { brick: 'Paragraph', id: newKey(), value: '----------' },
-              ],
-            },
-          ],
+          value: 'List with item number 1',
+        },
+        {
+          brick: 'ListItem',
+          id: newKey(),
+          value: 'List with item number 2',
+        },
+        {
+          brick: 'ListItem',
+          id: newKey(),
+          value: '<em>Try to add new list item</em>',
         },
       ],
     },
-    // { brick: 'Heading', id: newKey(), value: 'Heading' },
-    // { brick: 'Paragraph', id: newKey(), value: 'First line start <strong style="color: red"><strong>11str str<em>12st em</em>13str str</strong></strong> 14 <strong>15 st</strong>' },
-    // { brick: 'Paragraph', id: newKey(), value: 'Second line start <strong>21 st</strong> 22' },
-    // { brick: 'Paragraph', id: newKey(), value: ['3rd line 31', ' 32 ', '33'] },
-    // // {
-    // //   brick: 'Paragraph', id: newKey(), value: '4th line lorem <em>ipsum dolar sit amet</em>', attributes: { test: true },
-    // // },
-    // // {
-    // //   brick: 'Container',
-    // //   id: newKey(),
-    // //   children: [
-    // //     // 'test',
-    // //     // 'test',
-    // //     // 'test',
-    // //     { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
-    // //     { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
-    // //     { brick: 'Paragraph', id: newKey(), value: '2hello world' },
-    // //     { brick: 'Paragraph', id: newKey(), value: ['<strong>3one child</strong>', ' ', 'another child'] },
-    // //   ],
-    // // },
+    { brick: 'Paragraph', id: newKey(), value: 'It is a <strong>paragraph</strong>' },
     {
       brick: 'Profile',
       id: newKey(),
@@ -95,10 +64,10 @@ const Page = () => {
       //   { brick: 'Paragraph', id: newKey(), children: 'Hi <strong>everyone</strong>!' },
       // ],
     },
-    // { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
-    // ...Array.from({ length: 2000 }, () => ({
-    //   brick: 'Paragraph', id: newKey(), value: `${newKey()} hello world`,
-    // })),
+    { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
+    ...Array.from({ length: 2000 }, () => ({
+      brick: 'Paragraph', id: newKey(), value: `${newKey()} hello world`,
+    })),
   ]).flat());
   const [editable, setEditable] = useState(true);
 
@@ -118,6 +87,7 @@ const Page = () => {
         editable={editable}
         onChange={(newValue) => { setState(newValue); }}
         bricks={[
+          List,
           extend(
             Editor,
             withProps({
@@ -133,9 +103,9 @@ const Page = () => {
           Profile,
         ]}
       />
-      {/* <pre>
+      <pre>
         {JSON.stringify(state, null, 2)}
-      </pre> */}
+      </pre>
     </div>
   );
 };

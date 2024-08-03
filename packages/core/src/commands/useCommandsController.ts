@@ -7,7 +7,6 @@ import { getFirstDeepLeaf } from '@brickifyio/browser/utils';
 import { useCallback, useEffect, useRef } from 'react';
 
 import {
-  type Command,
   type RangeCallback,
   type ResultsCallback,
 } from './models';
@@ -35,23 +34,26 @@ export const useCommandsController = ({
   onChange,
 }: UseCommandControllerOptions) => {
   const ref = useRef<HTMLElement>(null);
-  const subscribersRef = useRef(
-    new Map<Node, () => {
-      onChange?: OnChange;
-      handlers: Command[];
-    }>(),
-  );
+  // const subscribersRef = useRef(
+  //   new Map<Node, () => {
+  //     onChange?: OnChange;
+  //     handlers: Command[];
+  //   }>(),
+  // );
 
   const subscribe = useCallback<BrickContextType['subscribeCommand']>((
     element,
     getHandlers,
   ) => {
-    subscribersRef.current.set(element, getHandlers);
+    const storeItem = store.get(element)!;
+
+    storeItem.commands = getHandlers;
+    // subscribersRef.current.set(element, getHandlers);
 
     return () => {
-      subscribersRef.current.delete(element);
+      // subscribersRef.current.delete(element);
     };
-  }, []);
+  }, [store]);
 
   useEffect(() => {
     assert(
@@ -94,7 +96,7 @@ export const useCommandsController = ({
 
       while (range) {
         while (current) {
-          if (subscribersRef.current.has(current)) {
+          if (store.get(current)) {
             break;
           }
 
@@ -105,12 +107,15 @@ export const useCommandsController = ({
           break;
         }
 
-        const { onChange: currentOnChange, handlers } =
-          subscribersRef.current.get(current)?.() ?? { handlers: [] };
+        const { commands: getCommands } = store.get(current)!;
+        const { handlers, onChange: currentOnChange } = getCommands?.() || {};
 
-        assert(Array.isArray(handlers), 'Commands should be array of Command');
+        // const { onChange: currentOnChange, handlers } =
+        //   subscribersRef.current.get(current)?.() ?? { handlers: [] };
 
-        if (handlers.length) {
+        // assert(Array.isArray(handlers), 'Commands should be array of Command');
+
+        if (handlers?.length) {
           const options = {
             originalEvent,
             target: current,

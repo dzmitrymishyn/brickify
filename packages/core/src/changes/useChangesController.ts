@@ -51,7 +51,7 @@ export const useChangesController = () => {
 
       sortedElements.current.push(elementToSort);
       // TODO: Use priority queue or a linked list
-      sortedElements.current.sort((a, b) => b.depth - a.depth);
+      sortedElements.current.sort((a, b) => a.depth - b.depth);
 
       return () => {
         subscribersRef.current.delete(key);

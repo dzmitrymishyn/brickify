@@ -26,9 +26,9 @@ import { getName } from '../components';
 import { extend, withBrickName, withDisplayName } from '../extensions';
 import { useBrickContextUnsafe } from '../hooks';
 import { useMutationsController } from '../mutations';
+import { fromPathRange } from '../ranges';
 import { useMergedRefs } from '../utils';
 import assert from 'assert';
-import { fromPathRange } from '../ranges';
 
 const metaKeyDisallowList = [
   'enter',

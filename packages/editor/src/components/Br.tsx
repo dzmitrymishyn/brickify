@@ -25,7 +25,7 @@ const addBr = ({ range, resultRange, results }: HandleCommandOptions) => {
     // br to display new line. After user starts typing on the line browser
     // automatically deletes the second br
     if (
-      !brNode.nextSibling
+      (!brNode.nextSibling && brNode.previousSibling?.nodeName !== 'BR')
       || (
         isText(brNode.nextSibling)
         && !brNode.nextSibling.textContent?.length

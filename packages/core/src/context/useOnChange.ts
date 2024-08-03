@@ -26,6 +26,8 @@ export const useOnChange = ({
       value: unknown;
     };
 
+    console.log('New value', newValue.value);
+
     onChangeRef.current?.(newValue.value);
   }, [rootTreeNode]);
 
@@ -46,6 +48,7 @@ export const useOnChange = ({
   useEffect(() => {
     return changesController.subscribeBatch(null, {
       apply: () => {
+        debugger;
         emitChange(editorChangesRef.current);
         editorChangesRef.current = [];
       },

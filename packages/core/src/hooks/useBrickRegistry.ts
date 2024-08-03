@@ -28,14 +28,6 @@ export const useBrickRegistry = (
   const storedBrickValue = useRef<BrickStoreValue>();
   const valueRef = useRef(value);
 
-  // If we get a new value that doesn't match the old one we need to clear
-  // the store from the old value
-  if (valueRef.current && value !== valueRef.current) {
-    store.remove(valueRef.current);
-  }
-
-  valueRef.current = value;
-
   const updateStore = useCallback((item?: BrickStoreValue) => {
     // If we don't have a value here it means that smth works not good and
     // we can't guarantee the right behavior
@@ -47,6 +39,19 @@ export const useBrickRegistry = (
 
     store.set(item.value, item);
   }, [store]);
+
+  // If we get a new value that doesn't match the old one we need to clear
+  // the store from the old value
+  if (valueRef.current && value !== valueRef.current) {
+    const oldStoredValue = store.get(valueRef.current)!;
+    const storedValue = store.get(value)!;
+
+    store.remove(valueRef.current);
+
+    updateStore({...oldStoredValue, ...storedValue});
+  }
+
+  valueRef.current = value;
 
   const ref = (node?: Node | null) => {
     if (!node || !valueRef.current) {
