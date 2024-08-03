@@ -55,19 +55,19 @@ const Page = () => {
       ],
     },
     { brick: 'Paragraph', id: newKey(), value: 'It is a <strong>paragraph</strong>' },
-    {
-      brick: 'Profile',
-      id: newKey(),
-      children: 'Hi <strong>everyone</strong>!',
-      visible: true,
-      // children: [
-      //   { brick: 'Paragraph', id: newKey(), children: 'Hi <strong>everyone</strong>!' },
-      // ],
-    },
-    { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
-    ...Array.from({ length: 2000 }, () => ({
-      brick: 'Paragraph', id: newKey(), value: `${newKey()} hello world`,
-    })),
+    // {
+    //   brick: 'Profile',
+    //   id: newKey(),
+    //   children: 'Hi <strong>everyone</strong>!',
+    //   visible: true,
+    //   // children: [
+    //   //   { brick: 'Paragraph', id: newKey(), children: 'Hi <strong>everyone</strong>!' },
+    //   // ],
+    // },
+    // { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
+    // ...Array.from({ length: 2000 }, () => ({
+    //   brick: 'Paragraph', id: newKey(), value: `${newKey()} hello world`,
+    // })),
   ]).flat());
   const [editable, setEditable] = useState(true);
 
