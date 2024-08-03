@@ -1,11 +1,10 @@
-import { fromRangeLike } from '@brickifyio/browser/selection';
-import { getNodeByOffset } from '@brickifyio/browser/src/selection/offset';
+import { fromRangeLike, getNodeByOffset } from '@brickifyio/browser/selection';
 import { find, type Node } from '@brickifyio/utils/slots-tree';
 import { pipe } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
 
 import { type PathRange, type PathRangeItem } from './pathRange';
-import { type BrickStore } from '../hooks';
+import { type BrickStore } from '../store';
 
 const prepareNode = (
   store: BrickStore,

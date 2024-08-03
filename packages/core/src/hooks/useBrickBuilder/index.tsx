@@ -15,7 +15,7 @@ export const useBricksBuilder = (
   brick: object,
   value: object,
   bricks: Component[],
-  onChange: OnChange,
+  onChange: OnChange = () => undefined,
 ): ReactNode => {
   const { store } = useBrickContext();
   const rootValueRef = useRef<Node | undefined>(undefined);

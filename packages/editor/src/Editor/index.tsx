@@ -1,9 +1,12 @@
 import {
   type Component,
   extend,
+  type PropsWithBrick,
+  type PropsWithChange,
   useBrickContext,
   useBrickRegistry,
   useBricksBuilder,
+  useCommands,
   useMergedRefs,
   withBrickContext,
   withBrickName,
@@ -13,16 +16,16 @@ import {
   forwardRef,
 } from 'react';
 
-type Props = {
+type Props = PropsWithBrick & PropsWithChange & {
   value: object[];
   bricks?: Component[];
-  brick: object;
 };
 
 const Editor = forwardRef<HTMLDivElement, Props>(({
   value,
   bricks = [],
   brick,
+  onChange: onChangeProp,
 }, refProp) => {
   const { editable, onChange } = useBrickContext();
   const { ref: brickRef } = useBrickRegistry(brick);
@@ -31,12 +34,13 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
     brick,
     value,
     bricks,
-    onChange,
+    onChange ?? onChangeProp,
   );
 
   const ref = useMergedRefs(
     brickRef,
     refProp,
+    useCommands(bricks),
   );
 
   return (

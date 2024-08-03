@@ -1,4 +1,5 @@
 import { type Change } from '../changes';
+import { type PathRange } from '../ranges';
 import { type BrickStore } from '../store';
 
 export type ResultsCallback = {
@@ -13,6 +14,7 @@ export type HandleCommandOptions = {
   target: Node;
   descendants: Node[];
   results: ResultsCallback;
+  resultRange: (range?: Range | PathRange) => void;
   range: RangeCallback;
   getFromStore: BrickStore['get'];
   onChange: (...changes: Change[]) => void;

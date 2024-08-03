@@ -7,9 +7,11 @@ import {
 } from '@brickifyio/browser/selection';
 import { useMemo, useRef } from 'react';
 
+import { type PathRange } from '../ranges';
+
 export const useBeforeAfterRanges = () => {
   const ref = useRef<HTMLElement>(null);
-  const ranges = useRef<{ before?: RangeLike; after?: CustomRange }>({
+  const ranges = useRef<{ before?: RangeLike; after?: CustomRange | PathRange }>({
     before: undefined,
     after: undefined,
   });
@@ -24,8 +26,12 @@ export const useBeforeAfterRanges = () => {
     clearBefore() {
       ranges.current.before = undefined;
     },
-    saveAfter(range = getRange()) {
-      ranges.current.after = toCustomRange(ref.current!)(range);
+    saveAfter(range: PathRange | CustomRange | Range | null = getRange()) {
+      if (range instanceof Range) {
+        ranges.current.after = toCustomRange(ref.current!)(range);
+      } else if (range) {
+        ranges.current.after = range;
+      }
     },
     getBefore() {
       return ranges.current.before;

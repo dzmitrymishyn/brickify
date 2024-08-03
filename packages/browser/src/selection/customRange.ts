@@ -1,8 +1,8 @@
 import { flow } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
 
-import { fromRangeLike } from './rangeLike';
 import { getCursorPosition, getNodeByOffset } from './offset';
+import { fromRangeLike } from './rangeLike';
 
 export type CustomRange = {
   startPath: { offset: number, childOffset: number, childOffsetType: 'start' | 'end' | 'center' };
@@ -38,10 +38,6 @@ export const toCustomRange = (container: Node) => flow(
     start: getPath(container, range.startContainer, range.startOffset),
     end: getPath(container, range.endContainer, range.endOffset),
   })),
-  // O.bind('startPath', ({ range }) =>
-  //   getPath(container, range.startContainer, range.startOffset)),
-  // O.bind('endPath', ({ range }) =>
-  //   getPath(container, range.endContainer, range.endOffset)),
   O.map(({ start, end }): CustomRange => ({
     startPath: start,
     endPath: end,
@@ -50,19 +46,19 @@ export const toCustomRange = (container: Node) => flow(
   O.toUndefined,
 );
 
-const makePath = (container: Node, path: number[]) => {
-  let current = container;
+// const makePath = (container: Node, path: number[]) => {
+//   let current = container;
 
-  for (let i = 0; i < path.length - 1; i += 1) {
-    current = current?.childNodes?.[path[i]];
-  }
+//   for (let i = 0; i < path.length - 1; i += 1) {
+//     current = current?.childNodes?.[path[i]];
+//   }
 
-  if (!current) {
-    return O.none;
-  }
+//   if (!current) {
+//     return O.none;
+//   }
 
-  return O.some({ node: current, offset: path[path.length - 1] });
-};
+//   return O.some({ node: current, offset: path[path.length - 1] });
+// };
 
 export const fromCustomRange = flow(
   O.fromNullable<CustomRange | null | undefined>,

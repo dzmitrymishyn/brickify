@@ -1,13 +1,16 @@
 import { fromRangeLike } from '@brickifyio/browser/selection';
 import { isText } from '@brickifyio/browser/utils';
-import { extend, type HandleCommandOptions, withShortcuts } from '@brickifyio/core';
+import {
+  extend,
+  type HandleCommandOptions,
+  withShortcuts,
+} from '@brickifyio/core';
 import { compile } from 'css-select';
 import React from 'react';
 
-
 const Br: React.FC = () => <br />;
 
-const addBr = ({ range, results }: HandleCommandOptions) => {
+const addBr = ({ range, resultRange, results }: HandleCommandOptions) => {
   const newRange = fromRangeLike(range());
 
   if (newRange) {
@@ -35,7 +38,7 @@ const addBr = ({ range, results }: HandleCommandOptions) => {
     newRange.setStartAfter(brNode);
     newRange.setEndAfter(brNode);
 
-    range(newRange);
+    resultRange(newRange);
     results({ stopPropagation: true });
   }
 };

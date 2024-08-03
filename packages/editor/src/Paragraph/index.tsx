@@ -61,17 +61,13 @@ const Paragraph: React.FC<Props> = ({
     (element?: HTMLElement | null) => pipe(
       element?.innerHTML ?? '',
       (html) => html === '<br>' ? '' : html,
-      (newValue) => newValue === value ? undefined : onChange?.({
+      (newValue) => onChange?.({
         value: newValue,
         type: 'update',
       })
     ),
-    [onChange, value],
+    [onChange],
   );
-
-  // useEffect(() => {
-  //   console.log(store.get(brick)?.pathRef.current());
-  // }, [brick, store]);
 
   const ref = useMergedRefs(
     rootRef,
@@ -124,7 +120,7 @@ export default extend(
     {
       name: 'newLine',
       shortcuts: ['enter'],
-      handle: ({ onChange, range, getFromStore, results, descendants }) => {
+      handle: ({ onChange, range, resultRange, getFromStore, results, descendants }) => {
         const currentRange = range();
         const target = descendants[0];
 
@@ -151,14 +147,21 @@ export default extend(
             tempDiv.append(tempRange.extractContents());
           }
 
+          const newPath = next(cacheItem.pathRef.current());
+
+          resultRange({
+            start: { path: newPath, offset: 0 },
+            end: { path: newPath, offset: 0 },
+          });
+
           onChange?.({
             type: 'add',
-            path: next(cacheItem.pathRef.current()),
+            path: newPath,
             value: {
               brick: 'Paragraph',
-              id: Math.random(),
+              id: Math.random().toFixed(3),
               // BR is a native browser behaviour to make an empty new line
-              value: tempDiv.innerHTML || '<br>',
+              value: tempDiv.innerHTML ?? '',
             },
           });
         }

@@ -55,8 +55,10 @@ export const useBrickRegistry = (
 
     const item = store.get(valueRef.current) || storedBrickValue.current;
 
-    if (item?.domNode && item.domNode !== node) {
-      store.remove(item.domNode);
+    if (item && item.domNode !== node) {
+      if (item.domNode) {
+        store.remove(item.domNode);
+      }
       item.domNode = node ?? undefined;
     }
 

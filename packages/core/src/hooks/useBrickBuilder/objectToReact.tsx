@@ -88,11 +88,11 @@ export const addChange = ({ onChange }: PickedDeps<'onChange'>) =>
   <T extends PickedData<'value' | 'pathRef'>>(data: T) => ({
     ...data,
     change: (...changes: Partial<Change>[]) => onChange?.(
-      ...changes.map(({ type = 'update', ...value }) => ({
+      ...changes.map(({ type = 'update', path, ...value }) => ({
         type,
+        path: path ?? data.pathRef.current(),
         value: { ...data.value, ...value },
-        path: data.pathRef.current(),
-      }))
+      })),
     ),
   });
 

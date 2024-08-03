@@ -2,34 +2,33 @@
 // rules for all the actions. Parent component already added it
 /* eslint-disable react-hooks/rules-of-hooks -- it's justified */
 import { addRange, fromCustomRange } from '@brickifyio/browser/selection';
-import { of, patch } from '@brickifyio/utils/slots-tree';
+import { of } from '@brickifyio/utils/slots-tree';
 import { pipe } from 'fp-ts/lib/function';
 import {
   forwardRef,
   type ForwardRefExoticComponent,
   useEffect,
   useMemo,
-  useRef,
-  useCallback,
 } from 'react';
 
 import { BrickContext } from './BrickContext';
 import { useBeforeAfterRanges } from './useBeforeAfterRanges';
 import { useBrickStoreFactory } from './useBrickStoreFactory';
 import { useDisallowHotkeys } from './useDisallowHotkeys';
+import { useOnChange } from './useOnChange';
 import { useRangeSaver } from './useRangeSaver';
 import {
-  type Change,
   type PropsWithChange,
   useChangesController,
 } from '../changes';
 import { useCommandsController } from '../commands/useCommandsController';
 import { getName } from '../components';
-import { extend, withDisplayName } from '../extensions';
+import { extend, withBrickName, withDisplayName } from '../extensions';
 import { useBrickContextUnsafe } from '../hooks';
 import { useMutationsController } from '../mutations';
 import { useMergedRefs } from '../utils';
 import assert from 'assert';
+import { fromPathRange } from '../ranges';
 
 const metaKeyDisallowList = [
   'enter',
@@ -44,16 +43,16 @@ const metaKeyDisallowList = [
 
 type Props = {
   editable?: boolean;
-  onChange: (value: unknown) => void;
+  onChange?: (value: unknown) => void;
   brick?: object;
 };
 
 export function withBrickContext<P extends { value: object } & PropsWithChange>(
   Component: ForwardRefExoticComponent<P>,
 ) {
-  const WithBrickContext = forwardRef<Node, Props & Omit<P, 'brick'>>(({
+  const WithBrickContext = forwardRef<Node, Props & Omit<P, 'brick' | 'onChange'>>(({
     editable = false,
-    onChange,
+    onChange: onChangeProp,
     brick,
     ...props
   }, refProp) => {
@@ -65,7 +64,7 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
         <Component
           {...props as P}
           brick={brick}
-          onChange={onChange}
+          onChange={onChangeProp}
         />
       );
     }
@@ -81,7 +80,6 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
         value: props.value,
       });
     }
-
     const changesController = useChangesController();
     const [rangesControllerRef, rangesController] = useBeforeAfterRanges();
     const rangeSaverElementRef = useRangeSaver(rangesController);
@@ -90,11 +88,18 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
       rangesController,
       changesController,
     });
+    const onChange = useOnChange({
+      onChange: onChangeProp,
+      rootTreeNode,
+      changesController,
+    });
+
     const commandsController = useCommandsController({
       changesController,
       rangesController,
       store,
       mutationsController,
+      onChange,
     });
 
     // When the value is updated we need to clear our MutationsArray.
@@ -107,8 +112,19 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
     );
 
     useEffect(function restoreRange() {
-      pipe(rangesController.getAfter(), fromCustomRange, addRange);
-    }, [rangesController, props.value, store]);
+      const range = rangesController.getAfter();
+
+      if (!range) {
+        return;
+      }
+
+      if ('container' in range) {
+        pipe(range, fromCustomRange, addRange);
+      } else {
+        pipe(fromPathRange(range, rootTreeNode, store), addRange);
+      }
+
+    }, [rangesController, props.value, store, rootTreeNode]);
 
     const ref = useMergedRefs(
       refProp,
@@ -119,52 +135,6 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
       commandsController.ref,
     );
 
-    const editorChangesRef = useRef<Change[]>([]);
-    const onChangeRef = useRef<(value: unknown) => void>();
-    onChangeRef.current = onChange;
-    const emitChange = useCallback((changes: Change[]) => {
-      if (!changes.length) {
-        return;
-      }
-
-      const newValue = patch(rootTreeNode, changes, []) as {
-        value: unknown;
-      };
-
-      onChangeRef.current?.(newValue.value);
-    }, [rootTreeNode]);
-
-    const change = useCallback((...changes: Change[]) => {
-      debugger;
-      if (!changes.length) {
-        return;
-      }
-
-      if (changesController.state() === 'interaction') {
-        emitChange(changes);
-        return;
-      }
-
-      // console.log('useBricksBuilder', changes, store.get(brick)?.pathRef.current());
-      editorChangesRef.current.push(...changes);
-      return changes;
-      // It should be impossible that the wrapped component will emit
-      // multiple changes or it's own removals
-      // TODO: Check it
-      // if (change.type === 'update') {
-      //   onChange?.(change.value);
-      // }
-    }, [changesController, emitChange]);
-
-    useEffect(() => {
-      return changesController.subscribeBatch(null, {
-        apply: () => {
-          emitChange(editorChangesRef.current);
-          editorChangesRef.current = [];
-        },
-      });
-    }, [emitChange, changesController]);
-
     const contextValue = useMemo(() => ({
       ranges: rangesController,
       changes: changesController,
@@ -173,7 +143,7 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
       editable,
       rootTreeNode,
       store,
-      onChange: change,
+      onChange,
     }), [
       changesController,
       commandsController.subscribe,
@@ -182,7 +152,7 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
       mutationsController.subscribe,
       rangesController,
       store,
-      change,
+      onChange,
     ]);
 
     return (
@@ -191,17 +161,16 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
           ref={ref}
           {...props as P}
           brick={props.value}
-          onChange={change}
+          onChange={onChange}
         />
       </BrickContext.Provider>
     );
   });
 
-  WithBrickContext.displayName = `WithBrickContext(${getName(Component) ?? 'Unnamed'})`;
-
   return extend(
     WithBrickContext,
     Component,
+    withBrickName(getName(Component)),
     withDisplayName(`WithBrickContext(${getName(Component) ?? 'Unnamed'})`),
   );
 };

@@ -6,6 +6,7 @@ module.exports = {
     './override.js',
   ].map(require.resolve),
   rules: {
+    'react/display-name': 'off',
     'react/function-component-definition': ['warn', { namedComponents: 'arrow-function' }],
   },
 };

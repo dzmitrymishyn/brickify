@@ -1,6 +1,5 @@
 import { match } from '@brickifyio/browser/hotkeys';
 import {
-  addRange,
   getRange,
   isElementWithinRange,
 } from '@brickifyio/browser/selection';
@@ -16,6 +15,7 @@ import { type ChangesController, type OnChange } from '../changes';
 import { type BrickContextType } from '../context';
 import { type BeforeAfterRangesController } from '../context/useBeforeAfterRanges';
 import { type MutationsController } from '../mutations';
+import { type PathRange } from '../ranges';
 import { type BrickStore } from '../store';
 import assert from 'assert';
 
@@ -24,6 +24,7 @@ type UseCommandControllerOptions = {
   rangesController: BeforeAfterRangesController;
   mutationsController: MutationsController;
   store: BrickStore;
+  onChange: OnChange;
 };
 
 export const useCommandsController = ({
@@ -31,6 +32,7 @@ export const useCommandsController = ({
   rangesController,
   mutationsController,
   store,
+  onChange,
 }: UseCommandControllerOptions) => {
   const ref = useRef<HTMLElement>(null);
   const subscribersRef = useRef(
@@ -59,7 +61,8 @@ export const useCommandsController = ({
 
     const element = ref.current;
     const handle = (originalEvent: KeyboardEvent) => {
-      let range = getRange();
+      let range: Range | null = getRange();
+      let resultRange: PathRange | Range | undefined;
 
       const results: Record<string, unknown> = {};
       const getOrUpdateResults: ResultsCallback = (nameOrOptions) => {
@@ -71,11 +74,14 @@ export const useCommandsController = ({
           Object.assign(results, nameOrOptions || {});
         }
       };
-      const getOrUpdateRange: RangeCallback = (newRange?: Range) => {
-        if (newRange instanceof Range) {
+      const setResultRange = (newRange?: Range | PathRange) => {
+        resultRange = newRange;
+      };
+      const getOrUpdateRange: RangeCallback = (newRange) => {
+        if (newRange) {
           range = newRange;
         }
-        return range;
+        return range instanceof Range ? range : null;
       };
 
       changesController.startBatch();
@@ -99,8 +105,8 @@ export const useCommandsController = ({
           break;
         }
 
-        const { onChange, handlers } = subscribersRef.current.get(current)?.()
-          ?? { handlers: [] };
+        const { onChange: currentOnChange, handlers } =
+          subscribersRef.current.get(current)?.() ?? { handlers: [] };
 
         assert(Array.isArray(handlers), 'Commands should be array of Command');
 
@@ -111,12 +117,10 @@ export const useCommandsController = ({
             descendants,
 
             results: getOrUpdateResults,
+            resultRange: setResultRange,
             range: getOrUpdateRange,
             getFromStore: store.get,
-
-            onChange: onChange ?? (() => {
-              throw new Error('You should specify onChange');
-            }),
+            onChange: currentOnChange ?? onChange,
           };
 
           handlers.find((handler) => {
@@ -147,19 +151,26 @@ export const useCommandsController = ({
         }
       }
 
-      if (range) {
-        addRange(range);
-      }
-
       const mutationsAfterCommands = mutationsController.clear() ?? [];
+
+      rangesController.saveAfter(resultRange ?? null);
+      const nextRange = rangesController.getAfter();
 
       mutationsController.handle(mutationsAfterCommands);
       changesController.applyBatch();
+
+      rangesController.saveAfter(nextRange);
     };
 
     element.addEventListener('keydown', handle);
     return () => element.removeEventListener('keydown', handle);
-  }, [changesController, rangesController, mutationsController, store]);
+  }, [
+    changesController,
+    rangesController,
+    mutationsController,
+    store,
+    onChange,
+  ]);
 
   return { subscribe, ref };
 };
