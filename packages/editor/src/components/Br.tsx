@@ -1,10 +1,9 @@
 import { fromRangeLike } from '@brickifyio/browser/selection';
 import { isText } from '@brickifyio/browser/utils';
+import { extend, type HandleCommandOptions, withShortcuts } from '@brickifyio/core';
 import { compile } from 'css-select';
 import React from 'react';
 
-import { extend, withShortcuts } from '../core';
-import { type HandleCommandOptions } from '../core/commands';
 
 const Br: React.FC = () => <br />;
 

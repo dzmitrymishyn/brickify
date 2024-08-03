@@ -1,13 +1,12 @@
-import { forwardRef, type PropsWithChildren } from 'react';
-
 import {
   extend,
   type PropsWithChange,
   useBrickRegistry,
+  useMergedRefs,
   useMutation,
   withSlots,
-} from '../core';
-import { useMergedRefs } from '../utils';
+} from '@brickifyio/core';
+import { forwardRef, type PropsWithChildren } from 'react';
 
 type Props = PropsWithChildren & PropsWithChange & { brick?: object };
 

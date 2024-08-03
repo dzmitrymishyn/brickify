@@ -1,12 +1,3 @@
-import { patch } from '@brickifyio/utils/slots-tree';
-import { pipe } from 'fp-ts/lib/function';
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useRef,
-} from 'react';
-
 import {
   type Change,
   type Component,
@@ -15,11 +6,18 @@ import {
   useBrickContext,
   useBrickRegistry,
   useBricksBuilder,
+  useCommands,
+  useMergedRefs,
   withBrickContext,
   withBrickName,
-} from '../core';
-import { useCommands } from '../core/commands';
-import { useMergedRefs } from '../utils';
+} from '@brickifyio/core';
+import { patch } from '@brickifyio/utils/slots-tree';
+import { pipe } from 'fp-ts/lib/function';
+import {
+  forwardRef,
+  useCallback,
+  useRef,
+} from 'react';
 
 type Props = {
   value: object[];

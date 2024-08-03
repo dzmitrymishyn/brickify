@@ -8,8 +8,6 @@ export type ResultsCallback = {
 
 export type RangeCallback = (range?: Range) => Range | null;
 
-export type OnChange = (...changes: Change[]) => void;
-
 export type HandleCommandOptions = {
   originalEvent: KeyboardEvent,
   target: Node;

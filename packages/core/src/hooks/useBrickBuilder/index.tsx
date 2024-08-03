@@ -23,8 +23,6 @@ export const useBricksBuilder = (
   const element = useMemo(() => {
     const storedItem = store.get(brick);
 
-    console.log('start building');
-
     assert(storedItem, 'brick item should be stored in the store');
 
     const parent = storedItem.slotsTreeNode;

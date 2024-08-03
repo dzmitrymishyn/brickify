@@ -1,3 +1,4 @@
+import { type NamedComponent } from '@brickifyio/core';
 import { array } from '@brickifyio/operators';
 import {
   isDocument,
@@ -5,14 +6,13 @@ import {
   isText,
   type Node,
 } from 'domhandler';
-import React, {
+import {
   cloneElement,
   isValidElement,
   type ReactNode,
   type RefObject,
 } from 'react';
 
-import { type NamedComponent } from '../core';
 
 // eslint-disable-next-line -- TODO: check it
 const hasIs = (value: unknown): value is { is: any } => (

@@ -1,17 +1,11 @@
 {
-  "name": "@brickifyio/editor",
+  "name": "@brickifyio/core",
   "version": "0.0.1",
-  "description": "WYSIWYG concept for react applications with controlled components",
+  "description": "Main features for controlled contentEditable component",
   "keywords": [
-    "WYSIWYG",
-    "react",
-    "editor"
+    "contentEditable"
   ],
-  "exports": {
-    "./components/*": "./components/*",
-    "./Editor": "./Editor",
-    "./Paragraph": "./Paragraph"
-  },
+  "main": "./src/index.ts",
   "scripts": {
     "lint": "eslint .",
     "test:watch": "jest --watch",
@@ -19,7 +13,6 @@
   },
   "dependencies": {
     "@brickifyio/browser": "*",
-    "@brickifyio/core": "*",
     "@brickifyio/eslint-config": "*",
     "@brickifyio/operators": "*",
     "@brickifyio/tsconfig": "*",

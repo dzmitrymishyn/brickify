@@ -1,8 +1,8 @@
 import { reshape } from '@brickifyio/browser/manipulations';
+import { extend, withShortcuts } from '@brickifyio/core';
 import { compile } from 'css-select';
 import React, { type PropsWithChildren } from 'react';
 
-import { extend, withShortcuts } from '../core';
 
 const Em: React.FC<PropsWithChildren> = ({ children }) => (
   <em>{children}</em>

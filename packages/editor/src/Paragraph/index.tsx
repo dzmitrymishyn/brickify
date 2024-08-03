@@ -1,4 +1,17 @@
 import { getLastDeepLeaf } from '@brickifyio/browser/utils';
+import {
+  type AnyComponent,
+  type BrickValue,
+  extend,
+  next,
+  type PropsWithChange,
+  useBrickContext,
+  useBrickRegistry,
+  useCommands,
+  useMergedRefs,
+  useMutation,
+  withShortcuts,
+} from '@brickifyio/core';
 import { pipe } from 'fp-ts/lib/function';
 import { parseDocument } from 'htmlparser2';
 import {
@@ -10,19 +23,6 @@ import {
 } from 'react';
 
 import { domToReactFactory } from './domToReactFactory';
-import {
-  type AnyComponent,
-  type BrickValue,
-  extend,
-  type PropsWithChange,
-  useBrickContext,
-  useBrickRegistry,
-  useMutation,
-  withShortcuts,
-} from '../core';
-import { useCommands } from '../core/commands';
-import { next } from '../core/utils/path';
-import { useMergedRefs } from '../utils';
 import assert from 'assert';
 
 type Value = BrickValue & {

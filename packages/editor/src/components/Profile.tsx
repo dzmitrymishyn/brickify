@@ -1,17 +1,17 @@
-import { forwardRef, useRef, useState } from 'react';
-
-import Br from './Br';
-import Strong from './Strong';
 import {
   type BrickValue,
   type PropsWithBrick,
   type PropsWithChange,
   useBrickContext,
   useBrickRegistry,
+  useMergedRefs,
   useMutation,
-} from '../core';
+} from '@brickifyio/core';
+import { forwardRef, useRef, useState } from 'react';
+
+import Br from './Br';
+import Strong from './Strong';
 import Paragraph from '../Paragraph';
-import { useMergedRefs } from '../utils';
 
 type Value = BrickValue & {
   children: string | number;

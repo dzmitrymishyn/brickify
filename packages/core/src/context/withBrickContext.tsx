@@ -12,7 +12,6 @@ import {
 } from 'react';
 
 import { BrickContext } from './BrickContext';
-import { useMergedRefs } from '../../utils';
 import { type PropsWithChange, useChangesController } from '../changes';
 import { useCommandsController } from '../commands/useCommandsController';
 import { getName } from '../components';
@@ -22,6 +21,7 @@ import { useBeforeAfterRanges } from '../hooks/useBeforeAfterRanges';
 import { useDisallowHotkeys } from '../hooks/useDisallowHotkeys';
 import { useRangeSaver } from '../hooks/useRangeSaver';
 import { useMutationsController } from '../mutations';
+import { useMergedRefs } from '../utils';
 import assert from 'assert';
 
 const metaKeyDisallowList = [
