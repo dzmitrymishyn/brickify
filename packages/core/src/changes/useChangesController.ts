@@ -10,13 +10,8 @@ type Subscriber = {
 export const useChangesController = () => {
   const state = useRef<ChangeState>('interaction');
 
-  const subscribersRef = useRef(
-    new Map<HTMLElement, Subscriber>(),
-  );
-  const sortedElements = useRef<{
-    depth: number;
-    handle: Subscriber;
-  }[]>([]);
+  const subscribersRef = useRef(new Map<HTMLElement, Subscriber>());
+  const sortedElements = useRef<{ depth: number; handle: Subscriber }[]>([]);
 
   const endBatch = useCallback(() => {
     state.current = 'interaction';
@@ -33,7 +28,7 @@ export const useChangesController = () => {
         try {
           handle?.apply?.();
         } catch (error) {
-          // logger?.error('After batch apply operation has an error', error);
+          // TODO: Handle error
         }
       });
 

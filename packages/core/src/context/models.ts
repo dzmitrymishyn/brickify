@@ -1,12 +1,12 @@
 import { type Node } from '@brickifyio/utils/slots-tree';
 
-import { type ChangesController } from '../changes';
-import { type Command, type OnChange } from '../commands';
-import { type BrickStore } from '../hooks';
 import {
   type BeforeAfterRangesController,
-} from '../hooks/useBeforeAfterRanges';
+} from './useBeforeAfterRanges';
+import { type ChangesController, type OnChange } from '../changes';
+import { type Command } from '../commands';
 import { type Mutation } from '../mutations';
+import { type BrickStore } from '../store';
 import { type ElementSubscribe, type PathRef } from '../utils';
 
 export type BrickContextType = {

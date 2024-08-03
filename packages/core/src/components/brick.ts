@@ -1,12 +1,9 @@
 import {
   type FC,
   type ForwardRefExoticComponent,
-  // type MutableRefObject,
 } from 'react';
 
 import { type BrickValue } from './values';
-
-// import { type BrickValue } from './values';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- it's fine
 export type Component<Props extends object = any> =
@@ -22,6 +19,6 @@ export type NamedComponent = {
   brick?: string;
 };
 
-export type PropsWithBrick<Value extends BrickValue = BrickValue> = {
+export type PropsWithBrick<Value extends object = BrickValue> = {
   brick: Value;
 };

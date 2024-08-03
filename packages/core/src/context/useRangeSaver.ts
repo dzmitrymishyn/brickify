@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 import { type BeforeAfterRangesController } from './useBeforeAfterRanges';
-import { useBrickContextUnsafe } from './useBrickContext';
+import { useBrickContextUnsafe } from '../hooks/useBrickContext';
 import assert from 'assert';
 
 export const useRangeSaver = (

@@ -1,4 +1,3 @@
-import { flow } from 'fp-ts/lib/function';
 import { useContext } from 'react';
 
 import { BrickContext } from '../context/BrickContext';
@@ -13,8 +12,3 @@ export const useBrickContext = () => {
 
   return context;
 };
-
-export const useLogger = flow(
-  useBrickContext,
-  ({ logger }) => logger,
-);

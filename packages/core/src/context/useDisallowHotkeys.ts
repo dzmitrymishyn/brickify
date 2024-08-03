@@ -1,7 +1,7 @@
 import { match } from '@brickifyio/browser/hotkeys';
 import { useEffect, useRef } from 'react';
 
-import { useBrickContextUnsafe } from './useBrickContext';
+import { useBrickContextUnsafe } from '../hooks/useBrickContext';
 import assert from 'assert';
 
 export const useDisallowHotkeys = (disallowList: string[] = []) => {

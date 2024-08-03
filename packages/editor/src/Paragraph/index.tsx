@@ -124,14 +124,14 @@ export default extend(
     {
       name: 'newLine',
       shortcuts: ['enter'],
-      handle: ({ onChange, range, cache, results, descendants }) => {
+      handle: ({ onChange, range, getFromStore, results, descendants }) => {
         const currentRange = range();
         const target = descendants[0];
 
         assert(target, 'This handler should be called by it\'s parent and descendants should be defined');
 
         if (currentRange) {
-          const cacheItem = cache(target);
+          const cacheItem = getFromStore(target);
           assert(cacheItem, 'Cache item should exist');
 
           currentRange.extractContents();

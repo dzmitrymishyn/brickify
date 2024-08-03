@@ -2,12 +2,12 @@ import { type FC, forwardRef } from 'react';
 
 import { type Component } from '../components';
 
-export const extend = <C extends Component | FC, Enhancer extends object[]>(
+export const extend = <C extends Component, Enhancer extends object[]>(
   brick: C,
   ...enhancers: Enhancer
 ): C & Enhancer[number] => {
-  // eslint-disable-next-line -- TODO: Check it
-  const config = Object.assign(
+  // eslint-disable-next-line -- brick is a component so it should have name
+  const config: { render?: Function } = Object.assign(
     { displayName: brick.displayName },
     ...enhancers,
   );
@@ -25,9 +25,7 @@ export const extend = <C extends Component | FC, Enhancer extends object[]>(
   const { render: _componentRender, ...oldBrick } = brick as unknown as {
     render: FC<unknown>;
   };
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- 1
   const { render: _configRender, ...restConfig } = config;
 
-  // eslint-disable-next-line -- TODO: Check it
-  return Object.assign(newBrick, oldBrick, restConfig);
+  return Object.assign(newBrick, oldBrick, restConfig) as C & Enhancer[number];
 };

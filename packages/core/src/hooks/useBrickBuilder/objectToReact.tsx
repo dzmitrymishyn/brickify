@@ -7,7 +7,6 @@ import * as R from 'fp-ts/lib/Reader';
 import {
   cloneElement,
   createRef,
-  type MutableRefObject,
   type ReactNode,
 } from 'react';
 
@@ -19,9 +18,8 @@ import {
   type NamedComponent,
 } from '../../components';
 import { hasProps, hasSlots } from '../../extensions';
-import { type BrickStore, type BrickStoreItem } from '../useBrickStoreFactory';
-
-type PathRef = MutableRefObject<() => string[]>;
+import { type BrickStore, type BrickStoreValue } from '../../store';
+import { type PathRef } from '../../utils';
 
 type Dependencies = {
   onChange: (...changes: Change[]) => void;
@@ -36,8 +34,8 @@ type Data = {
   value: BrickValue;
   slotMap: Record<string, 'inherit' | Record<string, NamedComponent>>;
   change: (...changes: Change[]) => void;
-  cached?: BrickStoreItem;
-  cachedOutdated?: BrickStoreItem;
+  cached?: BrickStoreValue;
+  cachedOutdated?: BrickStoreValue;
   pathRef: PathRef;
   node: Node;
   nodeOutdated?: Node;
@@ -89,7 +87,7 @@ export const addPathRef = ({ parentPathRef }: PickedDeps<'parentPathRef'>) =>
 export const addChange = ({ onChange }: PickedDeps<'onChange'>) =>
   <T extends PickedData<'value' | 'pathRef'>>(data: T) => ({
     ...data,
-    change: (...changes: Partial<Change>[]) => onChange(
+    change: (...changes: Partial<Change>[]) => onChange?.(
       ...changes.map(({ type = 'update', ...value }) => ({
         type,
         value: { ...data.value, ...value },

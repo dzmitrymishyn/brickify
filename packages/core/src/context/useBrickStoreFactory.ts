@@ -1,25 +1,14 @@
-import { type Node as TreeNode } from '@brickifyio/utils/slots-tree';
 import {
-  type ReactElement,
   useCallback,
   useMemo,
   useRef,
 } from 'react';
 
-import { type PathRef } from '../utils';
+import { type BrickStore, type BrickStoreValue } from '../store';
 
-export type BrickStoreItem = {
-  value: object;
-  pathRef: PathRef;
-  react?: ReactElement;
-  slotsTreeNode: TreeNode;
-  slotsTreeParent?: TreeNode;
-  domNode?: Node;
-};
-
-export const useBrickStoreFactory = () => {
-  const storeByElement = useRef(new Map<Node, BrickStoreItem>());
-  const storeByValue = useRef(new Map<object, BrickStoreItem>());
+export const useBrickStoreFactory = (): BrickStore => {
+  const storeByElement = useRef(new Map<Node, BrickStoreValue>());
+  const storeByValue = useRef(new Map<object, BrickStoreValue>());
 
   const getStoreByKey = useCallback((key: object | Node) => {
     if (typeof window !== 'undefined' && key instanceof Node) {
@@ -35,7 +24,7 @@ export const useBrickStoreFactory = () => {
   );
 
   const set = useCallback(
-    (key: object | Node, value: BrickStoreItem) => {
+    (key: object | Node, value: BrickStoreValue) => {
       const store = getStoreByKey(key);
       store.set(key, value);
     },
@@ -50,4 +39,3 @@ export const useBrickStoreFactory = () => {
   return useMemo(() => ({ get, set, remove }), [get, set, remove]);
 };
 
-export type BrickStore = ReturnType<typeof useBrickStoreFactory>;

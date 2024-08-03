@@ -2,7 +2,7 @@ import { add, clearSlot, of } from '@brickifyio/utils/slots-tree';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { useBrickContext } from './useBrickContext';
-import { type BrickStoreItem } from './useBrickStoreFactory';
+import { type BrickStoreValue } from '../store';
 import assert from 'assert';
 
 /**
@@ -25,7 +25,7 @@ export const useBrickRegistry = (
    * call it ones on unmount. But in StrictMode react call the useEffect
    * twice and we need to add the value again to the store
    */
-  const storedBrickItem = useRef<BrickStoreItem>();
+  const storedBrickValue = useRef<BrickStoreValue>();
   const valueRef = useRef(value);
 
   // If we get a new value that doesn't match the old one we need to clear
@@ -36,7 +36,7 @@ export const useBrickRegistry = (
 
   valueRef.current = value;
 
-  const updateStore = useCallback((item?: BrickStoreItem) => {
+  const updateStore = useCallback((item?: BrickStoreValue) => {
     // If we don't have a value here it means that smth works not good and
     // we can't guarantee the right behavior
     assert(item, 'item should be registered in the store');
@@ -53,7 +53,7 @@ export const useBrickRegistry = (
       return;
     }
 
-    const item = store.get(valueRef.current) || storedBrickItem.current;
+    const item = store.get(valueRef.current) || storedBrickValue.current;
 
     if (item?.domNode && item.domNode !== node) {
       store.remove(item.domNode);
@@ -64,8 +64,8 @@ export const useBrickRegistry = (
   };
 
   useEffect(function destroyStoreItemOnUnmount() {
-    if (storedBrickItem.current) {
-      updateStore(storedBrickItem.current);
+    if (storedBrickValue.current) {
+      updateStore(storedBrickValue.current);
     }
 
     return () => {
@@ -73,12 +73,14 @@ export const useBrickRegistry = (
         return;
       }
 
-      if (storedBrickItem.current) {
+      if (storedBrickValue.current) {
+        // TODO: Remove it
+        // eslint-disable-next-line no-console -- it's for development
         console.log('component was removed', valueRef.current);
       }
 
       const item = store.get(valueRef.current);
-      storedBrickItem.current = item;
+      storedBrickValue.current = item;
 
       if (item?.value) {
         store.remove(item.value);

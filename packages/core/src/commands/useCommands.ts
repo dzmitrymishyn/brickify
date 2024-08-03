@@ -17,27 +17,5 @@ export const useCommands = (
   return useCustomCommands(
     commands,
     onChange,
-    // flow(
-    //   (options) => {
-    //     bricks
-    //       .flatMap((brick) => (
-    //         hasShortcuts(brick)
-    //           ? Object.values(brick.commands)
-    //           : []
-    //       ))
-    //       .forEach((handle) => {
-    //         const hasMatch = handle && shortcuts?.some(
-    //           (shortcut) => match(options.originalEvent, shortcut),
-    //         );
-
-    //         if (hasMatch) {
-    //           handle({
-    //             ...options,
-    //             onChange: trackChanges ?? options.onChange,
-    //           });
-    //         }
-    //       });
-    //   },
-    // )
   );
 };

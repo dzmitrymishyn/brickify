@@ -14,8 +14,9 @@ import {
 } from './models';
 import { type ChangesController, type OnChange } from '../changes';
 import { type BrickContextType } from '../context';
-import { type BeforeAfterRangesController, type BrickStore } from '../hooks';
+import { type BeforeAfterRangesController } from '../context/useBeforeAfterRanges';
 import { type MutationsController } from '../mutations';
+import { type BrickStore } from '../store';
 import assert from 'assert';
 
 type UseCommandControllerOptions = {
@@ -111,7 +112,7 @@ export const useCommandsController = ({
 
             results: getOrUpdateResults,
             range: getOrUpdateRange,
-            cache: store.get,
+            getFromStore: store.get,
 
             onChange: onChange ?? (() => {
               throw new Error('You should specify onChange');
@@ -137,7 +138,7 @@ export const useCommandsController = ({
         }
 
         const nextDeepSiblingLeaf = getFirstDeepLeaf(current.nextSibling);
-        if (isElementWithinRange(range,nextDeepSiblingLeaf)) {
+        if (isElementWithinRange(range, nextDeepSiblingLeaf)) {
           current = nextDeepSiblingLeaf;
           descendants = [];
         } else {
@@ -157,7 +158,6 @@ export const useCommandsController = ({
     };
 
     element.addEventListener('keydown', handle);
-
     return () => element.removeEventListener('keydown', handle);
   }, [changesController, rangesController, mutationsController, store]);
 

@@ -30,7 +30,7 @@ export const useBatchChanges = (subscriber: Subscriber) => {
         return subscriberRef.current.before;
       },
     });
-  }, [subscribeBatch, subscriber]);
+  }, [subscribeBatch]);
 
   return ref;
 };

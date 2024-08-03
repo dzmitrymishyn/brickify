@@ -1,3 +1,4 @@
+import { type Node } from '@brickifyio/utils/slots-tree';
 import {
   type ReactNode,
   useMemo,
@@ -9,7 +10,6 @@ import { type Change } from '../../changes';
 import { bricksToMap, type Component } from '../../components';
 import { useBrickContext } from '../useBrickContext';
 import assert from 'assert';
-import { Node } from '@brickifyio/utils/slots-tree';
 
 export const useBricksBuilder = (
   brick: object,

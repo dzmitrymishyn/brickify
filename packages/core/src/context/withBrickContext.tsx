@@ -12,14 +12,15 @@ import {
 } from 'react';
 
 import { BrickContext } from './BrickContext';
+import { useBeforeAfterRanges } from './useBeforeAfterRanges';
+import { useBrickStoreFactory } from './useBrickStoreFactory';
+import { useDisallowHotkeys } from './useDisallowHotkeys';
+import { useRangeSaver } from './useRangeSaver';
 import { type PropsWithChange, useChangesController } from '../changes';
 import { useCommandsController } from '../commands/useCommandsController';
 import { getName } from '../components';
 import { extend, withDisplayName } from '../extensions';
-import { useBrickContextUnsafe, useBrickStoreFactory } from '../hooks';
-import { useBeforeAfterRanges } from '../hooks/useBeforeAfterRanges';
-import { useDisallowHotkeys } from '../hooks/useDisallowHotkeys';
-import { useRangeSaver } from '../hooks/useRangeSaver';
+import { useBrickContextUnsafe } from '../hooks';
 import { useMutationsController } from '../mutations';
 import { useMergedRefs } from '../utils';
 import assert from 'assert';

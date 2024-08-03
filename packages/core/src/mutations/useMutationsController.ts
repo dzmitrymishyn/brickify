@@ -8,7 +8,7 @@ import {
 } from './mutations';
 import { revertDomByMutations } from './revertDomByMutations';
 import { type ChangesController } from '../changes';
-import { type BeforeAfterRangesController } from '../hooks/useBeforeAfterRanges';
+import { type BeforeAfterRangesController } from '../context/useBeforeAfterRanges';
 import assert from 'assert';
 
 type UseMutationsControllerOptions = {
