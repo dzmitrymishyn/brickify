@@ -12,6 +12,7 @@ import Heading from '@brickifyio/editor/components/Heading';
 import List from '@brickifyio/editor/components/List';
 import Profile from '@brickifyio/editor/components/Profile';
 import Strong from '@brickifyio/editor/components/Strong';
+import Table from '@brickifyio/editor/components/Table';
 import Editor from '@brickifyio/editor/Editor';
 import Paragraph from '@brickifyio/editor/Paragraph';
 import React, { useMemo, useState } from 'react';
@@ -32,6 +33,33 @@ const Page = () => {
       id: newKey(),
       brick: 'Heading',
       value: 'Here is simple components that',
+    },
+    {
+      brick: 'Table',
+      id: newKey(),
+      children: [
+        {
+          brick: 'TableRow',
+          id: newKey(),
+          children: [
+            {
+              brick: 'TableCell',
+              id: newKey(),
+              children: 'Click `Tab` to move to the next cell',
+            },
+            {
+              brick: 'TableCell',
+              id: newKey(),
+              children: 'Click `Shift + Tab` to move to the previous cell',
+            },
+            {
+              brick: 'TableCell',
+              id: newKey(),
+              children: 'Click `Tab` to create a new row',
+            },
+          ],
+        },
+      ],
     },
     // {
     //   brick: 'Editor',
@@ -112,6 +140,7 @@ const Page = () => {
           extend(Paragraph, withProps({ component: 'article', bricks: [Em, Strong, ShiftEnterBr] })),
           extend(Container, withSlots({ children: 'inherit' })),
           Profile,
+          Table,
         ]}
       />
       <pre>
