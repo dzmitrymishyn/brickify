@@ -27,12 +27,23 @@ const Page = () => {
   // const [state2, setState2] = useState<unknown>(() => [
   //   { brick: 'Paragraph', id: newKey(), value: '1Lorem <strong style="color: red"><strong>i<em>ps</em>um</strong></strong> dolar sit <strong>amet</strong>' },
   // ]);
-  const [state, setState] = useState<unknown>(() => Array.from({ length: 1 }, () => [
+  const [state, setState] = useState<unknown>(Array.from({ length: 1 }, () => [
     {
-      brick: 'Heading',
       id: newKey(),
+      brick: 'Heading',
       value: 'Here is simple components that',
     },
+    // {
+    //   brick: 'Editor',
+    //   id: newKey(),
+    //   value: [
+    //     {
+    //       brick: 'Paragraph',
+    //       id: newKey(),
+    //       value: 'test',
+    //     },
+    //   ],
+    // },
     {
       brick: 'List',
       id: newKey(),

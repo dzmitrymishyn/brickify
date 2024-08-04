@@ -6,14 +6,11 @@ import {
 import { getFirstDeepLeaf } from '@brickifyio/browser/utils';
 import { useCallback, useEffect, useRef } from 'react';
 
-import {
-  type RangeCallback,
-  type ResultsCallback,
-} from './models';
-import { type ChangesController, type OnChange } from '../changes';
-import { type BrickContextType } from '../context';
-import { type BeforeAfterRangesController } from '../context/useBeforeAfterRanges';
-import { type MutationsController } from '../mutations';
+import { type BrickContextType } from './models';
+import { type BeforeAfterRangesController } from './useBeforeAfterRanges';
+import { type ChangesController } from './useChangesController';
+import { type MutationsController } from './useMutationsController';
+import { type RangeCallback, type ResultsCallback } from '../commands';
 import { type PathRange } from '../ranges';
 import { type BrickStore } from '../store';
 import assert from 'assert';
@@ -23,7 +20,6 @@ type UseCommandControllerOptions = {
   rangesController: BeforeAfterRangesController;
   mutationsController: MutationsController;
   store: BrickStore;
-  onChange: OnChange;
 };
 
 export const useCommandsController = ({
@@ -31,27 +27,21 @@ export const useCommandsController = ({
   rangesController,
   mutationsController,
   store,
-  onChange,
 }: UseCommandControllerOptions) => {
   const ref = useRef<HTMLElement>(null);
-  // const subscribersRef = useRef(
-  //   new Map<Node, () => {
-  //     onChange?: OnChange;
-  //     handlers: Command[];
-  //   }>(),
-  // );
 
   const subscribe = useCallback<BrickContextType['subscribeCommand']>((
     element,
-    getHandlers,
+    commands,
   ) => {
-    const storeItem = store.get(element)!;
+    const storedItem = store.get(element);
 
-    storeItem.commands = getHandlers;
-    // subscribersRef.current.set(element, getHandlers);
+    assert(storedItem, 'Store element should be defined');
+
+    storedItem.commands = commands;
 
     return () => {
-      // subscribersRef.current.delete(element);
+      storedItem.commands = [];
     };
   }, [store]);
 
@@ -62,7 +52,7 @@ export const useCommandsController = ({
     );
 
     const element = ref.current;
-    const handle = (originalEvent: KeyboardEvent) => {
+    const handle = changesController.handle((originalEvent: KeyboardEvent) => {
       let range: Range | null = getRange();
       let resultRange: PathRange | Range | undefined;
 
@@ -86,7 +76,7 @@ export const useCommandsController = ({
         return range instanceof Range ? range : null;
       };
 
-      changesController.startBatch();
+      // changesController.before('batch');
       mutationsController.clear();
 
       let current: Node | null = getFirstDeepLeaf(
@@ -107,15 +97,12 @@ export const useCommandsController = ({
           break;
         }
 
-        const { commands: getCommands } = store.get(current)!;
-        const { handlers, onChange: currentOnChange } = getCommands?.() || {};
+        const { commands, domNode, onChange } = store.get(current)!;
+        // const { handlers, onChange: currentOnChange } = getCommands?.() || {};
 
-        // const { onChange: currentOnChange, handlers } =
-        //   subscribersRef.current.get(current)?.() ?? { handlers: [] };
+        if (commands?.length) {
+          changesController.markForApply(domNode);
 
-        // assert(Array.isArray(handlers), 'Commands should be array of Command');
-
-        if (handlers?.length) {
           const options = {
             originalEvent,
             target: current,
@@ -125,10 +112,10 @@ export const useCommandsController = ({
             resultRange: setResultRange,
             range: getOrUpdateRange,
             getFromStore: store.get,
-            onChange: currentOnChange ?? onChange,
+            onChange: onChange ?? changesController.onChange,
           };
 
-          handlers.find((handler) => {
+          commands.find((handler) => {
             if (typeof handler === 'function') {
               handler(options);
             } else if (
@@ -158,14 +145,17 @@ export const useCommandsController = ({
 
       const mutationsAfterCommands = mutationsController.clear() ?? [];
 
-      rangesController.saveAfter(resultRange ?? null);
+      if (resultRange) {
+        rangesController.saveAfter(resultRange ?? null);
+      }
       const nextRange = rangesController.getAfter();
 
       mutationsController.handle(mutationsAfterCommands);
-      changesController.applyBatch();
 
-      rangesController.saveAfter(nextRange);
-    };
+      if (resultRange) {
+        rangesController.saveAfter(nextRange);
+      }
+    }, 'batch');
 
     element.addEventListener('keydown', handle);
     return () => element.removeEventListener('keydown', handle);
@@ -174,7 +164,6 @@ export const useCommandsController = ({
     rangesController,
     mutationsController,
     store,
-    onChange,
   ]);
 
   return { subscribe, ref };

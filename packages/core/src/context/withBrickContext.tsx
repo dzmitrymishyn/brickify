@@ -14,20 +14,19 @@ import {
 import { BrickContext } from './BrickContext';
 import { useBeforeAfterRanges } from './useBeforeAfterRanges';
 import { useBrickStoreFactory } from './useBrickStoreFactory';
+import { useChangesController } from './useChangesController';
+import { useCommandsController } from './useCommandsController';
 import { useDisallowHotkeys } from './useDisallowHotkeys';
+import { useMutationsController } from './useMutationsController';
 import { useOnChange } from './useOnChange';
 import { useRangeSaver } from './useRangeSaver';
 import {
   type PropsWithChange,
-  useChangesController,
 } from '../changes';
-import { useCommandsController } from '../commands/useCommandsController';
 import { getName } from '../components';
 import { extend, withBrickName, withDisplayName } from '../extensions';
-import { useBrickContextUnsafe } from '../hooks';
-import { useMutationsController } from '../mutations';
+import { useBrickContextUnsafe , useMergedRefs } from '../hooks';
 import { fromPathRange } from '../ranges';
-import { useMergedRefs } from '../utils';
 import assert from 'assert';
 
 const metaKeyDisallowList = [
@@ -74,24 +73,27 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
 
     if (!store.get(props.value)) {
       rootTreeNode.value = { value: props.value };
+      rootTreeNode.slots = {};
       store.set(props.value, {
         slotsTreeNode: rootTreeNode,
         pathRef: { current: () => [] },
         value: props.value,
       });
     }
-    const changesController = useChangesController();
+
+    const onChange = useOnChange({
+      onChange: onChangeProp,
+      rootTreeNode,
+    });
+    const changesController = useChangesController(store, onChange);
+
     const [rangesControllerRef, rangesController] = useBeforeAfterRanges();
     const rangeSaverElementRef = useRangeSaver(rangesController);
     const disalowKeyboardRef = useDisallowHotkeys(metaKeyDisallowList);
     const mutationsController = useMutationsController({
       rangesController,
       changesController,
-    });
-    const onChange = useOnChange({
-      onChange: onChangeProp,
-      rootTreeNode,
-      changesController,
+      store,
     });
 
     const commandsController = useCommandsController({
@@ -99,7 +101,6 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
       rangesController,
       store,
       mutationsController,
-      onChange,
     });
 
     // When the value is updated we need to clear our MutationsArray.
@@ -141,18 +142,15 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
       subscribeMutation: mutationsController.subscribe,
       subscribeCommand: commandsController.subscribe,
       editable,
-      rootTreeNode,
       store,
-      onChange,
+      onChange: changesController.onChange,
     }), [
       changesController,
       commandsController.subscribe,
       editable,
-      rootTreeNode,
       mutationsController.subscribe,
       rangesController,
       store,
-      onChange,
     ]);
 
     return (
@@ -161,7 +159,7 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
           ref={ref}
           {...props as P}
           brick={props.value}
-          onChange={onChange}
+          onChange={changesController.onChange}
         />
       </BrickContext.Provider>
     );

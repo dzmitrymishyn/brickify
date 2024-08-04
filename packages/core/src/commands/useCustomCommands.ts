@@ -21,10 +21,7 @@ export const useCustomCommands = (
     assert(ref.current, 'useCommands: ref should be attached to a node');
     return subscribeCommand(
       ref.current,
-      () => ({
-        handlers: commandsRef.current,
-        onChange: onChangeRef.current,
-      }),
+      commandsRef.current ?? [],
     );
   }, [subscribeCommand]);
 

@@ -2,10 +2,11 @@ import { getLastDeepLeaf } from '@brickifyio/browser/utils';
 import {
   extend,
   next,
+  type OnChange,
   type PropsWithBrick,
   type PropsWithChange,
-  useBatchChanges,
   useBrickRegistry,
+  useChangesApplier,
   useCommands,
   useMergedRefs,
   useMutation,
@@ -97,9 +98,23 @@ const bricks = [
 type Props = PropsWithChildren & PropsWithBrick & PropsWithChange;
 
 const List: FC<Props> = ({ children, brick, onChange: onChangeProp }) => {
-  const { ref: brickRef } = useBrickRegistry(brick);
+  const onChange: OnChange = (...changes) => {
+    changes.forEach(({ type }) => {
+      if (type === 'add') {
+        changesRef.current += 1;
+      } else if (type === 'remove') {
+        changesRef.current -= 1;
+      }
+    });
+    onChangeProp?.(...changes);
+  };
+
+
+  const { ref: brickRef } = useBrickRegistry(brick, { onChange });
 
   const changesRef = useRef<number>(0);
+  changesRef.current = Children.count(children);
+
   const ref = useMergedRefs(
     brickRef,
     useMutation((mutation) => {
@@ -107,28 +122,14 @@ const List: FC<Props> = ({ children, brick, onChange: onChangeProp }) => {
         return onChangeProp?.({ type: 'remove' });
       }
     }),
-    useCommands(bricks, (...changes) => {
-      changes.forEach(({ type }) => {
-        if (type === 'add') {
-          changesRef.current += 1;
-        } else if (type === 'remove') {
-          changesRef.current -= 1;
-        }
-      });
-      onChangeProp?.(...changes);
-    }),
-    useBatchChanges({
-      before: () => {
-        changesRef.current = Children.count(children);
-      },
-      apply: () => {
-        if (changesRef.current === 0) {
-          onChangeProp?.({
-            type: 'remove',
-          });
-        }
-        changesRef.current = 0;
-      },
+    useCommands(bricks),
+    useChangesApplier(() => {
+      if (changesRef.current === 0) {
+        onChangeProp?.({
+          type: 'remove',
+        });
+      }
+      changesRef.current = Children.count(children);
     }),
   );
 

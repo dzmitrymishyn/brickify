@@ -25,16 +25,16 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   value,
   bricks = [],
   brick,
-  onChange: onChangeProp,
+  onChange,
 }, refProp) => {
-  const { editable, onChange } = useBrickContext();
+  const { editable } = useBrickContext();
   const { ref: brickRef } = useBrickRegistry(brick);
 
   const components = useBricksBuilder(
     brick,
     value,
     bricks,
-    onChange ?? onChangeProp,
+    onChange,
   );
 
   const ref = useMergedRefs(

@@ -2,37 +2,28 @@ import { addRange, fromRangeLike } from '@brickifyio/browser/selection';
 import { pipe } from 'fp-ts/lib/function';
 import { useCallback, useEffect, useRef } from 'react';
 
-import {
-  type Mutation,
-  type MutationHandler,
-} from './mutations';
-import { revertDomByMutations } from './revertDomByMutations';
-import { type ChangesController } from '../changes';
-import { type BeforeAfterRangesController } from '../context/useBeforeAfterRanges';
+import { type BeforeAfterRangesController } from './useBeforeAfterRanges';
+import { type ChangesController } from './useChangesController';
+import { type Mutation, type MutationHandler, revertDomByMutations } from '../mutations';
+import { type BrickStore } from '../store';
 import assert from 'assert';
 
 type UseMutationsControllerOptions = {
   rangesController: BeforeAfterRangesController;
   changesController: ChangesController;
+  store: BrickStore;
 };
 
 export const useMutationsController = ({
   rangesController,
   changesController,
+  store,
 }: UseMutationsControllerOptions) => {
   const ref = useRef<Element>(null);
 
   const observerRef = useRef<MutationObserver>();
-  const subscribersRef = useRef(
-    new Map<HTMLElement, MutationHandler>(),
-  );
-  const sortedElements = useRef<{
-    depth: number;
-    mutate: MutationHandler;
-  }[]>([]);
 
   const handle = useCallback((mutations: MutationRecord[]) => {
-    let wereChanges = false;
     try {
       const defaultOptions: Omit<Mutation, 'target'> = {
         remove: false,
@@ -43,7 +34,8 @@ export const useMutationsController = ({
 
       mutations.forEach((mutation) => {
         mutation.removedNodes.forEach((node) => {
-          if (subscribersRef.current.has(node as HTMLElement)) {
+          const storedElement = store.get(node);
+          if (storedElement) {
             const options = handleOptions.get(node)
               ?? { ...defaultOptions, target: node };
             options.remove = true;
@@ -54,7 +46,8 @@ export const useMutationsController = ({
         let current: Node | null = mutation.target;
 
         while (current) {
-          if (subscribersRef.current.has(current as HTMLElement)) {
+          const storedElement = store.get(current);
+          if (storedElement) {
             const options = handleOptions.get(current)
               ?? { ...defaultOptions, target: current };
 
@@ -73,20 +66,15 @@ export const useMutationsController = ({
       handleOptions.forEach(
         (options, node) => {
           try {
-            const result = subscribersRef.current.get(
-              node as HTMLElement,
-            )?.(options);
-
-            if (result) {
-              wereChanges = wereChanges || result;
-            }
+            changesController.markForApply(options.target);
+            store.get(node)?.mutate?.(options);
           } catch (error) {
-            // logger?.error('Current mutation handler was broken', error);
+            // TODO: Add logger
           }
         },
       );
 
-      if (wereChanges) {
+      if (changesController.changes().length) {
         rangesController.saveAfter();
         revertDomByMutations(mutations);
         pipe(
@@ -96,18 +84,11 @@ export const useMutationsController = ({
           () => rangesController.clearBefore(),
         );
         observerRef.current?.takeRecords();
-        // logger?.log('The DOM was restored since there are mutations');
-      } else {
-        // logger?.log(
-        //   'Mutations were ignored since there are no registered changes',
-        // );
       }
     } catch (error) {
-      // logger?.error('The mutations observer works incorrect', error);
+      // TODO: Add logger
     }
-
-    return wereChanges;
-  }, [rangesController]);
+  }, [rangesController, changesController, store]);
 
   useEffect(() => {
     assert(
@@ -115,13 +96,7 @@ export const useMutationsController = ({
       'useMutationsController: ref should be attached to a node',
     );
 
-    const observer = new MutationObserver((mutations) => {
-      changesController.startBatch();
-      // logger?.log(`Mutations were detected at ${Date.now()}`);
-      handle(mutations);
-      changesController.applyBatch();
-      // logger?.groupEnd?.();
-    });
+    const observer = new MutationObserver(changesController.handle(handle));
 
     observer.observe(ref.current, {
       subtree: true,
@@ -139,32 +114,13 @@ export const useMutationsController = ({
 
   const subscribe = useCallback(
     (element: HTMLElement, mutate: MutationHandler) => {
-      subscribersRef.current.set(element, mutate);
-
-      let depth = 0;
-      let current: Node | null = element;
-
-      while (current) {
-        depth += 1;
-        current = current.parentNode;
-      }
-
-      const elementToSort = { depth, mutate };
-
-      sortedElements.current.push(elementToSort);
-      // TODO: Use priority queue or a linked list
-      sortedElements.current.sort((a, b) => b.depth - a.depth);
+      store.update(element, { mutate });
 
       return () => {
-        subscribersRef.current.delete(element);
-
-        const index = sortedElements.current.indexOf(elementToSort);
-        if (index >= 0) {
-          sortedElements.current.splice(index, 1);
-        }
+        store.update(element, { mutate: undefined });
       };
     },
-    [],
+    [store],
   );
 
   const clear = useCallback(() => {

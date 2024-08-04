@@ -13,6 +13,9 @@ import assert from 'assert';
  */
 export const useBrickRegistry = (
   value?: object,
+  {
+    onChange,
+  }: Partial<Pick<BrickStoreValue, 'onChange'>> = {},
 ) => {
   assert(value, 'Value should be specified');
 
@@ -28,27 +31,18 @@ export const useBrickRegistry = (
   const storedBrickValue = useRef<BrickStoreValue>();
   const valueRef = useRef(value);
 
-  const updateStore = useCallback((item?: BrickStoreValue) => {
-    // If we don't have a value here it means that smth works not good and
-    // we can't guarantee the right behavior
-    assert(item, 'item should be registered in the store');
-
-    if (item.domNode) {
-      store.set(item.domNode, item);
-    }
-
-    store.set(item.value, item);
-  }, [store]);
-
   // If we get a new value that doesn't match the old one we need to clear
   // the store from the old value
   if (valueRef.current && value !== valueRef.current) {
-    const oldStoredValue = store.get(valueRef.current)!;
-    const storedValue = store.get(value)!;
+    const oldStoredValue = store.get(valueRef.current);
+    const storedValue = store.get(value);
 
     store.remove(valueRef.current);
 
-    updateStore({...oldStoredValue, ...storedValue});
+    store.update(value, {
+      ...oldStoredValue,
+      ...storedValue,
+    });
   }
 
   valueRef.current = value;
@@ -60,19 +54,18 @@ export const useBrickRegistry = (
 
     const item = store.get(valueRef.current) || storedBrickValue.current;
 
-    if (item && item.domNode !== node) {
-      if (item.domNode) {
-        store.remove(item.domNode);
-      }
-      item.domNode = node ?? undefined;
-    }
+    assert(item, 'item should be defined');
 
-    updateStore(item);
+    store.update(item.value, { domNode: node, onChange });
   };
 
   useEffect(function destroyStoreItemOnUnmount() {
     if (storedBrickValue.current) {
-      updateStore(storedBrickValue.current);
+      store.set(storedBrickValue.current.value, storedBrickValue.current);
+
+      if (storedBrickValue.current.domNode) {
+        store.set(storedBrickValue.current.domNode, storedBrickValue.current);
+      }
     }
 
     return () => {
@@ -97,7 +90,7 @@ export const useBrickRegistry = (
         store.remove(item.domNode);
       }
     };
-  }, [store, updateStore]);
+  }, [store]);
 
   const useBrickChildRegistry = useCallback(
     (slotName: string, slotValue: object): object => {

@@ -11,7 +11,10 @@ import { type PathRange } from '../ranges';
 
 export const useBeforeAfterRanges = () => {
   const ref = useRef<HTMLElement>(null);
-  const ranges = useRef<{ before?: RangeLike; after?: CustomRange | PathRange }>({
+  const ranges = useRef<{
+    before?: RangeLike;
+    after?: CustomRange | PathRange;
+  }>({
     before: undefined,
     after: undefined,
   });

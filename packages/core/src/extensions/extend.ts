@@ -16,7 +16,6 @@ export const extend = <C extends Component, Enhancer extends object[]>(
     ? brick.bind(null)
     // If it's a forwardRef we need to handle render function that isn't
     // described in the types
-    // eslint-disable-next-line -- the component doesn't have displayName
     : forwardRef(
       (props, ref) => (brick as { render: FC<unknown> }).render(props, ref),
     );

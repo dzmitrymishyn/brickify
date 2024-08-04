@@ -31,11 +31,42 @@ export const useBrickStoreFactory = (): BrickStore => {
     [getStoreByKey],
   );
 
+  const update = useCallback(
+    (key: object | Node, value: Partial<BrickStoreValue>) => {
+      const store = getStoreByKey(key);
+      const storedValue = store.get(key);
+
+      if (storedValue) {
+        const oldDomNode = storedValue.domNode;
+
+        Object.assign(storedValue, value);
+
+        if (oldDomNode && oldDomNode !== storedValue.domNode) {
+          storeByElement.current.delete(oldDomNode);
+        }
+
+        if (storedValue.domNode) {
+          storeByElement.current.set(storedValue.domNode, storedValue);
+        }
+
+        storeByValue.current.set(storedValue.value, storedValue);
+      }
+
+      return Boolean(storedValue);
+    },
+    [getStoreByKey],
+  );
+
   const remove = useCallback(
     (key: object | Node) => getStoreByKey(key).delete(key),
     [getStoreByKey],
   );
 
-  return useMemo(() => ({ get, set, remove }), [get, set, remove]);
+  return useMemo(() => ({
+    update,
+    get,
+    set,
+    remove,
+  }), [get, set, remove, update]);
 };
 
