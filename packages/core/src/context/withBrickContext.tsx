@@ -2,7 +2,6 @@
 // rules for all the actions. Parent component already added it
 /* eslint-disable react-hooks/rules-of-hooks -- it's justified */
 import { addRange, fromCustomRange } from '@brickifyio/browser/selection';
-import { of } from '@brickifyio/utils/slots-tree';
 import { pipe } from 'fp-ts/lib/function';
 import {
   forwardRef,
@@ -23,7 +22,7 @@ import { useRangeSaver } from './useRangeSaver';
 import {
   type PropsWithChange,
 } from '../changes';
-import { getName } from '../components';
+import { type BrickValue, getName } from '../components';
 import { extend, withBrickName, withDisplayName } from '../extensions';
 import { useBrickContextUnsafe , useMergedRefs } from '../hooks';
 import { fromPathRange } from '../ranges';
@@ -46,15 +45,16 @@ type Props = {
   brick?: object;
 };
 
-export function withBrickContext<P extends { value: object } & PropsWithChange>(
+export function withBrickContext<P extends { value: BrickValue[] } & PropsWithChange>(
   Component: ForwardRefExoticComponent<P>,
 ) {
   const WithBrickContext = forwardRef<Node, Props & Omit<P, 'brick' | 'onChange'>>(({
     editable = false,
     onChange: onChangeProp,
-    brick,
+    brick: brickProp,
     ...props
   }, refProp) => {
+    const brick = brickProp || props.value;
     const inheritedContext = useBrickContextUnsafe();
 
     if (inheritedContext) {
@@ -69,13 +69,10 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
     }
 
     const store = useBrickStoreFactory();
-    const rootTreeNode = useMemo(() => of({}), []);
 
     if (!store.get(props.value)) {
-      rootTreeNode.value = { value: props.value };
-      rootTreeNode.slots = {};
       store.set(props.value, {
-        slotsTreeNode: rootTreeNode,
+        slotsTreeNode: props.value,
         pathRef: { current: () => [] },
         value: props.value,
       });
@@ -83,7 +80,7 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
 
     const onChange = useOnChange({
       onChange: onChangeProp,
-      rootTreeNode,
+      rootTreeNode: brick,
     });
     const changesController = useChangesController(store, onChange);
 
@@ -122,10 +119,10 @@ export function withBrickContext<P extends { value: object } & PropsWithChange>(
       if ('container' in range) {
         pipe(range, fromCustomRange, addRange);
       } else {
-        pipe(fromPathRange(range, rootTreeNode, store), addRange);
+        pipe(fromPathRange(range, brick, store), addRange);
       }
 
-    }, [rangesController, props.value, store, rootTreeNode]);
+    }, [rangesController, brick, store]);
 
     const ref = useMergedRefs(
       refProp,

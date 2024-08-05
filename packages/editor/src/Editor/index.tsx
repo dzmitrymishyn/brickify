@@ -1,4 +1,5 @@
 import {
+  type BrickValue,
   type Component,
   extend,
   type PropsWithBrick,
@@ -16,8 +17,8 @@ import {
   forwardRef,
 } from 'react';
 
-type Props = PropsWithBrick & PropsWithChange & {
-  value: object[];
+type Props = PropsWithBrick<BrickValue | BrickValue[]> & PropsWithChange & {
+  value: BrickValue[];
   bricks?: Component[];
 };
 

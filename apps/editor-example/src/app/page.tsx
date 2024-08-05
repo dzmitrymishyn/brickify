@@ -34,44 +34,55 @@ const Page = () => {
       brick: 'Heading',
       value: 'Here is simple components that',
     },
+    // {
+    //   brick: 'Table',
+    //   id: newKey(),
+    //   children: [
+    //     ['test1', 'test2', 'test3'],
+    //     // {
+    //     //   brick: 'TableRow',
+    //     //   id: newKey(),
+    //     //   children: [
+    //     //     {
+    //     //       brick: 'TableCell',
+    //     //       id: newKey(),
+    //     //       children: 'Click `Tab` to move to the next cell',
+    //     //     },
+    //     //     {
+    //     //       brick: 'TableCell',
+    //     //       id: newKey(),
+    //     //       children: 'Click `Shift + Tab` to move to the previous cell',
+    //     //     },
+    //     //     {
+    //     //       brick: 'TableCell',
+    //     //       id: newKey(),
+    //     //       children: 'Click `Tab` to create a new row',
+    //     //     },
+    //     //   ],
+    //     // },
+    //   ],
+    // },
     {
-      brick: 'Table',
+      brick: 'Editor',
       id: newKey(),
-      children: [
+      value: [
         {
-          brick: 'TableRow',
+          brick: 'Paragraph',
           id: newKey(),
-          children: [
-            {
-              brick: 'TableCell',
-              id: newKey(),
-              children: 'Click `Tab` to move to the next cell',
-            },
-            {
-              brick: 'TableCell',
-              id: newKey(),
-              children: 'Click `Shift + Tab` to move to the previous cell',
-            },
-            {
-              brick: 'TableCell',
-              id: newKey(),
-              children: 'Click `Tab` to create a new row',
-            },
-          ],
+          value: 'sub editor',
+        },
+        {
+          brick: 'Paragraph',
+          id: newKey(),
+          value: 'sub editor',
+        },
+        {
+          brick: 'Paragraph',
+          id: newKey(),
+          value: 'sub editor',
         },
       ],
     },
-    // {
-    //   brick: 'Editor',
-    //   id: newKey(),
-    //   value: [
-    //     {
-    //       brick: 'Paragraph',
-    //       id: newKey(),
-    //       value: 'test',
-    //     },
-    //   ],
-    // },
     {
       brick: 'List',
       id: newKey(),
@@ -94,15 +105,15 @@ const Page = () => {
       ],
     },
     { brick: 'Paragraph', id: newKey(), value: 'It is a <strong>paragraph</strong>' },
-    // {
-    //   brick: 'Profile',
-    //   id: newKey(),
-    //   children: 'Hi <strong>everyone</strong>!',
-    //   visible: true,
-    //   // children: [
-    //   //   { brick: 'Paragraph', id: newKey(), children: 'Hi <strong>everyone</strong>!' },
-    //   // ],
-    // },
+    {
+      brick: 'Profile',
+      id: newKey(),
+      children: 'Hi <strong>everyone</strong>!',
+      visible: true,
+      // children: [
+      //   { brick: 'Paragraph', id: newKey(), children: 'Hi <strong>everyone</strong>!' },
+      // ],
+    },
     // { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
     // ...Array.from({ length: 2000 }, () => ({
     //   brick: 'Paragraph', id: newKey(), value: `${newKey()} hello world`,

@@ -71,6 +71,7 @@ const Profile = forwardRef<HTMLDivElement, Props>(
           type="button"
           onClick={() => {
             if (editable) {
+              debugger;
               onChange?.({
                 type: 'update',
                 visible: !visible,

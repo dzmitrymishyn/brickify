@@ -2,7 +2,7 @@
   "name": "@brickifyio/utils",
   "version": "0.0.1",
   "exports": {
-    "./slots-tree": "./slots-tree",
+    "./object": "./object",
     "./pq": "./pq"
   },
   "scripts": {

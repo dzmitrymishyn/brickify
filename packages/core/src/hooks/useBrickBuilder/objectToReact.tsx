@@ -1,5 +1,4 @@
-import { array, tap } from '@brickifyio/operators';
-import { add, type Node, of } from '@brickifyio/utils/slots-tree';
+import { debug, tap } from '@brickifyio/operators';
 import { flow, pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
 import * as O from 'fp-ts/lib/Option';
@@ -22,12 +21,11 @@ import { type BrickStore, type BrickStoreValue } from '../../store';
 import { type PathRef } from '../../utils';
 
 type Dependencies = {
-  onChange: (...changes: Change[]) => void;
   store: BrickStore;
   slots: Record<string, ComponentType>;
-  parentPathRef: PathRef;
-  parent: Node;
-  oldParent?: Node;
+  onChange: (...changes: Change[]) => void;
+  pathRef: PathRef;
+  oldValue?: BrickValue[];
 };
 
 type Data = {
@@ -37,8 +35,8 @@ type Data = {
   cached?: BrickStoreValue;
   cachedOutdated?: BrickStoreValue;
   pathRef: PathRef;
-  node: Node;
-  nodeOutdated?: Node;
+  node: BrickValue;
+  nodeOutdated?: BrickValue;
   Component: ComponentType;
   index: number;
 };
@@ -67,7 +65,7 @@ export const safeComponent = ({ slots }: PickedDeps<'slots'>) =>
     )),
   );
 
-export const addStoredItem = ({ store }: PickedDeps<'store'>) =>
+export const addItemFromStore = ({ store }: PickedDeps<'store'>) =>
   <T extends PickedData<'value'>>(
     data: T,
   ) => ({
@@ -75,19 +73,19 @@ export const addStoredItem = ({ store }: PickedDeps<'store'>) =>
     cached: store.get(data.value),
   });
 
-export const addPathRef = ({ parentPathRef }: PickedDeps<'parentPathRef'>) =>
+export const addPathRef = (deps: PickedDeps<'pathRef'>) =>
   <T extends PickedData<'index' | 'cached'>>(data: T) => {
     const pathRef = data.cached?.pathRef ?? createRef() as PathRef;
 
-    pathRef.current = () => [...parentPathRef.current(), `${data.index}`];
+    pathRef.current = () => [...deps.pathRef.current(), `${data.index}`];
 
     return { ...data, pathRef };
   };
 
-export const addChange = ({ onChange }: PickedDeps<'onChange'>) =>
+export const addChange = (deps: PickedDeps<'onChange'>) =>
   <T extends PickedData<'value' | 'pathRef'>>(data: T) => ({
     ...data,
-    change: (...changes: Partial<Change>[]) => onChange?.(
+    change: (...changes: Partial<Change>[]) => deps.onChange?.(
       ...changes.map(({ type = 'update', path, ...value }) => ({
         type,
         path: path ?? data.pathRef.current(),
@@ -110,29 +108,27 @@ export const addSlotsMeta = <T extends PickedData<'Component'>>(value: T) => ({
 type AddTreeNodeData = PickedData<'value' | 'slotMap' | 'cached'>;
 export const addTreeNode = <T extends AddTreeNodeData>(data: T) => ({
   ...data,
-  node: data.cached?.slotsTreeNode ?? of(data.value),
+  node: (data.cached?.slotsTreeNode ?? data.value) as BrickValue,
 });
 
-type AddOutdatedDataDeps = PickedDeps<'store' | 'oldParent' | 'parentPathRef'>;
+type AddOutdatedDataDeps = PickedDeps<'store' | 'oldValue' | 'pathRef'>;
 const addOutdatedData = (deps: AddOutdatedDataDeps) =>
-  <T extends PickedData<'index'>>(data: T) => {
-    const path = deps.parentPathRef.current();
-    const slotName = path?.[path?.length - 1];
-    const nodeOutdated = deps.oldParent?.slots?.[slotName]?.[data.index];
+  <T extends PickedData<'index' | 'pathRef'>>(data: T) => {
+    const nodeOutdated = deps.oldValue?.[data.index];
     return {
       ...data,
       nodeOutdated,
-      cachedOutdated: deps.store.get(nodeOutdated?.value ?? {}),
+      cachedOutdated: deps.store.get(nodeOutdated ?? {}),
     };
   };
 
 export const buildSlots = (deps: Dependencies) =>
-  ({ slotMap, value, node, pathRef, nodeOutdated }: Data) =>
+  (data: Data) =>
     Object
-      .entries(slotMap)
+      .entries(data.slotMap)
       .reduce<Record<string, readonly ReactNode[]>>(
         (acc, [name, childBricks]) => {
-          const childValue = value[name as keyof typeof value] as object;
+          const childValue = data.value[name as keyof typeof data.value] as BrickValue[];
           acc[name] = objectToReact(childValue)({
             onChange: deps.onChange,
             store: deps.store,
@@ -141,11 +137,10 @@ export const buildSlots = (deps: Dependencies) =>
                 ? deps.slots
                 : childBricks
             ) as Record<string, ComponentType> || {},
-            parentPathRef: {
-              current: () => [...pathRef.current(), name],
+            pathRef: {
+              current: () => [...data.pathRef.current(), name],
             },
-            parent: node,
-            oldParent: nodeOutdated,
+            oldValue: data.nodeOutdated?.[name] as BrickValue[],
           });
           return acc;
         },
@@ -177,25 +172,19 @@ export const build = (deps: Dependencies) => flow(
 );
 
 export const objectToReact = flow(
-  array<object>,
-  R.traverseArrayWithIndex<Dependencies, object, ReactNode | null>(flow(
+  R.traverseArrayWithIndex<Dependencies, BrickValue, ReactNode | null>(flow(
     (index, value) => R.of({ index, value }),
-    R.chain((values) => (deps: Dependencies) => pipe(
-      values,
+    R.chain((inputData) => (deps: Dependencies) => pipe(
+      inputData,
       safeValue,
       safeComponent(deps),
       O.map(flow(
-        addStoredItem(deps),
+        addItemFromStore(deps),
         addPathRef(deps),
         addChange(deps),
         addSlotsMeta,
         addTreeNode,
         addOutdatedData(deps),
-        tap(({ node }) => add(
-          deps.parent,
-          deps.parentPathRef.current().at(-1)!,
-          node,
-        )),
       )),
       O.chain((data) => pipe(
         O.fromNullable(data.cached?.react),
@@ -207,7 +196,6 @@ export const objectToReact = flow(
               data.value,
               {
                 slotsTreeNode: data.node,
-                slotsTreeParent: deps.parent,
                 pathRef: data.pathRef,
                 value: data.value,
                 react,

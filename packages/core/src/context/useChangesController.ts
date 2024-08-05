@@ -10,18 +10,12 @@ export const useChangesController = (
   const state = useRef<ChangeState>('interaction');
 
   const currentChanges = useRef<Change[]>([]);
+  const onChangesRef = useRef<(...changes: Change[]) => void>();
   const markedForChanges = useRef<Node[]>([]);
 
-  const handle = useCallback(<T>(
-    fn: (params: T) => void,
-    iterationState: ChangeState = 'interaction',
-  ) => (params: T) => {
-    state.current = iterationState;
-    currentChanges.current = [];
-    markedForChanges.current = [];
+  onChangesRef.current = onChange;
 
-    fn(params);
-
+  const apply = useCallback(() => {
     const handledNodes = new Set<Node>();
     markedForChanges.current.forEach((node) => {
       if (handledNodes.has(node)) {
@@ -37,13 +31,25 @@ export const useChangesController = (
     });
 
     if (currentChanges.current.length) {
-      onChange(...currentChanges.current);
+      onChangesRef.current?.(...currentChanges.current);
     }
 
     markedForChanges.current = [];
     currentChanges.current = [];
     state.current = 'interaction';
-  }, [onChange, store]);
+  }, [store]);
+
+  const handle = useCallback(<T>(
+    fn?: (params: T) => void,
+    iterationState: ChangeState = 'interaction',
+  ) => (params: T) => {
+    state.current = iterationState;
+    currentChanges.current = [];
+    markedForChanges.current = [];
+
+    fn?.(params);
+    apply();
+  }, [apply]);
 
   return useMemo(() => ({
     state: () => state.current,
@@ -64,6 +70,7 @@ export const useChangesController = (
       }
 
       currentChanges.current.push(...changes);
+      requestAnimationFrame(apply);
     },
     subscribeApply: (element: HTMLElement, applyChanges: () => void) => {
       store.update(element, { applyChanges });
@@ -72,7 +79,7 @@ export const useChangesController = (
         store.update(element, { applyChanges: undefined });
       };
     },
-  }), [handle, store]);
+  }), [handle, store, apply]);
 };
 
 export type ChangesController = ReturnType<typeof useChangesController>;

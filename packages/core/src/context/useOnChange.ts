@@ -1,11 +1,11 @@
-import { type Node, patch } from '@brickifyio/utils/slots-tree';
+import { patch } from '@brickifyio/utils/object';
 import { useCallback, useRef } from 'react';
 
 import { type Change } from '../changes';
 
 type UseOnChange = {
   onChange?: (value: unknown) => void;
-  rootTreeNode: Node;
+  rootTreeNode: object;
 };
 
 export const useOnChange = ({
@@ -20,14 +20,12 @@ export const useOnChange = ({
       return;
     }
 
-    const newValue = patch(rootTreeNode, changes, []) as {
-      value: unknown;
-    };
+    const newValue = patch(rootTreeNode, changes);
 
     // eslint-disable-next-line no-console -- TODO: Replace it with logger
-    console.log('New value', newValue.value);
+    console.log('New value', newValue);
 
-    onChangeRef.current?.(newValue.value);
+    onChangeRef.current?.(newValue);
   }, [rootTreeNode]);
 
   return change;

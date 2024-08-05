@@ -1,4 +1,4 @@
-import { type Change } from '@brickifyio/utils/slots-tree';
+import { type Change } from '@brickifyio/utils/object';
 
 export type ChangeState = 'batch' | 'interaction';
 

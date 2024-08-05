@@ -1,4 +1,3 @@
-import { type Node as TreeNode } from '@brickifyio/utils/slots-tree';
 import { type ReactElement } from 'react';
 
 import { type OnChange } from '../changes';
@@ -10,8 +9,8 @@ export type BrickStoreValue = {
   value: object;
   pathRef: PathRef;
   react?: ReactElement;
-  slotsTreeNode: TreeNode;
-  slotsTreeParent?: TreeNode;
+  slotsTreeNode: object;
+  slotsTreeParent?: object;
   domNode?: Node;
   onChange?: OnChange;
   commands?: Command[];
