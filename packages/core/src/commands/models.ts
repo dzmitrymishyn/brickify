@@ -13,11 +13,15 @@ export type HandleCommandOptions = {
   originalEvent: KeyboardEvent,
   target: Node;
   descendants: Node[];
+
   results: ResultsCallback;
   resultRange: (range?: Range | PathRange) => void;
   range: RangeCallback;
   getFromStore: BrickStore['get'];
   onChange: (...changes: Change[]) => void;
+
+  stopBrickPropagation: () => void;
+  stopImmediatePropagation: () => void;
 };
 
 export type HandleCommand = (options: HandleCommandOptions) => void;

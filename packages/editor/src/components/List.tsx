@@ -34,7 +34,7 @@ const ListItem = extend(
     {
       name: 'newLine',
       shortcuts: ['enter'],
-      handle: ({ onChange, range, resultRange, getFromStore, results, descendants }) => {
+      handle: ({ onChange, range, resultRange, getFromStore, stopBrickPropagation, descendants }) => {
         const currentRange = range();
         const target = descendants[0] as HTMLElement;
         const cacheItem = getFromStore(target);
@@ -52,7 +52,6 @@ const ListItem = extend(
           assert(cacheItem, 'Cache item should exist');
 
           currentRange.extractContents();
-          results({ stop: true });
 
           const tempDiv = document.createElement('div');
           const tempRange = new Range();
@@ -85,6 +84,7 @@ const ListItem = extend(
               value: tempDiv.innerHTML ?? '',
             },
           });
+          stopBrickPropagation();
         }
       },
     },

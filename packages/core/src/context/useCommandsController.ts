@@ -76,7 +76,6 @@ export const useCommandsController = ({
         return range instanceof Range ? range : null;
       };
 
-      // changesController.before('batch');
       mutationsController.clear();
 
       let current: Node | null = getFirstDeepLeaf(
@@ -85,6 +84,10 @@ export const useCommandsController = ({
       let descendants: Node[] = [];
 
       while (range) {
+        // For the current brick it should be not set since we're going through
+        // all the siblings
+        getOrUpdateResults({ stopImmediatePropagation: undefined });
+
         while (current) {
           if (store.get(current)) {
             break;
@@ -98,7 +101,6 @@ export const useCommandsController = ({
         }
 
         const { commands, domNode, onChange } = store.get(current)!;
-        // const { handlers, onChange: currentOnChange } = getCommands?.() || {};
 
         if (commands?.length) {
           changesController.markForApply(domNode);
@@ -112,6 +114,14 @@ export const useCommandsController = ({
             resultRange: setResultRange,
             range: getOrUpdateRange,
             getFromStore: store.get,
+
+            stopBrickPropagation: () => getOrUpdateResults({
+              stopPropagation: true,
+            }),
+            stopImmediatePropagation: () => getOrUpdateResults({
+              stopImmediatePropagation: true,
+            }),
+
             onChange: onChange ?? changesController.onChange,
           };
 
@@ -125,12 +135,8 @@ export const useCommandsController = ({
               handler.handle?.(options);
             }
 
-            return false;
+            return getOrUpdateResults('stopImmediatePropagation');
           });
-        }
-
-        if (results.stop) {
-          break;
         }
 
         const nextDeepSiblingLeaf = getFirstDeepLeaf(current.nextSibling);
@@ -139,7 +145,9 @@ export const useCommandsController = ({
           descendants = [];
         } else {
           descendants.unshift(current);
-          current = current.parentNode;
+          current = getOrUpdateResults('stopPropagation')
+            ? null
+            : current.parentNode;
         }
       }
 

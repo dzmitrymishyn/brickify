@@ -217,8 +217,8 @@ const TableRow = extend(
     {
       name: 'preventNewLine',
       shortcuts: ['enter'],
-      handle: ({ results }) => {
-        results({ stop: true });
+      handle: ({ stopBrickPropagation }) => {
+        stopBrickPropagation();
       },
     },
   ]),
