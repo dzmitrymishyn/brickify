@@ -6,11 +6,10 @@ import * as I from 'fp-ts/lib/Identity';
 
 import assert from 'assert';
 
-export type Change = {
+export type Change<Value = any> = {
   type: 'add' | 'remove' | 'update';
-  value?: unknown;
+  value?: Value;
   path?: string[];
-  [key: string]: unknown;
 };
 
 export const makeChangesMap = (changes: Change[]) => pipe(
@@ -29,7 +28,9 @@ export const makeChangesMap = (changes: Change[]) => pipe(
       return current;
     }, '');
 
-    changesMap[key].push(change);
+    if (key) {
+      changesMap[key].push(change);
+    }
 
     return changesMap;
   }),
@@ -50,15 +51,13 @@ export const handleChangesArray = (
 ) => {
   switch (change.type) {
     case 'update': {
-      if (acc.value !== 'removed' && change.value) {
+      if (acc.value !== 'removed') {
         acc.value = change.value;
       }
       break;
     }
     case 'add': {
-      if (change.value) {
-        acc.previousValues.push(change.value);
-      }
+      acc.previousValues.push(change.value);
       break;
     }
     case 'remove': {
@@ -83,26 +82,39 @@ export const traverseAndApplyChanges = (
     E.map((currentPath) => changesMap[currentPath]),
     E.map((changes) => {
       if (Array.isArray(value)) {
-        return value.flatMap((currentValue: unknown, index) => {
-          const currentPath = [...path, `${index}`];
-          return traverseAndApplyChanges(
-            currentValue,
-            changesMap,
-            currentPath,
-          );
-        });
+        return [
+          ...value.flatMap((currentValue: unknown, index) => {
+            const currentPath = [...path, `${index}`];
+            const newValue = traverseAndApplyChanges(
+              currentValue,
+              changesMap,
+              currentPath,
+            );
+            return Array.isArray(currentValue) ? [newValue] : newValue;
+          }),
+          ...pipe(
+            [...path, value.length].join('/'),
+            (lastElementsPath) => changesMap[lastElementsPath] ?? [],
+            A.reduce<Change, unknown[]>([], (acc, change) => {
+              if (change.type === 'add') {
+                acc.push(change.value);
+              }
+              return acc;
+            }),
+          ),
+        ];
       }
 
-      let result = value;
+      let result = [value];
       const { value: newValue, previousValues } = changes.reduce(
         handleChangesArray,
         { value: 'unhandled', previousValues: [] },
       );
 
       if (newValue === 'removed') {
-        result = undefined;
+        result = [];
       } else if (!value || typeof value !== 'object') {
-        result = newValue === 'unhandled' ? value : newValue;
+        result = [newValue === 'unhandled' ? value : newValue];
       } else {
         const handledValue = (
           newValue === 'unhandled'
@@ -122,10 +134,10 @@ export const traverseAndApplyChanges = (
 
           handledValue[key] = isArray ? currentResult : array(currentResult)[0];
         });
-        result = handledValue;
+        result = [handledValue];
       }
 
-      return [...previousValues, result];
+      return [...previousValues, ...result];
     }),
     E.getOrElseW(I.of),
   );
@@ -136,7 +148,6 @@ export const patch = (
   changes: Change[],
 ) => pipe(
   makeChangesMap(changes),
-  // debug,
   (changesMap) => traverseAndApplyChanges(
     value,
     changesMap,

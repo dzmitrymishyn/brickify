@@ -1,11 +1,11 @@
 import { useCallback, useMemo, useRef } from 'react';
 
-import { type Change, type ChangeState } from '../changes';
+import { type Change, type ChangeState, type OnChange } from '../changes';
 import { type BrickStore } from '../store';
 
 export const useChangesController = (
   store: BrickStore,
-  onChange: (...changes: Change[]) => void,
+  onChangeProp: (...changes: Change[]) => void,
 ) => {
   const state = useRef<ChangeState>('interaction');
 
@@ -13,7 +13,7 @@ export const useChangesController = (
   const onChangesRef = useRef<(...changes: Change[]) => void>();
   const markedForChanges = useRef<Node[]>([]);
 
-  onChangesRef.current = onChange;
+  onChangesRef.current = onChangeProp;
 
   const apply = useCallback(() => {
     const handledNodes = new Set<Node>();
@@ -51,6 +51,29 @@ export const useChangesController = (
     apply();
   }, [apply]);
 
+  const onChange = useCallback<OnChange>((value, change) => {
+    if (!change.path && !change.brick) {
+      return;
+    }
+
+    const path = change.path || store.get(change.brick!)?.pathRef.current();
+
+    if (!path) {
+      return;
+    }
+
+    if (!currentChanges.current.length) {
+      requestAnimationFrame(apply);
+    }
+
+    currentChanges.current.push({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- ok
+      value,
+      type: change.type || 'update',
+      path,
+    });
+  }, [store, apply]);
+
   return useMemo(() => ({
     state: () => state.current,
     handle,
@@ -64,14 +87,7 @@ export const useChangesController = (
       markedForChanges.current.push(node);
     },
     changes: () => currentChanges.current,
-    onChange: (...changes: Change[]) => {
-      if (!changes.length) {
-        return;
-      }
-
-      currentChanges.current.push(...changes);
-      requestAnimationFrame(apply);
-    },
+    onChange,
     subscribeApply: (element: HTMLElement, applyChanges: () => void) => {
       store.update(element, { applyChanges });
 
@@ -79,7 +95,7 @@ export const useChangesController = (
         store.update(element, { applyChanges: undefined });
       };
     },
-  }), [handle, store, apply]);
+  }), [handle, store, onChange]);
 };
 
 export type ChangesController = ReturnType<typeof useChangesController>;

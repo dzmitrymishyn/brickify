@@ -1,5 +1,6 @@
 import {
   extend,
+  type PropsWithBrick,
   type PropsWithChange,
   useBrickRegistry,
   useMergedRefs,
@@ -8,13 +9,13 @@ import {
 } from '@brickifyio/core';
 import { forwardRef, type PropsWithChildren } from 'react';
 
-type Props = PropsWithChildren & PropsWithChange & { brick?: object };
+type Props = PropsWithChildren & PropsWithChange & PropsWithBrick;
 
 const Container = forwardRef<Node, Props>(({ brick, children, onChange }, refProp) => {
   const { ref: brickRegistryRef } = useBrickRegistry(brick);
   const mutationRef = useMutation<HTMLDivElement>(({ remove }) => {
     if (remove) {
-      return onChange?.({ type: 'remove' });
+      return onChange?.(null, { type: 'remove', brick });
     }
   });
 

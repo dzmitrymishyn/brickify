@@ -16,6 +16,7 @@ export type BrickStoreValue = {
   commands?: Command[];
   mutate?: MutationHandler;
   applyChanges?: () => void;
+  slots?: Record<string, Record<string, object>>;
 };
 
 export type BrickStoreKey = object | Node;

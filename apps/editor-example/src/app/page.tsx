@@ -28,80 +28,30 @@ const Page = () => {
   // const [state2, setState2] = useState<unknown>(() => [
   //   { brick: 'Paragraph', id: newKey(), value: '1Lorem <strong style="color: red"><strong>i<em>ps</em>um</strong></strong> dolar sit <strong>amet</strong>' },
   // ]);
-  const [state, setState] = useState<unknown>(Array.from({ length: 1 }, () => [
+  const [state, setState] = useState<unknown>(() => Array.from({ length: 1 }, () => [
     {
       id: newKey(),
       brick: 'Heading',
       value: 'Here is simple components that',
     },
-    // {
-    //   brick: 'Table',
-    //   id: newKey(),
-    //   children: [
-    //     ['test1', 'test2', 'test3'],
-    //     // {
-    //     //   brick: 'TableRow',
-    //     //   id: newKey(),
-    //     //   children: [
-    //     //     {
-    //     //       brick: 'TableCell',
-    //     //       id: newKey(),
-    //     //       children: 'Click `Tab` to move to the next cell',
-    //     //     },
-    //     //     {
-    //     //       brick: 'TableCell',
-    //     //       id: newKey(),
-    //     //       children: 'Click `Shift + Tab` to move to the previous cell',
-    //     //     },
-    //     //     {
-    //     //       brick: 'TableCell',
-    //     //       id: newKey(),
-    //     //       children: 'Click `Tab` to create a new row',
-    //     //     },
-    //     //   ],
-    //     // },
-    //   ],
-    // },
     {
-      brick: 'Editor',
+      brick: 'Table',
       id: newKey(),
-      value: [
-        {
-          brick: 'Paragraph',
-          id: newKey(),
-          value: 'sub editor',
-        },
-        {
-          brick: 'Paragraph',
-          id: newKey(),
-          value: 'sub editor',
-        },
-        {
-          brick: 'Paragraph',
-          id: newKey(),
-          value: 'sub editor',
-        },
+      children: [
+        [
+          'Click `Tab` to move to the next cell',
+          'Click `Shift + Tab` to move to the previous cell',
+          'Click `Tab` to create a new row',
+        ],
       ],
     },
     {
       brick: 'List',
       id: newKey(),
       children: [
-        {
-          brick: 'ListItem',
-          id: newKey(),
-          value: 'List with item number 1',
-        },
-        {
-          brick: 'ListItem',
-          id: newKey(),
-          value: 'List with item number 2',
-        },
-        {
-          brick: 'ListItem',
-          id: newKey(),
-          value: '<em>Try to add new list item</em>',
-        },
+        'It is a single level list',
+        'Click enter to create a new line',
+        'Click enter twice to create a new paragraph',
       ],
     },
     { brick: 'Paragraph', id: newKey(), value: 'It is a <strong>paragraph</strong>' },
@@ -132,6 +82,7 @@ const Page = () => {
         editable mode
       </button>
       <Editor
+        style={{ padding: 20 }}
         // eslint-disable-next-line -- TODO: check it
         value={state as any}
         editable={editable}

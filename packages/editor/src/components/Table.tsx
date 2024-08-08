@@ -1,78 +1,27 @@
-// TODO: Think about more flex structure for the component
-// Right now it's hard to define Table -> TableRow -> TableCell
-// It should be an array of strings. The current system works only with objects
-
 import {
   extend,
   next,
   previous,
   type PropsWithBrick,
   type PropsWithChange,
+  useBrickChildrenRegistry,
   useBrickRegistry,
   useCommands,
   useMergedRefs,
   useMutation,
   withName,
   withShortcuts,
-  useBrickContext,
-  // withSlots,
 } from '@brickifyio/core';
-import { type FC, type PropsWithChildren } from 'react';
+import { type FC } from 'react';
+
 import Paragraph from '../Paragraph';
 
-type TableCellProps = PropsWithBrick<object> & PropsWithChange & {
-  children: string;
-}
 type TableRowProps = PropsWithBrick<object> & PropsWithChange & {
   children: string[];
 };
 
 const TableCell = extend(
-  ({ brick, children, onChange }: TableCellProps) => {
-    const { store } = useBrickContext();
-    // const { ref: brickRef } = useBrickRegistry(brick);
-
-    // const ref = useMergedRefs(
-    //   brickRef,
-    //   useMutation(({ target, remove }) => {
-    //     if (remove) {
-    //       onChange?.({ type: 'remove' });
-    //       return;
-    //     }
-
-    //     onChange?.({
-    //       type: 'update',
-    //       children: target.textContent ?? '',
-    //     });
-    //   }),
-    // );
-
-    return (
-      <Paragraph
-        component="td"
-        value={children}
-        brick={brick}
-        onChange={(...changes) => {
-          const path = store.get(brick)?.pathRef.current() ?? [];
-          onChange?.(...changes.map(({ type, value }) => ({
-            type,
-            value,
-            path,
-          })));
-        }}
-      />
-      // <td
-      //   style={{
-      //     border: '1px solid #ccc',
-      //     padding: '10px',
-      //   }}
-      //   ref={ref}
-      //   data-brick="tableCell"
-      // >
-      //   {children || <br />}
-      // </td>
-    );
-  },
+  Paragraph,
   withName('TableCell'),
   withShortcuts([
     {
@@ -120,35 +69,26 @@ const TableCell = extend(
         } else {
           const currentRowStoredValue = getFromStore(target)!;
           const nextRowPath = next(currentRowStoredValue.pathRef.current());
-          onChange({
+          onChange(new Array(target.childNodes.length).fill(''), {
             type: 'add',
             path: nextRowPath,
-            value: {
-              brick: 'TableRow',
-              id: Math.random().toFixed(3),
-              children: Array.from(target.childNodes, () => ({
-                brick: 'TableCell',
-                id: Math.random().toFixed(3),
-                children: '',
-              })),
-            },
           });
           resultRange({
             start: {
               offset: 0,
-              path: [...nextRowPath, 'children', '0'],
+              path: [...nextRowPath, '0'],
             },
             end: {
               offset: 0,
-              path: [...nextRowPath, 'children', '0'],
+              path: [...nextRowPath, '0'],
             },
           });
         }
 
         // Empty change
-        onChange({
-          type: 'update',
-          path: getFromStore(currentCell)!.pathRef.current(),
+        onChange(null, {
+          type: 'add',
+          path: [''],
         });
       },
     },
@@ -200,47 +140,51 @@ const TableCell = extend(
           });
         }
 
-        onChange({
-          type: 'update',
-          path: getFromStore(currentCell)!.pathRef.current(),
+        onChange(null, {
+          type: 'add',
+          path: [''],
         });
       },
     },
-  ])
+  ]),
 );
 
 const TableRow = extend(
   ({ brick, children, onChange }: TableRowProps) => {
-    const { ref: brickRef, useBrickChildrenRegistry } = useBrickRegistry(brick);
-    const childrenBricks = useBrickChildrenRegistry(null, children);
+    const { ref: brickRef } = useBrickRegistry(brick);
+    const childrenBricks = useBrickChildrenRegistry(
+      brick,
+      null,
+      children,
+      (childBrick, index) => (
+        <TableCell
+          component="td"
+          brick={childBrick}
+          key={index}
+          value={childBrick.value}
+          style={{ border: '1px solid #ccc', padding: 10 }}
+          onChange={({ value }, change) => onChange?.(value, change)}
+        />
+      ),
+    );
 
     const ref = useMergedRefs(
       brickRef,
       useCommands([TableCell]),
       useMutation(({ remove }) => {
         if (remove) {
-          onChange?.({ type: 'remove' });
+          onChange?.({ type: 'remove' }, brick);
         }
       })
     );
 
     return (
       <tr ref={ref} data-brick="tableRow">
-        {childrenBricks.map((childBrick, index) => (
-          <TableCell
-            brick={childBrick}
-            key={index}
-            children={childBrick.value}
-            onChange={onChange}
-          />
-        ))}
+        {childrenBricks}
       </tr>
     );
   },
   withName('TableRow'),
-  // withSlots({
-  //   children: [TableCell],
-  // }),
   withShortcuts([
     {
       name: 'preventNewLine',
@@ -256,16 +200,29 @@ type Props = PropsWithBrick & PropsWithChange & {
   children: string[][];
 };
 
-const Table: FC<Props> = ({ children, brick, onChange: onChangeProp }) => {
-  const { ref: brickRef, useBrickChildrenRegistry } = useBrickRegistry(brick);
-  const childrenBricks = useBrickChildrenRegistry('children', children);
+const Table: FC<Props> = ({ children, brick, onChange }) => {
+  const { ref: brickRef } = useBrickRegistry(brick);
+  const childrenBricks = useBrickChildrenRegistry(
+    brick,
+    'children',
+    children,
+    (row, index) => (
+      <TableRow
+        key={index}
+        brick={row}
+        onChange={onChange}
+      >
+        {row}
+      </TableRow>
+    ),
+  );
 
   const ref = useMergedRefs(
     brickRef,
     useCommands([TableRow]),
     useMutation((mutation) => {
       if (mutation.remove) {
-        return onChangeProp?.({ type: 'remove' });
+        return onChange?.(null, { type: 'remove', brick });
       }
     }),
   );
@@ -273,14 +230,7 @@ const Table: FC<Props> = ({ children, brick, onChange: onChangeProp }) => {
   return (
     <table ref={ref} data-brick="table">
       <tbody>
-        {childrenBricks.map((childBrick, index) => (
-          <TableRow
-            key={index}
-            brick={childBrick}
-            children={childBrick.value}
-            onChange={onChangeProp}
-          />
-        ))}
+        {childrenBricks}
       </tbody>
     </table>
   );
@@ -289,7 +239,4 @@ const Table: FC<Props> = ({ children, brick, onChange: onChangeProp }) => {
 export default extend(
   Table,
   withName('Table'),
-  // withSlots({
-  //   children: [TableRow],
-  // }),
 );

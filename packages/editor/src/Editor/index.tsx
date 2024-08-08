@@ -20,6 +20,7 @@ import {
 type Props = PropsWithBrick<BrickValue | BrickValue[]> & PropsWithChange & {
   value: BrickValue[];
   bricks?: Component[];
+  style?: object;
 };
 
 const Editor = forwardRef<HTMLDivElement, Props>(({
@@ -27,6 +28,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   bricks = [],
   brick,
   onChange,
+  style,
 }, refProp) => {
   const { editable } = useBrickContext();
   const { ref: brickRef } = useBrickRegistry(brick);
@@ -48,6 +50,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
     <div
       ref={ref}
       data-brick="editor"
+      style={style}
       {...editable && {
         contentEditable: true,
         suppressContentEditableWarning: true,

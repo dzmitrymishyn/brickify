@@ -1,5 +1,6 @@
 import {
   type ReactNode,
+  useCallback,
   useMemo,
   useRef,
 } from 'react';
@@ -14,10 +15,18 @@ export const useBricksBuilder = (
   brick: object,
   value: BrickValue[],
   bricks: Component[],
-  onChange: OnChange = () => undefined,
+  onChangeProp: OnChange = () => undefined,
 ): ReactNode => {
   const { store } = useBrickContext();
   const rootValueRef = useRef<BrickValue[] | undefined>(undefined);
+  const onChangePropRef = useRef(onChangeProp);
+
+  onChangePropRef.current = onChangeProp;
+
+  const onChange = useCallback<OnChange>(
+    (...params) => onChangePropRef.current?.(...params),
+    [],
+  );
 
   const element = useMemo(() => {
     const storedItem = store.get(brick);

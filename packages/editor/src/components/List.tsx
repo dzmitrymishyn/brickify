@@ -5,17 +5,16 @@ import {
   type OnChange,
   type PropsWithBrick,
   type PropsWithChange,
+  useBrickChildrenRegistry,
   useBrickRegistry,
   useChangesApplier,
   useCommands,
   useMergedRefs,
   useMutation,
   withName,
-  withProps,
   withShortcuts,
-  withSlots,
 } from '@brickifyio/core';
-import { Children, type FC, type PropsWithChildren, useRef } from 'react';
+import { Children, type FC, useCallback, useRef } from 'react';
 
 import { ShiftEnterBr } from './Br';
 import Em from './Em';
@@ -25,10 +24,6 @@ import assert from 'assert';
 
 const ListItem = extend(
   Paragraph,
-  withProps({
-    component: 'li',
-    bricks: [ShiftEnterBr, Strong, Em],
-  }),
   withName('ListItem'),
   withShortcuts([
     {
@@ -42,7 +37,7 @@ const ListItem = extend(
         assert(target, 'This handler should be called by it\'s parent and descendants should be defined');
 
         if (target.innerHTML === '<br>' && !target.nextElementSibling) {
-          return onChange?.({
+          return onChange?.(null, {
             type: 'remove',
             path: cacheItem?.pathRef.current(),
           });
@@ -74,15 +69,9 @@ const ListItem = extend(
             end: { path: newPath, offset: 0 },
           });
 
-          onChange?.({
+          onChange?.({ value: tempDiv.innerHTML ?? '' }, {
             type: 'add',
             path: newPath,
-            value: {
-              brick: 'ListItem',
-              id: Math.random().toFixed(3),
-              // BR is a native browser behaviour to make an empty new line
-              value: tempDiv.innerHTML ?? '',
-            },
           });
           stopBrickPropagation();
         }
@@ -95,22 +84,39 @@ const bricks = [
   ListItem,
 ];
 
-type Props = PropsWithChildren & PropsWithBrick & PropsWithChange;
+type Props = PropsWithBrick & PropsWithChange & {
+  children: string[];
+};
 
 const List: FC<Props> = ({ children, brick, onChange: onChangeProp }) => {
-  const onChange: OnChange = (...changes) => {
-    changes.forEach(({ type }) => {
-      if (type === 'add') {
-        changesRef.current += 1;
-      } else if (type === 'remove') {
-        changesRef.current -= 1;
-      }
-    });
-    onChangeProp?.(...changes);
-  };
+  const onChange: OnChange<{ value: string | number }> = useCallback((value, change) => {
+    if (change.type === 'add') {
+      changesRef.current += 1;
+    } else if (change.type === 'remove') {
+      changesRef.current -= 1;
+    }
+    onChangeProp?.(value?.value ?? '', change);
+  }, [onChangeProp]);
 
+  const {
+    ref: brickRef,
+  } = useBrickRegistry(brick, { onChange });
 
-  const { ref: brickRef } = useBrickRegistry(brick, { onChange });
+  const components = useBrickChildrenRegistry(
+    brick,
+    'children',
+    children,
+    (childBrick, index) => (
+      <ListItem
+        component="li"
+        key={index}
+        brick={childBrick}
+        bricks={[ShiftEnterBr, Strong, Em]}
+        onChange={onChange}
+        value={childBrick.value}
+      />
+    ),
+  );
 
   const changesRef = useRef<number>(0);
   changesRef.current = Children.count(children);
@@ -119,14 +125,15 @@ const List: FC<Props> = ({ children, brick, onChange: onChangeProp }) => {
     brickRef,
     useMutation((mutation) => {
       if (mutation.remove) {
-        return onChangeProp?.({ type: 'remove' });
+        return onChangeProp?.(null, { type: 'remove', brick });
       }
     }),
     useCommands(bricks),
     useChangesApplier(() => {
       if (changesRef.current === 0) {
-        onChangeProp?.({
+        onChangeProp?.(null, {
           type: 'remove',
+          brick,
         });
       }
       changesRef.current = Children.count(children);
@@ -135,7 +142,7 @@ const List: FC<Props> = ({ children, brick, onChange: onChangeProp }) => {
 
   return (
     <ul ref={ref} data-brick="list">
-      {children}
+      {components}
     </ul>
   );
 };
@@ -143,7 +150,4 @@ const List: FC<Props> = ({ children, brick, onChange: onChangeProp }) => {
 export default extend(
   List,
   withName('List'),
-  withSlots({
-    children: bricks,
-  }),
 );

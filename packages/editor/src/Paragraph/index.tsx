@@ -29,11 +29,12 @@ type Value = BrickValue & {
   value: string | number;
 };
 
-type Props = PropsWithChange & {
+type Props = PropsWithChange<Value> & {
   bricks?: AnyComponent[];
   component?: ElementType;
   value: Value['value'];
   brick: object;
+  style?: object;
 };
 
 const Paragraph: React.FC<Props> = ({
@@ -41,8 +42,10 @@ const Paragraph: React.FC<Props> = ({
   bricks = [],
   component: Component = 'div',
   onChange,
-  brick,
+  brick: brickProp,
+  style,
 }) => {
+  const brick = brickProp as Value;
   const rootRef = useRef<HTMLElement>(null);
   const oldComponents = useRef<ReactNode>();
   const { editable } = useBrickContext();
@@ -61,12 +64,9 @@ const Paragraph: React.FC<Props> = ({
     (element?: HTMLElement | null) => pipe(
       element?.innerHTML ?? '',
       (html) => html === '<br>' ? '' : html,
-      (newValue) => onChange?.({
-        value: newValue,
-        type: 'update',
-      })
+      (newValue) => onChange?.({ ...brick, value: newValue }, { brick }),
     ),
-    [onChange],
+    [onChange, brick],
   );
 
   const ref = useMergedRefs(
@@ -75,7 +75,7 @@ const Paragraph: React.FC<Props> = ({
     useCommands(bricks),
     useMutation(({ remove, target }) => {
       if (remove) {
-        return onChange?.({ type: 'remove' });
+        return onChange?.(brick, { type: 'remove', brick });
       }
 
       return emitNewValue(target as HTMLElement);
@@ -88,6 +88,7 @@ const Paragraph: React.FC<Props> = ({
     <Component
       data-brick="paragraph"
       ref={ref}
+      style={style}
       {...editable && {
         contentEditable: true,
         suppressContentEditableWarning: true,
@@ -146,23 +147,23 @@ export default extend(
             tempDiv.append(tempRange.extractContents());
           }
 
-          const newPath = next(cacheItem.pathRef.current());
+          const nextPath = next(cacheItem.pathRef.current());
 
           resultRange({
-            start: { path: newPath, offset: 0 },
-            end: { path: newPath, offset: 0 },
+            start: { path: nextPath, offset: 0 },
+            end: { path: nextPath, offset: 0 },
           });
 
           onChange?.({
+            brick: 'Paragraph',
+            id: Math.random().toFixed(3),
+            // BR is a native browser behaviour to make an empty new line
+            value: tempDiv.innerHTML ?? '',
+          }, {
             type: 'add',
-            path: newPath,
-            value: {
-              brick: 'Paragraph',
-              id: Math.random().toFixed(3),
-              // BR is a native browser behaviour to make an empty new line
-              value: tempDiv.innerHTML ?? '',
-            },
+            path: nextPath,
           });
+
           stopBrickPropagation();
         }
       },

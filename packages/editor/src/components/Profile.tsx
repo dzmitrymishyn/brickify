@@ -45,7 +45,7 @@ const Profile = forwardRef<HTMLDivElement, Props>(
 
     const mutationRef = useMutation<HTMLDivElement>(({ remove }) => {
       if (remove) {
-        return onChange?.({ type: 'remove' });
+        return onChange?.(null, { type: 'remove', brick });
       }
     });
 
@@ -71,10 +71,9 @@ const Profile = forwardRef<HTMLDivElement, Props>(
           type="button"
           onClick={() => {
             if (editable) {
-              debugger;
-              onChange?.({
+              onChange?.({ ...brick, visible: !visible }, {
                 type: 'update',
-                visible: !visible,
+                brick,
               });
             } else {
               setIsDescriptionVisible((oldValue) => !oldValue);
@@ -89,11 +88,11 @@ const Profile = forwardRef<HTMLDivElement, Props>(
           value={children}
           brick={paragraphBrick}
           bricks={[Strong, Br]}
-          onChange={(newValue) => {
+          onChange={(newValue, { type }) => {
             return onChange?.({
-              children: newValue.type === 'update' ? newValue.value ?? '' : '',
-              type: 'update',
-            });
+              ...brick,
+              children: type ==='update' ? newValue : '',
+            }, { type: 'update', brick });
           }
         }
         /> : null}

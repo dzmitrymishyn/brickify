@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { useBrickContext } from './useBrickContext';
 import { type BrickStoreValue } from '../store';
@@ -116,56 +116,5 @@ export const useBrickRegistry = (
     [value, store],
   );
 
-  const useBrickChildrenRegistry = useCallback(
-    <T = unknown>(slotName: string | null, slotValues: T[]): (T extends object ? T : { value: T })[] => {
-      type TT = T extends object ? T : { value: T };
-      const { slotsTreeNode, pathRef } = store.get(value)!;
-      // eslint-disable-next-line react-hooks/rules-of-hooks -- it's ok
-      const [values, setValues] = useState<TT[]>([]);
-      // eslint-disable-next-line react-hooks/rules-of-hooks -- it's ok
-      const previousSlotValues = useRef<T[]>([]);
-
-      if (previousSlotValues.current !== slotValues) {
-        setValues(Array.from(
-          { length: Math.max(previousSlotValues.current.length, slotValues.length) },
-          (_, index) => {
-            const newValue = slotValues[index] === previousSlotValues.current[index]
-              ? values[index]
-              : (
-                typeof slotValues[index] === 'object'
-                  ? slotValues[index]
-                  : { value: slotValues[index] }
-              ) as TT;
-
-            if (store.get(newValue)) {
-              return newValue;
-            }
-
-            // const node = of(newValue);
-            const childPathRef = {
-              current: () => [...pathRef.current(), ...(slotName ? [slotName] : []), `${index}`],
-            };
-
-            // addArray(slotsTreeNode, slotName || `${index}`, node);
-
-            store.set(newValue, {
-              value: newValue,
-              slotsTreeNode: newValue,
-              slotsTreeParent: slotsTreeNode,
-              pathRef: childPathRef,
-            });
-
-            return newValue;
-          },
-        ));
-
-        previousSlotValues.current = slotValues;
-      }
-
-      return values;
-    },
-    [value, store],
-  );
-
-  return { ref, useBrickChildRegistry, useBrickChildrenRegistry };
+  return { ref, useBrickChildRegistry };
 };

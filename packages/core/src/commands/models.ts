@@ -1,4 +1,4 @@
-import { type Change } from '../changes';
+import { type OnChange } from '../changes';
 import { type PathRange } from '../ranges';
 import { type BrickStore } from '../store';
 
@@ -18,7 +18,7 @@ export type HandleCommandOptions = {
   resultRange: (range?: Range | PathRange) => void;
   range: RangeCallback;
   getFromStore: BrickStore['get'];
-  onChange: (...changes: Change[]) => void;
+  onChange: OnChange;
 
   stopBrickPropagation: () => void;
   stopImmediatePropagation: () => void;

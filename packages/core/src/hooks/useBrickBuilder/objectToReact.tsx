@@ -1,4 +1,4 @@
-import { debug, tap } from '@brickifyio/operators';
+import { tap } from '@brickifyio/operators';
 import { flow, pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
 import * as O from 'fp-ts/lib/Option';
@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 
-import { type Change } from '../../changes';
+import { type OnChange } from '../../changes';
 import {
   type BrickValue,
   type Component as ComponentType,
@@ -23,7 +23,7 @@ import { type PathRef } from '../../utils';
 type Dependencies = {
   store: BrickStore;
   slots: Record<string, ComponentType>;
-  onChange: (...changes: Change[]) => void;
+  onChange: OnChange;
   pathRef: PathRef;
   oldValue?: BrickValue[];
 };
@@ -31,7 +31,6 @@ type Dependencies = {
 type Data = {
   value: BrickValue;
   slotMap: Record<string, 'inherit' | Record<string, NamedComponent>>;
-  change: (...changes: Change[]) => void;
   cached?: BrickStoreValue;
   cachedOutdated?: BrickStoreValue;
   pathRef: PathRef;
@@ -82,24 +81,6 @@ export const addPathRef = (deps: PickedDeps<'pathRef'>) =>
     return { ...data, pathRef };
   };
 
-export const addChange = (deps: PickedDeps<'onChange'>) =>
-  <T extends PickedData<'value' | 'pathRef'>>(data: T) => ({
-    ...data,
-    change: (...changes: Partial<Change>[]) => deps.onChange?.(
-      ...changes.map(({ type = 'update', path, ...value }) => ({
-        type,
-        path: path ?? data.pathRef.current(),
-        ...(
-          path
-            ? value
-            : {
-              value: { ...data.value, ...value },
-            }
-        ),
-      })),
-    ),
-  });
-
 export const addSlotsMeta = <T extends PickedData<'Component'>>(value: T) => ({
   ...value,
   slotMap: hasSlots(value.Component) ? value.Component.slots : {},
@@ -149,7 +130,7 @@ export const buildSlots = (deps: Dependencies) =>
 
 export const build = (deps: Dependencies) => flow(
   I.bind('slotProps', buildSlots(deps)),
-  I.map(({ slotProps, Component, change, value, index, cachedOutdated }) => {
+  I.map(({ slotProps, Component, value, index, cachedOutdated }) => {
     const { id, brick: _brick, ...rest } = value;
     const key = id || `${index}`;
 
@@ -157,7 +138,7 @@ export const build = (deps: Dependencies) => flow(
       ...(hasProps(Component) && Component.props),
       ...rest,
       ...slotProps,
-      onChange: change,
+      onChange: deps.onChange,
       brick: value,
     };
 
@@ -181,7 +162,6 @@ export const objectToReact = flow(
       O.map(flow(
         addItemFromStore(deps),
         addPathRef(deps),
-        addChange(deps),
         addSlotsMeta,
         addTreeNode,
         addOutdatedData(deps),
