@@ -125,9 +125,9 @@ const TableCell = extend(
           });
         } else if (target.previousSibling) {
           const currentRowStoredValue = getFromStore(target)!;
-          const nextRowPath = previous(
+          const nextRowPath = [...previous(
             currentRowStoredValue.pathRef.current(),
-          );
+          ), `${target.childNodes.length - 1}`];
           resultRange({
             start: {
               offset: 0,
@@ -158,7 +158,7 @@ const TableRow = extend(
       children,
       (childBrick, index) => (
         <TableCell
-          component="td"
+          component="div"
           brick={childBrick}
           key={index}
           value={childBrick.value}
@@ -179,9 +179,9 @@ const TableRow = extend(
     );
 
     return (
-      <tr ref={ref} data-brick="tableRow">
+      <div ref={ref} style={{ display: 'contents' }}>
         {childrenBricks}
-      </tr>
+      </div>
     );
   },
   withName('TableRow'),
@@ -228,11 +228,16 @@ const Table: FC<Props> = ({ children, brick, onChange }) => {
   );
 
   return (
-    <table ref={ref} data-brick="table">
-      <tbody>
-        {childrenBricks}
-      </tbody>
-    </table>
+    <div
+      ref={ref}
+      data-brick="table"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${children?.[0]?.length}, 1fr)`,
+      }}
+    >
+      {childrenBricks}
+    </div>
   );
 };
 

@@ -12,12 +12,11 @@ import {
   useMutation,
   withShortcuts,
 } from '@brickifyio/core';
-import { pipe } from 'fp-ts/lib/function';
+import { flow } from 'fp-ts/lib/function';
 import { parseDocument } from 'htmlparser2';
 import {
   type ElementType,
   type ReactNode,
-  useCallback,
   useMemo,
   useRef,
 } from 'react';
@@ -60,13 +59,10 @@ const Paragraph: React.FC<Props> = ({
     [value, domToReact],
   );
 
-  const emitNewValue = useCallback(
-    (element?: HTMLElement | null) => pipe(
-      element?.innerHTML ?? '',
-      (html) => html === '<br>' ? '' : html,
-      (newValue) => onChange?.({ ...brick, value: newValue }, { brick }),
-    ),
-    [onChange, brick],
+  const emitNewValue = flow(
+    (element?: HTMLElement | null) => element?.innerHTML ?? '',
+    (html) => html === '<br>' ? '' : html,
+    (newValue) => onChange?.({ ...brick, value: newValue }, { brick }),
   );
 
   const ref = useMergedRefs(

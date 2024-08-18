@@ -24,10 +24,14 @@ export const fromRangeLike = flow(
   O.fromNullable<RangeLike | null | undefined>,
   O.chain(O.fromPredicate((a) => Boolean(a.startContainer ?? a.endContainer))),
   O.map((rangeLike: RangeLike) => {
-    const range = new Range();
-    range.setStart(rangeLike.startContainer, rangeLike.startOffset);
-    range.setEnd(rangeLike.endContainer, rangeLike.endOffset);
-    return range;
+    try {
+      const range = new Range();
+      range.setStart(rangeLike.startContainer, rangeLike.startOffset);
+      range.setEnd(rangeLike.endContainer, rangeLike.endOffset);
+      return range;
+    } catch {
+      return null;
+    }
   }),
   O.toNullable,
 );
