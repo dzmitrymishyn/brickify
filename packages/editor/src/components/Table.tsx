@@ -158,7 +158,7 @@ const TableRow = extend(
       children,
       (childBrick, index) => (
         <TableCell
-          component="div"
+          component="td"
           brick={childBrick}
           key={index}
           value={childBrick.value}
@@ -179,9 +179,9 @@ const TableRow = extend(
     );
 
     return (
-      <div ref={ref} style={{ display: 'contents' }}>
+      <tr ref={ref} data-brick="tableRow">
         {childrenBricks}
-      </div>
+      </tr>
     );
   },
   withName('TableRow'),
@@ -228,16 +228,11 @@ const Table: FC<Props> = ({ children, brick, onChange }) => {
   );
 
   return (
-    <div
-      ref={ref}
-      data-brick="table"
-      style={{
-        display: 'grid',
-        gridTemplateColumns: `repeat(${children?.[0]?.length}, 1fr)`,
-      }}
-    >
-      {childrenBricks}
-    </div>
+    <table ref={ref} data-brick="table">
+      <tbody>
+        {childrenBricks}
+      </tbody>
+    </table>
   );
 };
 
