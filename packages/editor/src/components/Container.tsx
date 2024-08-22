@@ -35,7 +35,6 @@ export const Test = extend(
         brick={childBrick}
         value={childBrick.value.value}
         onChange={(change) => {
-          debugger;
           return onChange?.({
             ...change,
             value: change.value?.value ?? '',
