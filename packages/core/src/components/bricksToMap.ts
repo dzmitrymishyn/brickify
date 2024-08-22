@@ -1,4 +1,4 @@
-import { type NamedComponent } from './brick';
+import { type Component, type NamedComponent } from './brick';
 import { getName } from './getName';
 
 export const bricksToMap = (
@@ -8,7 +8,15 @@ export const bricksToMap = (
     ? bricks
     : bricks.reduce((slotAcc, brick) => ({
       ...slotAcc,
-      // TODO: Check this place
       [getName(brick) ?? '']: brick,
     }), {})
+);
+
+export const componentsToMap = (
+  components?: Component[],
+): Record<string, Component> => (
+  components?.reduce((slotAcc, component) => ({
+    ...slotAcc,
+    [getName(component) ?? '']: component,
+  }), {}) ?? {}
 );

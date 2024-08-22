@@ -5,8 +5,7 @@ export type ChangeState = 'batch' | 'interaction';
 export { type Change };
 
 export type OnChange<Value = any> = (
-  value: Value,
-  change: Partial<Pick<Change, 'path' | 'type'> & { brick: object }>,
+  event: Change<Value>,
 ) => void;
 
 export type PropsWithChange<Value = unknown> = {

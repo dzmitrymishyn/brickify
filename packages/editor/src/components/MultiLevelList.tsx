@@ -31,7 +31,7 @@ const ListItem = extend(
       shortcuts: ['enter'],
       handle: ({ onChange, range, resultRange, getFromStore, stopBrickPropagation, descendants }) => {
         const currentRange = range();
-        const target = descendants[0] as HTMLElement;
+        const target = descendants()[0] as HTMLElement;
         const cacheItem = getFromStore(target);
 
         assert(target, 'This handler should be called by it\'s parent and descendants should be defined');
@@ -105,7 +105,7 @@ const List: FC<Props> = ({ children, brick, onChange: onChangeProp }) => {
     useBrickRegistry(brick, { onChange }),
     useMutation((mutation) => {
       if (mutation.remove) {
-        return onChangeProp?.({ type: 'remove', value: null });
+        return onChangeProp?.(null, { type: 'remove', brick });
       }
     }),
     useCommands(bricks),

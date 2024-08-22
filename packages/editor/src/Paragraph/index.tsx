@@ -1,18 +1,20 @@
 import { getLastDeepLeaf } from '@brickifyio/browser/utils';
 import {
   type AnyComponent,
+  type BrickStoreValue,
   type BrickValue,
   extend,
   next,
   type PropsWithChange,
   useBrickContext,
   useBrickRegistry,
+  useChange,
   useCommands,
   useMergedRefs,
   useMutation,
   withShortcuts,
 } from '@brickifyio/core';
-import { flow } from 'fp-ts/lib/function';
+import { pipe } from 'fp-ts/lib/function';
 import { parseDocument } from 'htmlparser2';
 import {
   type ElementType,
@@ -32,7 +34,7 @@ type Props = PropsWithChange<Value> & {
   bricks?: AnyComponent[];
   component?: ElementType;
   value: Value['value'];
-  brick: object;
+  brick: BrickStoreValue;
   style?: object;
 };
 
@@ -41,15 +43,32 @@ const Paragraph: React.FC<Props> = ({
   bricks = [],
   component: Component = 'div',
   onChange,
-  brick: brickProp,
+  brick,
   style,
 }) => {
-  const brick = brickProp as Value;
   const rootRef = useRef<HTMLElement>(null);
   const oldComponents = useRef<ReactNode>();
   const { editable } = useBrickContext();
+  const change = useChange(brick, onChange);
 
-  const { ref: brickRef } = useBrickRegistry(brick);
+  const ref = useMergedRefs(
+    rootRef,
+    useBrickRegistry(brick),
+    useCommands(bricks),
+    useMutation(({ remove, target }) => {
+      if (remove) {
+        return change({}, 'remove');
+      }
+
+      return pipe(
+        target as HTMLElement,
+        (element?: HTMLElement | null) => element?.innerHTML ?? '',
+        (html) => html === '<br>' ? '' : html,
+        (newValue) => change({ value: newValue }),
+      );;
+    }),
+  );
+
   const domToReact = useMemo(() => domToReactFactory(
     bricks,
     oldComponents,
@@ -57,25 +76,6 @@ const Paragraph: React.FC<Props> = ({
   const components = useMemo(
     () => domToReact(parseDocument(`${value}`), 0),
     [value, domToReact],
-  );
-
-  const emitNewValue = flow(
-    (element?: HTMLElement | null) => element?.innerHTML ?? '',
-    (html) => html === '<br>' ? '' : html,
-    (newValue) => onChange?.({ ...brick, value: newValue }, { brick }),
-  );
-
-  const ref = useMergedRefs(
-    rootRef,
-    brickRef,
-    useCommands(bricks),
-    useMutation(({ remove, target }) => {
-      if (remove) {
-        return onChange?.(brick, { type: 'remove', brick });
-      }
-
-      return emitNewValue(target as HTMLElement);
-    }),
   );
 
   oldComponents.current = <>{components}</>;
@@ -151,13 +151,14 @@ export default extend(
           });
 
           onChange?.({
-            brick: 'Paragraph',
-            id: Math.random().toFixed(3),
-            // BR is a native browser behaviour to make an empty new line
-            value: tempDiv.innerHTML ?? '',
-          }, {
             type: 'add',
             path: nextPath,
+            value: {
+              brick: 'Paragraph',
+              id: Math.random().toFixed(3),
+              // BR is a native browser behaviour to make an empty new line
+              value: tempDiv.innerHTML ?? '',
+            },
           });
 
           stopBrickPropagation();

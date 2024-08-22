@@ -122,6 +122,7 @@ export const traverseAndApplyChanges = (
             : newValue
         ) as Record<string, unknown>;
         const keys = Object.keys(handledValue);
+        let handledKeys = newValue === 'unhandled' ? 0 : 1;
 
         keys.forEach((key) => {
           const subPath = [...path, key];
@@ -132,9 +133,13 @@ export const traverseAndApplyChanges = (
             subPath,
           );
 
+          if (handledValue[key] !== currentResult) {
+            handledKeys += 1;
+          }
+
           handledValue[key] = isArray ? currentResult : array(currentResult)[0];
         });
-        result = [handledValue];
+        result = [handledKeys === 0 ? value : handledValue];
       }
 
       return [...previousValues, ...result];

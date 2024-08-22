@@ -9,6 +9,7 @@ import {
   useBricksBuilder,
   useCommands,
   useMergedRefs,
+  useRenderer,
   withBrickContext,
   withBrickName,
 } from '@brickifyio/core';
@@ -31,20 +32,20 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   style,
 }, refProp) => {
   const { editable } = useBrickContext();
-  const { ref: brickRef } = useBrickRegistry(brick);
-
-  const components = useBricksBuilder(
-    brick,
-    value,
-    bricks,
-    onChange,
-  );
 
   const ref = useMergedRefs(
-    brickRef,
     refProp,
+    useBrickRegistry(brick),
     useCommands(bricks),
   );
+
+  // const components = useBricksBuilder(
+  //   brick,
+  //   value,
+  //   bricks,
+  //   onChange,
+  // );
+  const [nodes] = useRenderer(brick, value, bricks, onChange);
 
   return (
     <div
@@ -56,7 +57,8 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
         suppressContentEditableWarning: true,
       }}
     >
-      {components}
+      {/* {components} */}
+      {nodes}
     </div>
   );
 });

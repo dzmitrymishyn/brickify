@@ -70,13 +70,13 @@ export function withBrickContext<P extends { value: BrickValue[] } & PropsWithCh
 
     const store = useBrickStoreFactory();
 
-    if (!store.get(props.value)) {
-      store.set(props.value, {
-        slotsTreeNode: props.value,
-        pathRef: { current: () => [] },
-        value: props.value,
-      });
-    }
+    // if (!store.get(props.value)) {
+    //   store.set(props.value, {
+    //     slotsTreeNode: props.value,
+    //     pathRef: { current: () => [] },
+    //     value: props.value,
+    //   });
+    // }
 
     const onChange = useOnChange({
       onChange: onChangeProp,
@@ -155,7 +155,10 @@ export function withBrickContext<P extends { value: BrickValue[] } & PropsWithCh
         <Component
           ref={ref}
           {...props as P}
-          brick={props.value}
+          brick={{
+            value: props.value,
+            pathRef: { current: () => [] },
+          }}
           onChange={changesController.onChange}
         />
       </BrickContext.Provider>

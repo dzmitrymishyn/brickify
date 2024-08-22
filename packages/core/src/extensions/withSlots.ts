@@ -11,7 +11,7 @@ export const withSlots = <S extends Slots>(slots: S) => ({
 });
 
 type WithSlots = {
-  slots: Record<string, 'inherit' | Record<string, NamedComponent>>;
+  slots: Record<string, 'inherit' | Record<string, Component>>;
 };
 
 export const hasSlots = (Component: unknown): Component is WithSlots =>

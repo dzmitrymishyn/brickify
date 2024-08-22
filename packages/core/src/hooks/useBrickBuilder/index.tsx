@@ -8,28 +8,24 @@ import {
 import { objectToReact } from './objectToReact';
 import { type OnChange } from '../../changes';
 import { bricksToMap, type BrickValue, type Component, isBrickValue } from '../../components';
+import { type BrickStoreValue } from '../../store';
 import { useBrickContext } from '../useBrickContext';
 import assert from 'assert';
 
 export const useBricksBuilder = (
-  brick: object,
+  brick: BrickStoreValue<BrickValue | BrickValue[]>,
   value: BrickValue[],
   bricks: Component[],
   onChangeProp: OnChange = () => undefined,
 ): ReactNode => {
   const { store } = useBrickContext();
   const rootValueRef = useRef<BrickValue[] | undefined>(undefined);
-  const onChangePropRef = useRef(onChangeProp);
 
+  const onChangePropRef = useRef(onChangeProp);
   onChangePropRef.current = onChangeProp;
 
-  const onChange = useCallback<OnChange>(
-    (...params) => onChangePropRef.current?.(...params),
-    [],
-  );
-
   const element = useMemo(() => {
-    const storedItem = store.get(brick);
+    const storedItem = store.get(brick.value);
 
     assert(storedItem, 'brick item should be stored in the store');
 
@@ -41,13 +37,13 @@ export const useBricksBuilder = (
     rootValueRef.current = value;
 
     return objectToReact(value)({
-      onChange,
+      onChange: onChangePropRef.current,
       slots: bricksToMap(bricks) as Record<string, Component>,
       pathRef,
       oldValue,
       store,
     });
-  }, [brick, bricks, value, onChange, store]);
+  }, [brick, bricks, value, store]);
 
   return element;
 };

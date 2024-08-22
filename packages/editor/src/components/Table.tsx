@@ -151,7 +151,16 @@ const TableCell = extend(
 
 const TableRow = extend(
   ({ brick, children, onChange }: TableRowProps) => {
-    const { ref: brickRef } = useBrickRegistry(brick);
+    const ref = useMergedRefs(
+      useBrickRegistry(brick),
+      useCommands([TableCell]),
+      useMutation(({ remove }) => {
+        if (remove) {
+          onChange?.({ type: 'remove' }, brick);
+        }
+      })
+    );
+
     const childrenBricks = useBrickChildrenRegistry(
       brick,
       null,
@@ -166,16 +175,6 @@ const TableRow = extend(
           onChange={({ value }, change) => onChange?.(value, change)}
         />
       ),
-    );
-
-    const ref = useMergedRefs(
-      brickRef,
-      useCommands([TableCell]),
-      useMutation(({ remove }) => {
-        if (remove) {
-          onChange?.({ type: 'remove' }, brick);
-        }
-      })
     );
 
     return (
@@ -201,7 +200,16 @@ type Props = PropsWithBrick & PropsWithChange & {
 };
 
 const Table: FC<Props> = ({ children, brick, onChange }) => {
-  const { ref: brickRef } = useBrickRegistry(brick);
+  const ref = useMergedRefs(
+    useBrickRegistry(brick),
+    useCommands([TableRow]),
+    useMutation((mutation) => {
+      if (mutation.remove) {
+        return onChange?.(null, { type: 'remove', brick });
+      }
+    }),
+  );
+
   const childrenBricks = useBrickChildrenRegistry(
     brick,
     'children',
@@ -215,16 +223,6 @@ const Table: FC<Props> = ({ children, brick, onChange }) => {
         {row}
       </TableRow>
     ),
-  );
-
-  const ref = useMergedRefs(
-    brickRef,
-    useCommands([TableRow]),
-    useMutation((mutation) => {
-      if (mutation.remove) {
-        return onChange?.(null, { type: 'remove', brick });
-      }
-    }),
   );
 
   return (

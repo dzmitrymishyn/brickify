@@ -51,14 +51,8 @@ export const useChangesController = (
     apply();
   }, [apply]);
 
-  const onChange = useCallback<OnChange>((value, change) => {
-    if (!change.path && !change.brick) {
-      return;
-    }
-
-    const path = change.path || store.get(change.brick!)?.pathRef.current();
-
-    if (!path) {
+  const onChange = useCallback<OnChange>((event) => {
+    if (!event.path) {
       return;
     }
 
@@ -66,13 +60,8 @@ export const useChangesController = (
       requestAnimationFrame(apply);
     }
 
-    currentChanges.current.push({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- ok
-      value,
-      type: change.type || 'update',
-      path,
-    });
-  }, [store, apply]);
+    currentChanges.current.push(event);
+  }, [apply]);
 
   return useMemo(() => ({
     state: () => state.current,

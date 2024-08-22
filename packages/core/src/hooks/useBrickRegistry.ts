@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { useBrickContext } from './useBrickContext';
 import { type BrickStoreValue } from '../store';
@@ -11,110 +11,82 @@ import assert from 'assert';
  * @returns ref function that should be set to a root component of a component
  */
 export const useBrickRegistry = (
-  value?: object,
+  brick?: BrickStoreValue<object>,
   {
     onChange,
   }: Partial<Pick<BrickStoreValue, 'onChange'>> = {},
 ) => {
-  assert(value, 'Value should be specified');
+  assert(brick, 'Value should be specified');
 
   const { store } = useBrickContext();
 
-  /**
-   * The variable is used only for the development purposes and will not be
-   * used in the production build.
-   * The `destroyStoreItemOnUnmount` clear the store from the variable and we
-   * call it ones on unmount. But in StrictMode react call the useEffect
-   * twice and we need to add the value again to the store
-   */
-  const storedBrickValue = useRef<BrickStoreValue>();
-  const valueRef = useRef(value);
+  const valueRef = useRef<object>();
 
   // If we get a new value that doesn't match the old one we need to clear
   // the store from the old value
-  if (valueRef.current && value !== valueRef.current) {
-    const oldStoredValue = store.get(valueRef.current);
-    const storedValue = store.get(value);
-
-    store.remove(valueRef.current);
-
-    store.update(value, {
+  if (brick.value !== valueRef.current) {
+    const oldValue = valueRef.current || {};
+    const oldStoredValue = store.get(oldValue);
+    const newBrick = {
       ...oldStoredValue,
-      ...storedValue,
-    });
+      ...brick,
+      onChange,
+    };
+
+    store.delete(oldValue);
+
+    store.set(newBrick.value, newBrick);
+    if (newBrick.domNode) {
+      store.set(newBrick.domNode, newBrick);
+    }
   }
 
-  valueRef.current = value;
+  valueRef.current = brick.value;
 
   const ref = (node?: Node | null) => {
     if (!node || !valueRef.current) {
       return;
     }
 
-    const item = store.get(valueRef.current) || storedBrickValue.current;
+    const item = store.get(valueRef.current);
 
     assert(item, 'item should be defined');
 
-    store.update(item.value, { domNode: node, onChange });
+    const newBrick: BrickStoreValue<object> = {
+      ...item,
+      domNode: node,
+    };
+
+    store.set(newBrick.value, newBrick);
+    store.set(node, newBrick);
   };
 
-  useEffect(function destroyStoreItemOnUnmount() {
-    if (storedBrickValue.current) {
-      store.set(storedBrickValue.current.value, storedBrickValue.current);
+  const timer = useRef(0);
 
-      if (storedBrickValue.current.domNode) {
-        store.set(storedBrickValue.current.domNode, storedBrickValue.current);
-      }
+  useEffect(function destroyStoreItemOnUnmount() {
+    if (timer.current) {
+      cancelAnimationFrame(timer.current);
     }
 
     return () => {
-      if (!valueRef.current) {
+      const value = valueRef.current;
+      if (!value) {
         return;
       }
 
-      if (storedBrickValue.current) {
-        // TODO: Remove it
-        // eslint-disable-next-line no-console -- it's for development
-        console.log('component was removed', valueRef.current);
-      }
+      timer.current = requestAnimationFrame(() => {
+        const item = store.get<object>(value);
 
-      const item = store.get(valueRef.current);
-      storedBrickValue.current = item;
+        assert(item, 'item should be defined');
 
-      if (item?.value) {
-        store.remove(item.value);
-      }
+        store.delete(item.value);
 
-      if (item?.domNode) {
-        store.remove(item.domNode);
-      }
+        if (item.domNode) {
+          store.delete(item.domNode);
+        }
+      });
     };
   }, [store]);
 
-  const useBrickChildRegistry = useCallback(
-    (slotName: string, slotValue: object): object => {
-      const { slotsTreeNode, pathRef } = store.get(value)!;
-
-      // clearSlot(slotsTreeNode, slotName);
-
-      const childPathRef = {
-        current: () => [...pathRef.current(), slotName, '0'],
-      };
-      // const node = of(slotValue);
-
-      // addArray(slotsTreeNode, slotName, node);
-
-      store.set(slotValue, {
-        value: slotValue,
-        slotsTreeNode: slotValue,
-        slotsTreeParent: slotsTreeNode,
-        pathRef: childPathRef,
-      });
-
-      return slotValue;
-    },
-    [value, store],
-  );
-
-  return { ref, useBrickChildRegistry };
+  return ref;
 };

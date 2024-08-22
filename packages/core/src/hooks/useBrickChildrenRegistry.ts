@@ -82,7 +82,6 @@ export const useBrickChildrenRegistry = <Value = unknown>(
       const react = makeRef.current(newValue as ObjectValue<Value>, index);
       store.set(newValue, {
         value: newValue,
-        slotsTreeNode: newValue,
         pathRef: childPathRef,
         react,
       });

@@ -4,10 +4,11 @@ import {
 } from 'react';
 
 import { type BrickValue } from './values';
+import { type BrickStoreValue } from '../store';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- it's fine
 export type Component<Props extends object = any> =
-  ForwardRefExoticComponent<Props> | React.FC<Props>;
+  ForwardRefExoticComponent<Props> | FC<Props>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- it's fine
 export type AnyComponent<Props extends object = any> =
@@ -20,5 +21,5 @@ export type NamedComponent = {
 };
 
 export type PropsWithBrick<Value extends object = BrickValue> = {
-  brick: Value;
+  brick: BrickStoreValue<Value>;
 };

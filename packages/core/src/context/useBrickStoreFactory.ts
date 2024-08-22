@@ -1,72 +1,41 @@
-import {
-  useCallback,
-  useMemo,
-  useRef,
-} from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import { type BrickStore, type BrickStoreValue } from '../store';
+import { debug } from '@brickifyio/operators';
 
-export const useBrickStoreFactory = (): BrickStore => {
-  const storeByElement = useRef(new Map<Node, BrickStoreValue>());
-  const storeByValue = useRef(new Map<object, BrickStoreValue>());
+const createStore = (): BrickStore => {
+  const store = new Map<Node | object, BrickStoreValue>();
+  console.log('store', store);
 
-  const getStoreByKey = useCallback((key: object | Node) => {
-    if (typeof window !== 'undefined' && key instanceof Node) {
-      return storeByElement.current;
-    }
+  const update = (key: object | Node, value: Partial<BrickStoreValue>) => {
+    const storedValue = store.get(key);
 
-    return storeByValue.current;
-  }, []);
+    if (storedValue) {
+      const oldDomNode = storedValue.domNode;
 
-  const get = useCallback(
-    (key: object | Node) => getStoreByKey(key).get(key),
-    [getStoreByKey],
-  );
+      Object.assign(storedValue, value);
 
-  const set = useCallback(
-    (key: object | Node, value: BrickStoreValue) => {
-      const store = getStoreByKey(key);
-      store.set(key, value);
-    },
-    [getStoreByKey],
-  );
-
-  const update = useCallback(
-    (key: object | Node, value: Partial<BrickStoreValue>) => {
-      const store = getStoreByKey(key);
-      const storedValue = store.get(key);
-
-      if (storedValue) {
-        const oldDomNode = storedValue.domNode;
-
-        Object.assign(storedValue, value);
-
-        if (oldDomNode && oldDomNode !== storedValue.domNode) {
-          storeByElement.current.delete(oldDomNode);
-        }
-
-        if (storedValue.domNode) {
-          storeByElement.current.set(storedValue.domNode, storedValue);
-        }
-
-        storeByValue.current.set(storedValue.value, storedValue);
+      if (oldDomNode && oldDomNode !== storedValue.domNode) {
+        store.delete(oldDomNode);
       }
 
-      return Boolean(storedValue);
-    },
-    [getStoreByKey],
-  );
+      if (storedValue.domNode) {
+        store.set(storedValue.domNode, storedValue);
+      }
 
-  const remove = useCallback(
-    (key: object | Node) => getStoreByKey(key).delete(key),
-    [getStoreByKey],
-  );
+      store.set(storedValue.value, storedValue);
+    }
 
-  return useMemo(() => ({
+    return Boolean(storedValue);
+  };
+
+  return {
+    get: store.get.bind(store),
+    set: store.set.bind(store),
+    delete: store.delete.bind(store),
     update,
-    get,
-    set,
-    remove,
-  }), [get, set, remove, update]);
+  };
 };
+
+export const useBrickStoreFactory = () => useMemo(createStore, []);
 

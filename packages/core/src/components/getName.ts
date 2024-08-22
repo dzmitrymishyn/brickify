@@ -1,6 +1,8 @@
-import { type NamedComponent } from './brick';
+import { type Component, type NamedComponent } from './brick';
 
-export const getName = (Component: NamedComponent) =>
-  Component.brick
-  ?? Component.displayName
-  ?? Component.name;
+export const getName = (inputComponent: Component) => {
+  const component = inputComponent as NamedComponent;
+  return component.brick
+    ?? component.displayName
+    ?? component.name;
+};

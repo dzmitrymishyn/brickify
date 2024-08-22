@@ -96,7 +96,9 @@ export const useMutationsController = ({
       'useMutationsController: ref should be attached to a node',
     );
 
-    const observer = new MutationObserver(changesController.handle(handle));
+    const observer = new MutationObserver((mutations) => {
+      changesController.handle(handle)(mutations);
+    });
 
     observer.observe(ref.current, {
       subtree: true,

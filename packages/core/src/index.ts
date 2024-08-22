@@ -8,3 +8,5 @@ export * from './logger';
 export * from './mutations';
 export * from './store';
 export * from './utils';
+
+export * from './renderer';

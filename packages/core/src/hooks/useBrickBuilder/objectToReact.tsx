@@ -1,4 +1,4 @@
-import { tap } from '@brickifyio/operators';
+// import { tap } from '@brickifyio/operators';
 import { flow, pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
 import * as O from 'fp-ts/lib/Option';
@@ -34,7 +34,7 @@ type Data = {
   cached?: BrickStoreValue;
   cachedOutdated?: BrickStoreValue;
   pathRef: PathRef;
-  node: BrickValue;
+  // node: BrickValue;
   nodeOutdated?: BrickValue;
   Component: ComponentType;
   index: number;
@@ -89,7 +89,7 @@ export const addSlotsMeta = <T extends PickedData<'Component'>>(value: T) => ({
 type AddTreeNodeData = PickedData<'value' | 'slotMap' | 'cached'>;
 export const addTreeNode = <T extends AddTreeNodeData>(data: T) => ({
   ...data,
-  node: (data.cached?.slotsTreeNode ?? data.value) as BrickValue,
+  node: (data.cached?.value ?? data.value) as BrickValue,
 });
 
 type AddOutdatedDataDeps = PickedDeps<'store' | 'oldValue' | 'pathRef'>;
@@ -130,7 +130,7 @@ export const buildSlots = (deps: Dependencies) =>
 
 export const build = (deps: Dependencies) => flow(
   I.bind('slotProps', buildSlots(deps)),
-  I.map(({ slotProps, Component, value, index, cachedOutdated }) => {
+  I.map(({ slotProps, Component, value, pathRef, index, cachedOutdated }) => {
     const { id, brick: _brick, ...rest } = value;
     const key = id || `${index}`;
 
@@ -139,16 +139,21 @@ export const build = (deps: Dependencies) => flow(
       ...rest,
       ...slotProps,
       onChange: deps.onChange,
-      brick: value,
+      // brick: value,
+      brick: { pathRef, value } as BrickStoreValue,
     };
 
     if (cachedOutdated && cachedOutdated?.react?.key === key) {
-      return cloneElement(cachedOutdated.react, props);
+      const react = cloneElement(cachedOutdated.react, props);
+      props.brick.react = react;
+    } else {
+      const react = (
+        <Component key={key} {...props} />
+      );
+      props.brick.react = react;
     }
 
-    return (
-      <Component key={key} {...props} />
-    );
+    return props.brick.react;
   }),
 );
 
@@ -163,7 +168,7 @@ export const objectToReact = flow(
         addItemFromStore(deps),
         addPathRef(deps),
         addSlotsMeta,
-        addTreeNode,
+        // addTreeNode,
         addOutdatedData(deps),
       )),
       O.chain((data) => pipe(
@@ -171,17 +176,17 @@ export const objectToReact = flow(
         O.alt(flow(
           () => data,
           build(deps),
-          tap((react) => {
-            deps.store.set(
-              data.value,
-              {
-                slotsTreeNode: data.node,
-                pathRef: data.pathRef,
-                value: data.value,
-                react,
-              },
-            );
-          }),
+          // tap((react) => {
+          //   deps.store.set(
+          //     data.value,
+          //     {
+          //       slotsTreeNode: data.node,
+          //       pathRef: data.pathRef,
+          //       value: data.value,
+          //       react,
+          //     },
+          //   );
+          // }),
           O.some,
         )),
       )),
