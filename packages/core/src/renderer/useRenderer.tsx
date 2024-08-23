@@ -160,6 +160,6 @@ export const useRenderer = (
     E.foldW(
       (error) => [null, error],
       (nodes) => [nodes, null],
-    )
+    ),
   ), [brick, components, value, store]);
 };

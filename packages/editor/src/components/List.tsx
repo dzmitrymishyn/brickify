@@ -5,7 +5,6 @@ import {
   type OnChange,
   type PropsWithBrick,
   type PropsWithChange,
-  useBrickChildrenRegistry,
   useBrickRegistry,
   useChangesApplier,
   useCommands,
@@ -13,6 +12,7 @@ import {
   useMutation,
   withName,
   withShortcuts,
+  useChildrenRenderer,
 } from '@brickifyio/core';
 import { Children, type FC, useCallback, useRef } from 'react';
 
@@ -32,19 +32,19 @@ const ListItem = extend(
       handle: ({ onChange, range, resultRange, getFromStore, stopBrickPropagation, descendants }) => {
         const currentRange = range();
         const target = descendants[0] as HTMLElement;
-        const cacheItem = getFromStore(target);
+        const stored = getFromStore(target);
 
         assert(target, 'This handler should be called by it\'s parent and descendants should be defined');
 
         if (target.innerHTML === '<br>' && !target.nextElementSibling) {
-          return onChange?.(null, {
+          return onChange?.({
             type: 'remove',
-            path: cacheItem?.pathRef.current(),
+            path: stored?.pathRef.current(),
           });
         }
 
         if (currentRange) {
-          assert(cacheItem, 'Cache item should exist');
+          assert(stored, 'Cache item should exist');
 
           currentRange.extractContents();
 
@@ -62,14 +62,15 @@ const ListItem = extend(
             tempDiv.append(tempRange.extractContents());
           }
 
-          const newPath = next(cacheItem.pathRef.current());
+          const newPath = next(stored.pathRef.current());
 
           resultRange({
             start: { path: newPath, offset: 0 },
             end: { path: newPath, offset: 0 },
           });
 
-          onChange?.({ value: tempDiv.innerHTML ?? '' }, {
+          onChange?.({
+            value: tempDiv.innerHTML ?? '',
             type: 'add',
             path: newPath,
           });
@@ -89,38 +90,41 @@ type Props = PropsWithBrick & PropsWithChange & {
 };
 
 const List: FC<Props> = ({ children, brick, onChange: onChangeProp }) => {
-  const onChange: OnChange<{ value: string | number }> = useCallback((value, change) => {
+  const onChange: OnChange<{ value: string | number }> = useCallback((change) => {
     if (change.type === 'add') {
       changesRef.current += 1;
     } else if (change.type === 'remove') {
       changesRef.current -= 1;
     }
-    onChangeProp?.(value?.value ?? '', change);
+    onChangeProp?.({ ...change, value: change.value?.value ?? '' });
   }, [onChangeProp]);
 
   const changesRef = useRef<number>(0);
   changesRef.current = Children.count(children);
 
   const ref = useMergedRefs(
-    useBrickRegistry(brick, { onChange }),
+    useBrickRegistry(brick),
     useMutation((mutation) => {
       if (mutation.remove) {
-        return onChangeProp?.({ type: 'remove', value: null });
+        return onChangeProp?.({
+          type: 'remove',
+          path: brick.pathRef.current(),
+        });
       }
     }),
     useCommands(bricks),
     useChangesApplier(() => {
       if (changesRef.current === 0) {
-        onChangeProp?.(null, {
+        onChangeProp?.({
           type: 'remove',
-          brick,
+          path: brick.pathRef.current(),
         });
       }
       changesRef.current = Children.count(children);
     }),
   );
 
-  const components = useBrickChildrenRegistry(
+  const components = useChildrenRenderer(
     brick,
     'children',
     children,
@@ -131,7 +135,7 @@ const List: FC<Props> = ({ children, brick, onChange: onChangeProp }) => {
         brick={childBrick}
         bricks={[ShiftEnterBr, Strong, Em]}
         onChange={onChange}
-        value={childBrick.value}
+        value={childBrick.value.value}
       />
     ),
   );

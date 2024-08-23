@@ -65,11 +65,11 @@ const Container: FC<Props> = ({ children, brick, onChange }) => {
 
   const ref = useMergedRefs(
     useBrickRegistry(brick),
-    // useMutation((mutation) => {
-    //   if (mutation.remove) {
-    //     return onChange?.(null, { type: 'remove', brick });
-    //   }
-    // }),
+    useMutation((mutation) => {
+      if (mutation.remove) {
+        return onChange?.({ type: 'remove', path: brick.pathRef.current() });
+      }
+    }),
     // useCommands(Object.values(brick?.slotsMap?.children ?? {})),
   );
 

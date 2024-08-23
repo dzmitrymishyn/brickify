@@ -41,15 +41,15 @@ const Page = () => {
     //     ],
     //   ],
     // },
-    // {
-    //   brick: 'List',
-    //   id: newKey(),
-    //   children: [
-    //     'It is a single level list',
-    //     'Click enter to create a new line',
-    //     'Click enter twice to create a new paragraph',
-    //   ],
-    // },
+    {
+      brick: 'List',
+      id: newKey(),
+      children: [
+        'It is a single level list',
+        'Click enter to create a new line',
+        'Click enter twice to create a new paragraph',
+      ],
+    },
     { brick: 'Test', id: newKey(), value: 'Test text', test: '123' },
     // { brick: 'Paragraph', id: newKey(), value: 'It is a <strong>paragraph</strong>' },
     // {
