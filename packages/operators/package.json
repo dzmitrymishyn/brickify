@@ -12,6 +12,6 @@
   "devDependencies": {
     "@brickifyio/eslint-config": "*",
     "@brickifyio/tsconfig": "*",
-    "ts-jest": "^29.2.3"
+    "ts-jest": "^29.2.5"
   }
 }

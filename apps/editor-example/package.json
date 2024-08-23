@@ -30,7 +30,7 @@
     "@next/bundle-analyzer": "^14.2.6",
     "@next/eslint-plugin-next": "^14.2.6",
     "@testing-library/dom": "^10.4.0",
-    "@testing-library/jest-dom": "^6.4.8",
+    "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/react": "^16.0.0",
     "@types/jest": "^29.5.12",
     "@types/node": "^22.5.0",
