@@ -7,12 +7,12 @@ import {
   type PropsWithChange,
   useBrickRegistry,
   useChangesApplier,
+  useChildrenRenderer,
   useCommands,
   useMergedRefs,
   useMutation,
   withName,
   withShortcuts,
-  useChildrenRenderer,
 } from '@brickifyio/core';
 import { Children, type FC, useCallback, useRef } from 'react';
 

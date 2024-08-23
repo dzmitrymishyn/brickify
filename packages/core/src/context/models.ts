@@ -1,6 +1,5 @@
 import { type BeforeAfterRangesController } from './useBeforeAfterRanges';
-import { type ChangesController } from './useChangesController';
-import { type OnChange } from '../changes';
+import { type ChangesController, type OnChange } from '../changes';
 import { type Command } from '../commands';
 import { type Mutation } from '../mutations';
 import { type BrickStore } from '../store';

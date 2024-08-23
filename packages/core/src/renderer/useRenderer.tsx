@@ -2,6 +2,7 @@ import { tap } from '@brickifyio/operators';
 import * as A from 'fp-ts/lib/Array';
 import * as E from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/function';
+import * as I from 'fp-ts/lib/Identity';
 import * as O from 'fp-ts/lib/Option';
 import {
   cloneElement,
@@ -129,7 +130,7 @@ export const useRenderer = (
   value: BrickValue[],
   components: Component[],
   onChangeProp?: OnChange | null,
-): [null, string] | [ReactNode, null] => {
+): ReactNode => {
   const { store, onChange } = useBrickContext();
   const rootValueRef = useRef<Record<string, unknown> | undefined>(undefined);
 
@@ -139,7 +140,7 @@ export const useRenderer = (
     ? onChange
     : onChangeProp;
 
-  return useMemo(() => pipe(
+  const result = useMemo(() => pipe(
     store.get(brick.value),
     E.fromNullable('value is not registered in the store'),
     E.map((stored) => pipe(
@@ -157,9 +158,12 @@ export const useRenderer = (
     E.map(tap(() => {
       rootValueRef.current = value as unknown as Record<string, unknown>;
     })),
-    E.foldW(
-      (error) => [null, error],
-      (nodes) => [nodes, null],
-    ),
+    E.foldW(Error, I.of),
   ), [brick, components, value, store]);
+
+  if (result instanceof Error) {
+    throw result;
+  }
+
+  return result;
 };

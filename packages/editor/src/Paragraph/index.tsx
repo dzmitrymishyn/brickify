@@ -57,14 +57,14 @@ const Paragraph: React.FC<Props> = ({
     useCommands(bricks),
     useMutation(({ remove, target }) => {
       if (remove) {
-        return change({}, 'remove');
+        return change({ type: 'remove' });
       }
 
       return pipe(
         target as HTMLElement,
         (element?: HTMLElement | null) => element?.innerHTML ?? '',
         (html) => html === '<br>' ? '' : html,
-        (newValue) => change({ value: newValue }),
+        (newValue) => change({ value: { value: newValue } }),
       );;
     }),
   );

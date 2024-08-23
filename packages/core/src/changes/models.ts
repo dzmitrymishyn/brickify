@@ -4,6 +4,7 @@ export type ChangeState = 'batch' | 'interaction';
 
 export { type Change };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- should handle any type
 export type OnChange<Value = any> = (
   event: Change<Value>,
 ) => void;

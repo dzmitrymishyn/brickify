@@ -8,8 +8,8 @@ import { useCallback, useEffect, useRef } from 'react';
 
 import { type BrickContextType } from './models';
 import { type BeforeAfterRangesController } from './useBeforeAfterRanges';
-import { type ChangesController } from './useChangesController';
 import { type MutationsController } from './useMutationsController';
+import { type ChangesController } from '../changes';
 import { type RangeCallback, type ResultsCallback } from '../commands';
 import { type PathRange } from '../ranges';
 import { type BrickStore } from '../store';

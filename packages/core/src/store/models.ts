@@ -13,17 +13,7 @@ export type BrickStoreValue<Value = any> = {
 
   mutate?: MutationHandler;
   onChange?: OnChange;
-  applyChanges?: () => void;
 
   commands?: Command[];
   slots?: Record<string, Record<string, object>>;
-};
-
-export type BrickStoreKey = object | Node;
-
-export type BrickStore = {
-  get: <Value = any>(key: BrickStoreKey) => BrickStoreValue<Value> | undefined;
-  set: (key: BrickStoreKey, value: BrickStoreValue) => void;
-  update: (key: BrickStoreKey, value: Partial<BrickStoreValue>) => void;
-  delete: (key: BrickStoreKey) => boolean;
 };

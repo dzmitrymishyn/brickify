@@ -4,12 +4,13 @@ import { type BrickStoreValue } from '../store';
 export const useChange = <Value>(
   brick: BrickStoreValue<Value>,
   onChange?: OnChange<Value>,
-) => (value: Partial<Value>, type: Change['type'] = 'update') =>
+) => (change: Partial<Change<Partial<Value>>>) =>
   onChange?.({
     path: brick.pathRef.current(),
-    type,
+    type: 'update',
+    ...change,
     value: {
       ...brick.value,
-      ...value,
+      ...change?.value,
     },
   });

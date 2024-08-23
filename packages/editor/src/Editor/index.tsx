@@ -6,7 +6,6 @@ import {
   type PropsWithChange,
   useBrickContext,
   useBrickRegistry,
-  useBricksBuilder,
   useCommands,
   useMergedRefs,
   useRenderer,
@@ -39,13 +38,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
     useCommands(bricks),
   );
 
-  // const components = useBricksBuilder(
-  //   brick,
-  //   value,
-  //   bricks,
-  //   onChange,
-  // );
-  const [nodes] = useRenderer(brick, value, bricks, onChange);
+  const nodes = useRenderer(brick, value, bricks, onChange);
 
   return (
     <div
@@ -57,7 +50,6 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
         suppressContentEditableWarning: true,
       }}
     >
-      {/* {components} */}
       {nodes}
     </div>
   );

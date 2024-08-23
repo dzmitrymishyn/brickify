@@ -12,8 +12,6 @@ import {
 
 import { BrickContext } from './BrickContext';
 import { useBeforeAfterRanges } from './useBeforeAfterRanges';
-import { useBrickStoreFactory } from './useBrickStoreFactory';
-import { useChangesController } from './useChangesController';
 import { useCommandsController } from './useCommandsController';
 import { useDisallowHotkeys } from './useDisallowHotkeys';
 import { useMutationsController } from './useMutationsController';
@@ -21,11 +19,13 @@ import { useOnChange } from './useOnChange';
 import { useRangeSaver } from './useRangeSaver';
 import {
   type PropsWithChange,
+  useChangesControllerFactory,
 } from '../changes';
 import { type BrickValue, getName } from '../components';
 import { extend, withBrickName, withDisplayName } from '../extensions';
 import { useBrickContextUnsafe , useMergedRefs } from '../hooks';
 import { fromPathRange } from '../ranges';
+import { useBrickStoreFactory } from '../store';
 import assert from 'assert';
 
 const metaKeyDisallowList = [
@@ -70,19 +70,11 @@ export function withBrickContext<P extends { value: BrickValue[] } & PropsWithCh
 
     const store = useBrickStoreFactory();
 
-    // if (!store.get(props.value)) {
-    //   store.set(props.value, {
-    //     slotsTreeNode: props.value,
-    //     pathRef: { current: () => [] },
-    //     value: props.value,
-    //   });
-    // }
-
     const onChange = useOnChange({
       onChange: onChangeProp,
       rootTreeNode: brick,
     });
-    const changesController = useChangesController(store, onChange);
+    const changesController = useChangesControllerFactory(onChange);
 
     const [rangesControllerRef, rangesController] = useBeforeAfterRanges();
     const rangeSaverElementRef = useRangeSaver(rangesController);

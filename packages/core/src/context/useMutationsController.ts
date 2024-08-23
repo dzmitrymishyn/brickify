@@ -3,7 +3,7 @@ import { pipe } from 'fp-ts/lib/function';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { type BeforeAfterRangesController } from './useBeforeAfterRanges';
-import { type ChangesController } from './useChangesController';
+import { type ChangesController } from '../changes';
 import { type Mutation, type MutationHandler, revertDomByMutations } from '../mutations';
 import { type BrickStore } from '../store';
 import assert from 'assert';
