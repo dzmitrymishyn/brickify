@@ -1,10 +1,12 @@
 import { tap } from '@brickifyio/operators';
-import { pipe } from 'fp-ts/lib/function';
 import * as A from 'fp-ts/lib/Array';
+import { pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
 import * as O from 'fp-ts/lib/Option';
 import { type ReactElement, type ReactNode, useMemo, useRef } from 'react';
 
+import { renderWithPlugins } from './utils';
+import { type PropsWithBrick } from '../components';
 import { useBrickContext } from '../hooks';
 import { type BrickStoreValue } from '../store';
 import assert from 'assert';
@@ -42,9 +44,12 @@ export const useChildrenRenderer = <Value = unknown>(
   parentBrick: BrickStoreValue<object>,
   slotName: string | undefined | null,
   slotValues: Value[] | Record<string, Value>,
-  make: ((brick: BrickStoreValue<ObjectValue<Value>>, key: string) => ReactElement),
+  make: (
+    brick: BrickStoreValue<ObjectValue<Value>>,
+    key: string
+  ) => ReactElement<PropsWithBrick>,
 ): ReactNode[] => {
-  const { store } = useBrickContext();
+  const { store, plugins } = useBrickContext();
   const storedParent = store.get(parentBrick.value);
 
   assert(storedParent, 'parent value is not registered in the store');
@@ -73,7 +78,7 @@ export const useChildrenRenderer = <Value = unknown>(
         current: () => [
           ...storedParent.pathRef.current(),
           ...slotName ? [slotName] : [],
-          `${index}`,
+          index,
         ],
       })),
       ({ pathRef, value, stored }) => pipe(
@@ -87,11 +92,16 @@ export const useChildrenRenderer = <Value = unknown>(
         O.chain(({ react }) => O.fromNullable(react)),
         O.alt(() => {
           const brick: BrickStoreValue = { pathRef, value };
-          brick.react = makeRef.current(brick, index);
+
+          brick.react = renderWithPlugins(
+            plugins,
+            makeRef.current(brick, index),
+          );
+
           return O.of(brick.react);
         }),
         O.getOrElseW(() => null),
       ),
     )),
-  ), [slotName, slotValues, store, storedParent]);
+  ), [slotName, slotValues, store, storedParent, plugins]);
 };

@@ -1,8 +1,8 @@
 import { getLastDeepLeaf } from '@brickifyio/browser/utils';
 import {
-  type AnyComponent,
   type BrickStoreValue,
   type BrickValue,
+  type Component,
   extend,
   next,
   type PropsWithChange,
@@ -31,7 +31,7 @@ type Value = BrickValue & {
 };
 
 type Props = PropsWithChange<Value> & {
-  bricks?: AnyComponent[];
+  bricks?: Component[];
   component?: ElementType;
   value: Value['value'];
   brick: BrickStoreValue;

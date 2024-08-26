@@ -1,10 +1,10 @@
 import { useCustomCommands } from './useCustomCommands';
 import { type OnChange } from '../changes';
-import { type AnyComponent } from '../components';
+import { type Component } from '../components';
 import { hasShortcuts } from '../extensions';
 
 export const useCommands = (
-  bricks: AnyComponent[],
+  bricks: Component[],
   onChange?: OnChange,
 ) => {
   const commands = bricks

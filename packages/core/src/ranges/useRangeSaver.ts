@@ -1,14 +1,16 @@
-import { useEffect, useRef } from 'react';
+import { type RefObject, useEffect } from 'react';
 
-import { type BeforeAfterRangesController } from './useBeforeAfterRanges';
+import {
+  type BeforeAfterRangesController,
+} from './useBeforeAfterRangesPluginFactory';
 import { useBrickContextUnsafe } from '../hooks/useBrickContext';
 import assert from 'assert';
 
 export const useRangeSaver = (
   rangesController: BeforeAfterRangesController,
+  ref: RefObject<HTMLElement>,
 ) => {
   const hasInheritedContext = Boolean(useBrickContextUnsafe());
-  const ref = useRef<HTMLElement>(null);
 
   assert(
     !hasInheritedContext,
@@ -38,7 +40,5 @@ export const useRangeSaver = (
         (event) => element.removeEventListener(event, saveSelection, true),
       );
     };
-  }, [rangesController]);
-
-  return ref;
+  }, [rangesController, ref]);
 };

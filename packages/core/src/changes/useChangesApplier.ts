@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react';
 
-import { useBrickContext } from '../hooks';
+import { useChanges } from './useChanges';
 import assert from 'assert';
 
 export const useChangesApplier = (applyChanges: () => void) => {
   const ref = useRef<HTMLElement>(null);
-  const { changes: { subscribeApply } } = useBrickContext();
+  const { subscribeApply } = useChanges()!;
   const subscriberRef = useRef<() => void>();
 
   subscriberRef.current = applyChanges;

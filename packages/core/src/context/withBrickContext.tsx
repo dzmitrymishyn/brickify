@@ -1,38 +1,27 @@
 // If we have inherited context it means that we don't need to apply the same
 // rules for all the actions. Parent component already added it
 /* eslint-disable react-hooks/rules-of-hooks -- it's justified */
-import { addRange, fromCustomRange } from '@brickifyio/browser/selection';
-import { pipe } from 'fp-ts/lib/function';
 import {
   forwardRef,
   type ForwardRefExoticComponent,
-  useEffect,
+  type RefObject,
   useMemo,
 } from 'react';
 
 import { BrickContext } from './BrickContext';
-import { useBeforeAfterRanges } from './useBeforeAfterRanges';
-import { useCommandsController } from './useCommandsController';
+import { CommonPlugins } from './commonPlugins';
 import { useDisallowHotkeys } from './useDisallowHotkeys';
-import { useMutationsController } from './useMutationsController';
-import { useOnChange } from './useOnChange';
-import { useRangeSaver } from './useRangeSaver';
-import {
-  type PropsWithChange,
-  useChangesControllerFactory,
-} from '../changes';
 import { type BrickValue, getName } from '../components';
 import { extend, withBrickName, withDisplayName } from '../extensions';
 import { useBrickContextUnsafe , useMergedRefs } from '../hooks';
-import { fromPathRange } from '../ranges';
-import { useBrickStoreFactory } from '../store';
-import assert from 'assert';
+import { getPlugins, usePluginContext, type UsePluginFactory } from '../plugins';
+import { type BrickStoreValue, useBrickStoreFactory } from '../store';
 
 const metaKeyDisallowList = [
   'enter',
   'shift+enter',
   ...[
-    'z', // undo
+    // 'z', // undo
     'b', // bold
     'i', // italic
     'u', // underline
@@ -42,116 +31,61 @@ const metaKeyDisallowList = [
 type Props = {
   editable?: boolean;
   onChange?: (value: unknown) => void;
-  brick?: object;
+  brick?: BrickStoreValue;
 };
 
-export function withBrickContext<P extends { value: BrickValue[] } & PropsWithChange>(
+export function withBrickContext<P extends { value: BrickValue[] }>(
   Component: ForwardRefExoticComponent<P>,
 ) {
-  const WithBrickContext = forwardRef<Node, Props & Omit<P, 'brick' | 'onChange'>>(({
-    editable = false,
-    onChange: onChangeProp,
-    brick: brickProp,
-    ...props
-  }, refProp) => {
-    const brick = brickProp || props.value;
+  const WithBrickContext = forwardRef<Node, Props & Omit<P, 'brick' | 'plugins'> & { plugins?: (UsePluginFactory | UsePluginFactory[])[] }>((
+    { plugins = [CommonPlugins], ...props },
+    refProp,
+  ) => {
     const inheritedContext = useBrickContextUnsafe();
 
     if (inheritedContext) {
-      assert(brick, 'brick value should be passed from the parent component');
       return (
-        <Component
-          {...props as P}
-          brick={brick}
-          onChange={onChangeProp}
-        />
+        <Component {...props as P} />
       );
     }
 
     const store = useBrickStoreFactory();
+    const newBrick = {
+      value: props.value,
+      pathRef: { current: () => [] },
+    };
 
-    const onChange = useOnChange({
-      onChange: onChangeProp,
-      rootTreeNode: brick,
-    });
-    const changesController = useChangesControllerFactory(onChange);
-
-    const [rangesControllerRef, rangesController] = useBeforeAfterRanges();
-    const rangeSaverElementRef = useRangeSaver(rangesController);
-    const disalowKeyboardRef = useDisallowHotkeys(metaKeyDisallowList);
-    const mutationsController = useMutationsController({
-      rangesController,
-      changesController,
-      store,
-    });
-
-    const commandsController = useCommandsController({
-      changesController,
-      rangesController,
-      store,
-      mutationsController,
-    });
-
-    // When the value is updated we need to clear our MutationsArray.
-    // It will be performed after all the React's mutations in the DOM.
-    useEffect(
-      () => {
-        mutationsController.clear();
-      },
-      [props.value, mutationsController, editable]
+    const { pluginsRef, props: newProps } = usePluginContext(
+      { store, brick: newBrick },
+      props,
+      plugins?.flat(),
     );
-
-    useEffect(function restoreRange() {
-      const range = rangesController.getAfter();
-
-      if (!range) {
-        return;
-      }
-
-      if ('container' in range) {
-        pipe(range, fromCustomRange, addRange);
-      } else {
-        pipe(fromPathRange(range, brick, store), addRange);
-      }
-
-    }, [rangesController, brick, store]);
+    const disalowKeyboardRef = useDisallowHotkeys(metaKeyDisallowList);
 
     const ref = useMergedRefs(
       refProp,
-      rangesControllerRef,
-      rangeSaverElementRef,
-      mutationsController.ref,
+      ...getPlugins(pluginsRef.current)
+        .map((plugin) => plugin.ref)
+        .filter(Boolean) as RefObject<Node>[],
       disalowKeyboardRef,
-      commandsController.ref,
     );
 
     const contextValue = useMemo(() => ({
-      ranges: rangesController,
-      changes: changesController,
-      subscribeMutation: mutationsController.subscribe,
-      subscribeCommand: commandsController.subscribe,
-      editable,
+      plugins: pluginsRef.current,
+      editable: props.editable || false,
       store,
-      onChange: changesController.onChange,
     }), [
-      changesController,
-      commandsController.subscribe,
-      editable,
-      mutationsController.subscribe,
-      rangesController,
+      pluginsRef,
+      props.editable,
       store,
     ]);
 
     return (
       <BrickContext.Provider value={contextValue}>
         <Component
+          {...newProps as P}
           ref={ref}
-          {...props as P}
-          brick={{
-            value: props.value,
-            pathRef: { current: () => [] },
-          }}
-          onChange={changesController.onChange}
+          brick={newBrick}
         />
       </BrickContext.Provider>
     );

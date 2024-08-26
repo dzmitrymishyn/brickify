@@ -6,13 +6,11 @@ import {
 import { type BrickValue } from './values';
 import { type BrickStoreValue } from '../store';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- it's fine
+// We should allow to define any property we want. Any is the easiest way for
+// doing that.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- ok
 export type Component<Props extends object = any> =
   ForwardRefExoticComponent<Props> | FC<Props>;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- it's fine
-export type AnyComponent<Props extends object = any> =
-  Component<Props> | FC<Props>;
 
 export type NamedComponent = {
   displayName?: string;
@@ -21,5 +19,5 @@ export type NamedComponent = {
 };
 
 export type PropsWithBrick<Value extends object = BrickValue> = {
-  brick: BrickStoreValue<Value>;
+  brick: Pick<BrickStoreValue<Value>, 'pathRef' | 'value'>;
 };

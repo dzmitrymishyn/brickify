@@ -1,7 +1,7 @@
 import { type ReactElement, type ReactNode } from 'react';
 
+import { type ObjectValue, useChildrenRenderer } from './useChildrenRenderer';
 import { type BrickStoreValue } from '../store';
-import { ObjectValue, useChildrenRenderer } from './useChildrenRenderer';
 
 export const useChildRenderer = <Value = unknown>(
   parentBrick: BrickStoreValue<object>,

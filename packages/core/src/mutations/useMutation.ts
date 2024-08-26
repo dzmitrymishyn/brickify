@@ -7,16 +7,16 @@ import {
 import {
   type MutationHandler,
 } from './mutations';
-import { useBrickContext } from '../hooks/useBrickContext';
+import { useMutations } from './useMutationsPluginFactory';
 import assert from 'assert';
 
 export const useMutation = <Element extends HTMLElement>(
   mutate: MutationHandler,
 ): RefObject<Element> => {
-  const { subscribeMutation } = useBrickContext();
+  const { subscribe } = useMutations()!;
 
   assert(
-    subscribeMutation,
+    subscribe,
     'You cannot subscribe on new mutations without the context',
   );
 
@@ -28,11 +28,11 @@ export const useMutation = <Element extends HTMLElement>(
   useEffect(() => {
     assert(ref.current, 'useMutation: ref should be attached to a node');
 
-    return subscribeMutation(
+    return subscribe(
       ref.current,
       (mutation) => mutateRef.current?.(mutation),
     );
-  }, [mutate, subscribeMutation]);
+  }, [mutate, subscribe]);
 
   return ref;
 };

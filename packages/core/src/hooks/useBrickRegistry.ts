@@ -16,7 +16,7 @@ export const useBrickRegistry = (
     onChange,
   }: Partial<Pick<BrickStoreValue, 'onChange'>> = {},
 ) => {
-  assert(brick, 'Value should be specified');
+  assert(brick, 'value should be specified');
 
   const { store } = useBrickContext();
 
@@ -35,6 +35,7 @@ export const useBrickRegistry = (
 
     store.delete(oldValue);
 
+    // console.log(2, brick.pathRef.current(), brick.value);
     store.set(newBrick.value, newBrick);
     if (newBrick.domNode) {
       store.set(newBrick.domNode, newBrick);
@@ -48,7 +49,7 @@ export const useBrickRegistry = (
       return;
     }
 
-    const item = store.get(valueRef.current);
+    const item = store.get<object>(valueRef.current);
 
     assert(item, 'item should be defined');
 

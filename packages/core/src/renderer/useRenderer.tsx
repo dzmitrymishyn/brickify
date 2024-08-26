@@ -6,12 +6,14 @@ import * as I from 'fp-ts/lib/Identity';
 import * as O from 'fp-ts/lib/Option';
 import {
   cloneElement,
+  type ReactElement,
   type ReactNode,
   useMemo,
   useRef,
 } from 'react';
 
-import { type OnChange } from '../changes';
+import { renderWithPlugins } from './utils';
+import { type OnChange, type Plugin } from '../changes';
 import {
   type BrickValue,
   type Component,
@@ -29,6 +31,7 @@ type Deps = {
   oldValue?: Record<string, unknown>;
   store: BrickStore;
   componentsMap?: Record<string, Component>;
+  plugins: Record<string, Plugin>;
 };
 
 const sanitizeBrick = (
@@ -80,19 +83,28 @@ const render = (deps: Deps, brickValue: BrickValue) => pipe(
       ...hasProps(Component) && Component.props,
       ...sanitizeBrick(brickValue),
       ...slots,
-      onChange: deps.onChange,
+      ...deps.onChange && {
+        onChange: deps.onChange,
+      },
       brick,
     },
     (props) => {
       if (brickValue.id === deps.oldValue?.id) {
-        const oldElement = deps.store.get(deps.oldValue!)?.react;
+        const oldElement = deps.store
+          .get(deps.oldValue!)?.react as ReactElement<object>;
 
         if (oldElement) {
-          return cloneElement(oldElement, props);
+          return cloneElement(oldElement, {
+            ...oldElement.props,
+            ...props,
+          });
         }
       }
 
-      return <Component {...props} key={brickValue.id} />;
+      return renderWithPlugins(
+        deps.plugins,
+        <Component {...props} key={brickValue.id} />,
+      );
     },
     tap((react) => {
       brick.react = react;
@@ -129,16 +141,13 @@ export const useRenderer = (
   brick: BrickStoreValue<BrickValue | BrickValue[]>,
   value: BrickValue[],
   components: Component[],
-  onChangeProp?: OnChange | null,
+  onChange?: OnChange | null,
 ): ReactNode => {
-  const { store, onChange } = useBrickContext();
+  const { store, plugins } = useBrickContext();
   const rootValueRef = useRef<Record<string, unknown> | undefined>(undefined);
 
   const onChangeRef = useRef<OnChange | null>();
-
-  onChangeRef.current = onChangeProp === undefined
-    ? onChange
-    : onChangeProp;
+  onChangeRef.current = onChange;
 
   const result = useMemo(() => pipe(
     store.get(brick.value),
@@ -148,6 +157,7 @@ export const useRenderer = (
         current: () => [...stored.pathRef.current(), 'value'],
       } : stored.pathRef,
       (pathRef) => renderArray({
+        plugins,
         onChange: onChangeRef.current,
         pathRef,
         oldValue: rootValueRef.current,
@@ -159,7 +169,7 @@ export const useRenderer = (
       rootValueRef.current = value as unknown as Record<string, unknown>;
     })),
     E.foldW(Error, I.of),
-  ), [brick, components, value, store]);
+  ), [brick, components, value, store, plugins]);
 
   if (result instanceof Error) {
     throw result;

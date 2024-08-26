@@ -1,29 +1,30 @@
 import { addRange, fromRangeLike } from '@brickifyio/browser/selection';
 import { pipe } from 'fp-ts/lib/function';
-import { useCallback, useEffect, useRef } from 'react';
+import { type RefObject, useEffect, useMemo, useRef } from 'react';
 
-import { type BeforeAfterRangesController } from './useBeforeAfterRanges';
-import { type ChangesController } from '../changes';
-import { type Mutation, type MutationHandler, revertDomByMutations } from '../mutations';
+import { type Mutation, type MutationHandler } from './mutations';
+import { revertDomByMutations } from './revertDomByMutations';
+import { type ChangesController, useChanges } from '../changes';
+import { createUsePlugin, type UsePluginFactory } from '../plugins';
+import {
+  type BeforeAfterRangesController,
+  useBeforeAfterRanges,
+} from '../ranges';
 import { type BrickStore } from '../store';
 import assert from 'assert';
 
-type UseMutationsControllerOptions = {
-  rangesController: BeforeAfterRangesController;
-  changesController: ChangesController;
-  store: BrickStore;
-};
-
-export const useMutationsController = ({
+export const createController = ({
+  store,
   rangesController,
   changesController,
-  store,
-}: UseMutationsControllerOptions) => {
-  const ref = useRef<Element>(null);
-
-  const observerRef = useRef<MutationObserver>();
-
-  const handle = useCallback((mutations: MutationRecord[]) => {
+  observerRef,
+}: {
+  store: BrickStore;
+  rangesController: BeforeAfterRangesController;
+  changesController: ChangesController;
+  observerRef: RefObject<MutationObserver | undefined>;
+}) => {
+  const handle = (mutations: MutationRecord[]) => {
     try {
       const defaultOptions: Omit<Mutation, 'target'> = {
         remove: false,
@@ -88,7 +89,43 @@ export const useMutationsController = ({
     } catch (error) {
       // TODO: Add logger
     }
-  }, [rangesController, changesController, store]);
+  };
+
+  const subscribe = (element: HTMLElement, mutate: MutationHandler) => {
+    store.update(element, { mutate });
+
+    return () => {
+      store.update(element, { mutate: undefined });
+    };
+  };
+
+  const clear = () => {
+    return observerRef.current?.takeRecords();
+  };
+
+  return { handle, clear, subscribe };
+};
+
+export type MutationsController = ReturnType<typeof createController>;
+
+const token = Symbol('MutationsPlugin');
+
+export const useMutationsPluginFactory: UsePluginFactory<MutationsController> = (_, deps) => {
+  const ref = useRef<Element>(null);
+  const rangesController = useBeforeAfterRanges(deps.plugins)!;
+  const changesController = useChanges(deps.plugins)!;
+  const observerRef = useRef<MutationObserver>();
+
+  const controller = useMemo(() => createController({
+    rangesController,
+    changesController,
+    store: deps.store,
+    observerRef,
+  }), [
+    rangesController,
+    changesController,
+    deps.store,
+  ]);
 
   useEffect(() => {
     assert(
@@ -97,7 +134,7 @@ export const useMutationsController = ({
     );
 
     const observer = new MutationObserver((mutations) => {
-      changesController.handle(handle)(mutations);
+      changesController.handle(controller.handle)(mutations);
     });
 
     observer.observe(ref.current, {
@@ -112,29 +149,22 @@ export const useMutationsController = ({
     observerRef.current = observer;
 
     return () => observer.disconnect();
-  }, [changesController, handle]);
+  }, [changesController, controller]);
 
-  const subscribe = useCallback(
-    (element: HTMLElement, mutate: MutationHandler) => {
-      store.update(element, { mutate });
-
-      return () => {
-        store.update(element, { mutate: undefined });
-      };
+  // When the value is updated we need to clear our MutationsArray.
+  // It will be performed after all the React's mutations in the DOM.
+  useEffect(
+    () => {
+      controller.clear();
     },
-    [store],
+    [deps.brick.value, controller]
   );
 
-  const clear = useCallback(() => {
-    return observerRef.current?.takeRecords();
-  }, []);
-
   return {
-    subscribe,
-    clear,
-    handle,
+    token,
+    controller,
     ref,
   };
 };
 
-export type MutationsController = ReturnType<typeof useMutationsController>;
+export const useMutations = createUsePlugin<MutationsController>(token);

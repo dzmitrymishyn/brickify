@@ -2,8 +2,7 @@
   "name": "@brickifyio/utils",
   "version": "0.0.1",
   "exports": {
-    "./object": "./object",
-    "./pq": "./pq"
+    "./object": "./object"
   },
   "scripts": {
     "lint": "eslint .",

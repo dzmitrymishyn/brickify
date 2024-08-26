@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 
 import { type Command } from './models';
+import { useCommandsController } from './useCommandsPluginFactory';
 import { type OnChange } from '../changes';
-import { useBrickContext } from '../hooks';
 import assert from 'assert';
 
 export const useCustomCommands = (
@@ -10,7 +10,7 @@ export const useCustomCommands = (
   onChange?: OnChange,
 ) => {
   const ref = useRef<HTMLElement>();
-  const { subscribeCommand } = useBrickContext();
+  const { subscribe } = useCommandsController()!;
   const commandsRef = useRef(handlers);
   commandsRef.current = handlers;
 
@@ -19,11 +19,11 @@ export const useCustomCommands = (
 
   useEffect(() => {
     assert(ref.current, 'useCommands: ref should be attached to a node');
-    return subscribeCommand(
+    return subscribe(
       ref.current,
       commandsRef.current ?? [],
     );
-  }, [subscribeCommand]);
+  }, [subscribe]);
 
   return ref;
 };

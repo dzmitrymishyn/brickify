@@ -4,36 +4,26 @@ import {
   isElementWithinRange,
 } from '@brickifyio/browser/selection';
 import { getFirstDeepLeaf } from '@brickifyio/browser/utils';
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
-import { type BrickContextType } from './models';
-import { type BeforeAfterRangesController } from './useBeforeAfterRanges';
-import { type MutationsController } from './useMutationsController';
-import { type ChangesController } from '../changes';
-import { type RangeCallback, type ResultsCallback } from '../commands';
-import { type PathRange } from '../ranges';
+import { type RangeCallback, type ResultsCallback } from ".";
+import { type Command } from './models';
+import { useChanges } from '../changes';
+import { useMutations } from '../mutations';
+import { createUsePlugin, type UsePluginFactory } from '../plugins';
+import { type PathRange, useBeforeAfterRanges } from '../ranges';
 import { type BrickStore } from '../store';
+import { type ElementSubscribe } from '../utils';
 import assert from 'assert';
 
-type UseCommandControllerOptions = {
-  changesController: ChangesController;
-  rangesController: BeforeAfterRangesController;
-  mutationsController: MutationsController;
-  store: BrickStore;
-};
+const token = Symbol('CommandsPlugin');
 
-export const useCommandsController = ({
-  changesController,
-  rangesController,
-  mutationsController,
+const createController = ({
   store,
-}: UseCommandControllerOptions) => {
-  const ref = useRef<HTMLElement>(null);
-
-  const subscribe = useCallback<BrickContextType['subscribeCommand']>((
-    element,
-    commands,
-  ) => {
+}: {
+  store: BrickStore;
+}) => {
+  const subscribe: ElementSubscribe<Command[]> = (element, commands) => {
     const storedItem = store.get(element);
 
     assert(storedItem, 'Store element should be defined');
@@ -43,9 +33,24 @@ export const useCommandsController = ({
     return () => {
       storedItem.commands = [];
     };
-  }, [store]);
+  };
+
+  return { subscribe };
+};
+
+export type CommandsController = ReturnType<typeof createController>;
+
+export const useCommandsPluginFactory: UsePluginFactory<object, CommandsController> = (_, deps) => {
+  const ref = useRef<HTMLElement>(null);
+  const changesController = useChanges(deps.plugins);
+  const rangesController = useBeforeAfterRanges();
+  const mutationsController = useMutations(deps.plugins)!;
 
   useEffect(() => {
+    if (!changesController || !rangesController) {
+      return;
+    }
+
     assert(
       ref.current,
       'useCommandsController: ref should be attached to a node',
@@ -89,7 +94,7 @@ export const useCommandsController = ({
         getOrUpdateResults({ stopImmediatePropagation: undefined });
 
         while (current) {
-          if (store.get(current)) {
+          if (deps.store.get(current)) {
             break;
           }
 
@@ -100,7 +105,7 @@ export const useCommandsController = ({
           break;
         }
 
-        const { commands, domNode, onChange } = store.get(current)!;
+        const { commands, domNode, onChange } = deps.store.get(current)!;
 
         if (commands?.length) {
           changesController.markForApply(domNode);
@@ -113,7 +118,7 @@ export const useCommandsController = ({
             results: getOrUpdateResults,
             resultRange: setResultRange,
             range: getOrUpdateRange,
-            getFromStore: store.get,
+            getFromStore: deps.store.get,
 
             stopBrickPropagation: () => getOrUpdateResults({
               stopPropagation: true,
@@ -171,8 +176,19 @@ export const useCommandsController = ({
     changesController,
     rangesController,
     mutationsController,
-    store,
+    deps.store,
   ]);
 
-  return { subscribe, ref };
+  const controller = useMemo(
+    () => createController({ store: deps.store }),
+    [deps.store],
+  );
+
+  return {
+    ref,
+    token,
+    controller,
+  };
 };
+
+export const useCommandsController = createUsePlugin<CommandsController>(token);
