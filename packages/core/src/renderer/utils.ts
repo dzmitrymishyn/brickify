@@ -2,8 +2,8 @@ import * as A from 'fp-ts/lib/Array';
 import { pipe } from 'fp-ts/lib/function';
 import { type ReactElement } from 'react';
 
-import { type Plugin } from '../changes';
 import { type PropsWithBrick } from '../components';
+import { type Plugin } from '../plugins';
 
 const getRender = ({ render }: Plugin) => render;
 

@@ -13,7 +13,7 @@ import {
 } from 'react';
 
 import { renderWithPlugins } from './utils';
-import { type OnChange, type Plugin } from '../changes';
+import { type OnChange } from '../changes';
 import {
   type BrickValue,
   type Component,
@@ -22,6 +22,7 @@ import {
 } from '../components';
 import { hasProps, hasSlots } from '../extensions';
 import { useBrickContext } from '../hooks/useBrickContext';
+import { type Plugin } from '../plugins';
 import { type BrickStore, type BrickStoreValue } from '../store';
 import { type PathRef } from '../utils';
 

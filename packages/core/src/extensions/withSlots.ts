@@ -1,4 +1,4 @@
-import { bricksToMap, type Component, type NamedComponent } from '../components';
+import { bricksToMap, type Component } from '../components';
 
 export type Slot = [string, 'inherit' | Component[]];
 export type Slots = Record<Slot[0], Slot[1]>;
