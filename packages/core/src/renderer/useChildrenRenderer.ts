@@ -60,48 +60,63 @@ export const useChildrenRenderer = <Value = unknown>(
   const makeRef = useRef(make);
   makeRef.current = make;
 
-  return useMemo(() => pipe(
-    Object.entries(slotValues),
-    A.map(([index, currentValue]) => pipe(
-      makeObjectValue(
-        currentValue,
-        previoueValues.current[index],
-        previousObjectValues.current[index],
-      ),
-      I.bindTo('value'),
-      I.bind('stored', ({ value }) => store.get(value as object)),
-      tap(({ value }) => {
-        previoueValues.current[index] = currentValue;
-        previousObjectValues.current[index] = value;
-      }),
-      I.bind('pathRef', () => ({
-        current: () => [
-          ...storedParent.pathRef.current(),
-          ...slotName ? [slotName] : [],
-          index,
-        ],
-      })),
-      ({ pathRef, value, stored }) => pipe(
-        O.fromNullable(stored),
-        O.map(tap((storedParam) => {
-          // We need to mutate previous pathRef.current function with new one
-          // since we can change the ordering of items and it should handle
-          // the change inside the current stored element
-          storedParam.pathRef.current = pathRef.current;
-        })),
-        O.chain(({ react }) => O.fromNullable(react)),
-        O.alt(() => {
-          const brick: BrickStoreValue = { pathRef, value };
+  return useMemo(() => {
+    let brickValuesForSlot: Record<string, object>;
 
-          brick.react = renderWithPlugins(
-            plugins,
-            makeRef.current(brick, index),
-          );
+    storedParent.slots = storedParent.slots || {};
+    if (slotName) {
+      brickValuesForSlot = {};
+      storedParent.slots[slotName] = brickValuesForSlot;
+    } else {
+      brickValuesForSlot = storedParent.slots;
+    }
 
-          return O.of(brick.react);
+    return pipe(
+      Object.entries(slotValues),
+      A.map(([index, currentValue]) => pipe(
+        makeObjectValue(
+          currentValue,
+          previoueValues.current[index],
+          previousObjectValues.current[index],
+        ),
+        I.bindTo('value'),
+        I.bind('stored', ({ value }) => store.get(value as object)),
+        tap(({ value }) => {
+          previoueValues.current[index] = currentValue;
+          previousObjectValues.current[index] = value;
         }),
-        O.getOrElseW(() => null),
-      ),
-    )),
-  ), [slotName, slotValues, store, storedParent, plugins]);
+        tap(({ value }) => {
+          brickValuesForSlot[index] = value as object;
+        }),
+        I.bind('pathRef', () => ({
+          current: () => [
+            ...storedParent.pathRef.current(),
+            ...slotName ? [slotName] : [],
+            index,
+          ],
+        })),
+        ({ pathRef, value, stored }) => pipe(
+          O.fromNullable(stored),
+          O.map(tap((storedParam) => {
+            // We need to mutate previous pathRef.current function with new one
+            // since we can change the ordering of items and it should handle
+            // the change inside the current stored element
+            storedParam.pathRef.current = pathRef.current;
+          })),
+          O.chain(({ react }) => O.fromNullable(react)),
+          O.alt(() => {
+            const brick: BrickStoreValue = { pathRef, value };
+
+            brick.react = renderWithPlugins(
+              plugins,
+              makeRef.current(brick, index),
+            );
+
+            return O.of(brick.react);
+          }),
+          O.getOrElseW(() => null),
+        ),
+      )),
+    );
+  }, [slotName, slotValues, store, storedParent, plugins]);
 };

@@ -43,7 +43,7 @@ export type CommandsController = ReturnType<typeof createController>;
 export const useCommandsPluginFactory: UsePluginFactory<object, CommandsController> = (_, deps) => {
   const ref = useRef<HTMLElement>(null);
   const changesController = useChanges(deps.plugins);
-  const rangesController = useBeforeAfterRanges();
+  const rangesController = useBeforeAfterRanges(deps.plugins);
   const mutationsController = useMutations(deps.plugins)!;
 
   useEffect(() => {
