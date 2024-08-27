@@ -13,6 +13,8 @@ import {
 import { type BrickStore } from '../store';
 import assert from 'assert';
 
+const token = Symbol('MutationsPlugin');
+
 export const createController = ({
   store,
   rangesController,
@@ -108,12 +110,12 @@ export const createController = ({
 
 export type MutationsController = ReturnType<typeof createController>;
 
-const token = Symbol('MutationsPlugin');
-
-export const useMutationsPluginFactory: UsePluginFactory<MutationsController> = (_, deps) => {
+export const useMutationsPluginFactory: UsePluginFactory<
+  MutationsController
+> = (_, deps) => {
   const ref = useRef<Element>(null);
-  const rangesController = useBeforeAfterRanges(deps.plugins)!;
-  const changesController = useChanges(deps.plugins)!;
+  const rangesController = useBeforeAfterRanges(deps.plugins);
+  const changesController = useChanges(deps.plugins);
   const observerRef = useRef<MutationObserver>();
 
   const controller = useMemo(() => createController({
@@ -130,12 +132,12 @@ export const useMutationsPluginFactory: UsePluginFactory<MutationsController> = 
   useEffect(() => {
     assert(
       ref.current,
-      'useMutationsController: ref should be attached to a node',
+      'ref for useMutationsController should be attached to a node',
     );
 
-    const observer = new MutationObserver((mutations) => {
-      changesController.handle(controller.handle)(mutations);
-    });
+    const observer = new MutationObserver(
+      changesController.handle(controller.handle),
+    );
 
     observer.observe(ref.current, {
       subtree: true,

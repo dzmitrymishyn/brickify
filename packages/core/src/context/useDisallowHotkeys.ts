@@ -14,7 +14,10 @@ export const useDisallowHotkeys = (disallowList: string[] = []) => {
   );
 
   useEffect(() => {
-    assert(ref.current, 'useRangeSaver: ref should be attached to a node');
+    assert(
+      ref.current,
+      'ref for useDisallowHotkeys should be attached to a node',
+    );
 
     const element = ref.current;
     const handleKeydown = (event: Event) => {

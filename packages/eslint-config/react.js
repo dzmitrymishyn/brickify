@@ -2,6 +2,7 @@ module.exports = {
   extends: [
     './base.js',
     '@vercel/style-guide/eslint/react',
+    '@vercel/style-guide/eslint/jest-react',
     './override.js',
   ].map(require.resolve),
   rules: {

@@ -2,24 +2,21 @@ import * as A from 'fp-ts/lib/Array';
 import { pipe } from 'fp-ts/lib/function';
 import { type ReactElement } from 'react';
 
-import { type PropsWithBrick } from '../components';
-import { type Plugin } from '../plugins';
+import { getPlugins, type Plugin } from '../plugins';
 
 const getRender = ({ render }: Plugin) => render;
 
 export const getRenderFromPlugins = (
   plugins: Record<string | symbol, Plugin> = {},
 ) => pipe(
-  Object.values(plugins),
-  A.concat(Object.getOwnPropertySymbols(plugins)
-    .map((symbol) => plugins[symbol])),
+  getPlugins(plugins),
   A.map(getRender),
   A.filter(Boolean),
 );
 
 export const renderWithPlugins = (
   plugins: Record<string | symbol, Plugin>,
-  element: ReactElement<PropsWithBrick>,
+  element: ReactElement,
 ) => pipe(
   getRenderFromPlugins(plugins),
   A.reduce(

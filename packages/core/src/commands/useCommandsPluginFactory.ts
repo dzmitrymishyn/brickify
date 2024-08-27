@@ -18,20 +18,12 @@ import assert from 'assert';
 
 const token = Symbol('CommandsPlugin');
 
-const createController = ({
-  store,
-}: {
-  store: BrickStore;
-}) => {
+const createController = ({ store }: { store: BrickStore }) => {
   const subscribe: ElementSubscribe<Command[]> = (element, commands) => {
-    const storedItem = store.get(element);
-
-    assert(storedItem, 'Store element should be defined');
-
-    storedItem.commands = commands;
+    store.update(element, { commands });
 
     return () => {
-      storedItem.commands = [];
+      store.update(element, { commands: undefined });
     };
   };
 
@@ -40,20 +32,19 @@ const createController = ({
 
 export type CommandsController = ReturnType<typeof createController>;
 
-export const useCommandsPluginFactory: UsePluginFactory<object, CommandsController> = (_, deps) => {
+export const useCommandsPluginFactory: UsePluginFactory<
+  object,
+  CommandsController
+> = (_, deps) => {
   const ref = useRef<HTMLElement>(null);
   const changesController = useChanges(deps.plugins);
   const rangesController = useBeforeAfterRanges(deps.plugins);
-  const mutationsController = useMutations(deps.plugins)!;
+  const mutationsController = useMutations(deps.plugins);
 
   useEffect(() => {
-    if (!changesController || !rangesController) {
-      return;
-    }
-
     assert(
       ref.current,
-      'useCommandsController: ref should be attached to a node',
+      `ref for ${token.toString()} should be attached to a node`,
     );
 
     const element = ref.current;
@@ -168,7 +159,7 @@ export const useCommandsPluginFactory: UsePluginFactory<object, CommandsControll
       if (resultRange) {
         rangesController.saveAfter(nextRange);
       }
-    }, 'batch');
+    });
 
     element.addEventListener('keydown', handle);
     return () => element.removeEventListener('keydown', handle);

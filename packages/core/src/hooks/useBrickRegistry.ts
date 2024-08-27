@@ -12,9 +12,6 @@ import assert from 'assert';
  */
 export const useBrickRegistry = (
   brick?: BrickStoreValue<object>,
-  {
-    onChange,
-  }: Partial<Pick<BrickStoreValue, 'onChange'>> = {},
 ) => {
   assert(brick, 'value should be specified');
 
@@ -30,7 +27,6 @@ export const useBrickRegistry = (
     const newBrick = {
       ...oldStoredValue,
       ...brick,
-      onChange,
     };
 
     store.delete(oldValue);

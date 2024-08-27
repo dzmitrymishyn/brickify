@@ -13,12 +13,7 @@ import assert from 'assert';
 export const useMutation = <Element extends HTMLElement>(
   mutate: MutationHandler,
 ): RefObject<Element> => {
-  const { subscribe } = useMutations()!;
-
-  assert(
-    subscribe,
-    'You cannot subscribe on new mutations without the context',
-  );
+  const { subscribe } = useMutations();
 
   const mutateRef = useRef(mutate);
   const ref = useRef<Element>(null);
@@ -26,7 +21,7 @@ export const useMutation = <Element extends HTMLElement>(
   mutateRef.current = mutate;
 
   useEffect(() => {
-    assert(ref.current, 'useMutation: ref should be attached to a node');
+    assert(ref.current, 'ref for useMutation should be attached to a node');
 
     return subscribe(
       ref.current,

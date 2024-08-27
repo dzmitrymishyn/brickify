@@ -9,17 +9,16 @@ import {
 export const usePluginContext = (
   deps: Omit<PluginDependencies, 'plugins'>,
   props: object,
-  usePlugins: UsePluginFactory[],
+  plugins: UsePluginFactory[],
 ) => {
   const pluginsRef = useRef<Record<string | symbol, Plugin>>({});
 
-  pluginsRef.current = {};
-
-  const newProps = usePlugins.reduce((currentProps, init) => {
+  const newProps = plugins.reduce((currentProps, init) => {
     const plugin = init(props, {
       ...deps,
       plugins: pluginsRef.current,
     });
+
     pluginsRef.current[plugin.token] = plugin;
 
     if (plugin.props) {

@@ -70,7 +70,6 @@ const Container: FC<Props> = ({ children, brick, onChange }) => {
         return onChange?.({ type: 'remove', path: brick.pathRef.current() });
       }
     }),
-    // useCommands(Object.values(brick?.slotsMap?.children ?? {})),
   );
 
   return (

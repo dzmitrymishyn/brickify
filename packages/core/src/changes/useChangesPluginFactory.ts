@@ -11,23 +11,27 @@ import {
   useRef,
 } from 'react';
 
-import { type Change, type ChangeState, type PropsWithChange } from './models';
+import { type Change, type PropsWithChange } from './models';
 import { type BrickValue, type PropsWithBrick } from '../components';
-import { type UsePluginFactory } from '../plugins';
+import { createUsePlugin, type UsePluginFactory } from '../plugins';
 import { subscribeFactory } from '../utils';
 
-export const changesToken = Symbol('changes');
+export const changesToken = Symbol('ChangesPlugin');
 
-const createChangesPluginController = (
+const createController = (
   valueRef: RefObject<BrickValue[]>,
   onChangeRef: RefObject<undefined | ((value: object) => void)>,
 ) => {
-  let state: ChangeState = 'interaction';
   const applyHandlers = new Map<Node, () => void>();
 
   let changes: Change[] = [];
   let markedForChanges: Node[] = [];
 
+  /**
+   * When we apply current changes we go through markedForChanges elements
+   * and call apply function in each element if it exists. After that we
+   * patch current value with the updates and pass it to the parent component
+   */
   const apply = () => pipe(
     markedForChanges,
     A.reduce(new Set<Node>(), (handledNodes, node: Node) => {
@@ -47,14 +51,12 @@ const createChangesPluginController = (
     )),
   );
 
-  const clear = (newState: ChangeState) => {
-    state = newState;
+  const clear = () => {
     changes = [];
     markedForChanges = [];
   };
 
   return {
-    state: () => state,
     changes: () => changes,
 
     markForApply: (node?: Node) => {
@@ -63,16 +65,13 @@ const createChangesPluginController = (
       }
     },
 
-    handle: <T>(
-      fn?: (params: T) => void,
-      newState: ChangeState = 'interaction',
-    ) => (params: T) => {
-      clear(newState);
+    handle: <T>(fn?: (params: T) => void) => (params: T) => {
+      clear();
 
       fn?.(params);
       apply();
 
-      clear('interaction');
+      clear();
     },
 
     subscribeApply: subscribeFactory(applyHandlers),
@@ -82,6 +81,10 @@ const createChangesPluginController = (
         return;
       }
 
+      /**
+       * if it's a single onChange not in mutations or commands we just call
+       * the apply function on the next render.
+       */
       if (!changes.length) {
         requestAnimationFrame(apply);
       }
@@ -92,7 +95,7 @@ const createChangesPluginController = (
 };
 
 export type ChangesController = ReturnType<
-  typeof createChangesPluginController
+  typeof createController
 >;
 
 type Props = {
@@ -100,9 +103,10 @@ type Props = {
   value: BrickValue[];
 };
 
-export const useChangesPluginFactory: UsePluginFactory<Props, ChangesController> = (
-  props,
-) => {
+export const useChangesPluginFactory: UsePluginFactory<
+  Props,
+  ChangesController
+> = (props) => {
   const onChangeRef = useRef(props.onChange);
   onChangeRef.current = props.onChange;
 
@@ -110,15 +114,24 @@ export const useChangesPluginFactory: UsePluginFactory<Props, ChangesController>
   valueRef.current = props.value;
 
   const controller = useMemo(
-    () => createChangesPluginController(valueRef, onChangeRef),
+    () => createController(valueRef, onChangeRef),
     [],
   );
 
   return useMemo(() => ({
     token: changesToken,
     props: {
+      // We mutate current root props with new onChange method that can
+      // interract with the whole object. Children components must implement
+      // plugin interface for change function
       onChange: controller.onChange,
     },
+    /**
+     * Each element that will be rendered will have onChange function.
+     * If an element already has this function we don't need to override it.
+     * useChild(-ren)Renderer uses its own onChange function to make sure
+     * we make change event with right value
+     */
     render: (element: ReactElement<PropsWithBrick & PropsWithChange>) => {
       if (element.props.onChange) {
         return element;
@@ -131,3 +144,5 @@ export const useChangesPluginFactory: UsePluginFactory<Props, ChangesController>
     controller,
   }), [controller]);
 };
+
+export const useChanges = createUsePlugin<ChangesController>(changesToken);

@@ -1,6 +1,7 @@
-// If we have inherited context it means that we don't need to apply the same
-// rules for all the actions. Parent component already added it
-/* eslint-disable react-hooks/rules-of-hooks -- it's justified */
+/* eslint-disable react-hooks/rules-of-hooks -- it's justified
+ * If we have inherited context it means that we don't need to apply the same
+ * rules for all the actions. Parent component already added it
+ */
 import {
   forwardRef,
   type ForwardRefExoticComponent,
@@ -14,14 +15,18 @@ import { useDisallowHotkeys } from './useDisallowHotkeys';
 import { type BrickValue, getName } from '../components';
 import { extend, withBrickName, withDisplayName } from '../extensions';
 import { useBrickContextUnsafe , useMergedRefs } from '../hooks';
-import { getPlugins, usePluginContext, type UsePluginFactory } from '../plugins';
-import { type BrickStoreValue, useBrickStoreFactory } from '../store';
+import {
+  getPlugins,
+  usePluginContext,
+  type UsePluginFactory,
+} from '../plugins';
+import { useBrickStoreFactory } from '../store';
 
 const metaKeyDisallowList = [
   'enter',
   'shift+enter',
   ...[
-    // 'z', // undo
+    'z', // undo
     'b', // bold
     'i', // italic
     'u', // underline
@@ -30,14 +35,16 @@ const metaKeyDisallowList = [
 
 type Props = {
   editable?: boolean;
-  onChange?: (value: unknown) => void;
-  brick?: BrickStoreValue;
 };
 
 export function withBrickContext<P extends { value: BrickValue[] }>(
   Component: ForwardRefExoticComponent<P>,
 ) {
-  const WithBrickContext = forwardRef<Node, Props & Omit<P, 'brick' | 'plugins'> & { plugins?: (UsePluginFactory | UsePluginFactory[])[] }>((
+  type ContextProps =
+    & Props
+    & Omit<P, 'brick' | 'plugins'>
+    & { plugins?: (UsePluginFactory | UsePluginFactory[])[] };
+  const WithBrickContext = forwardRef<Node, ContextProps>((
     { plugins = [CommonPlugins], ...props },
     refProp,
   ) => {
@@ -50,13 +57,13 @@ export function withBrickContext<P extends { value: BrickValue[] }>(
     }
 
     const store = useBrickStoreFactory();
-    const newBrick = {
+    const brick = {
       value: props.value,
       pathRef: { current: () => [] },
     };
 
     const { pluginsRef, props: newProps } = usePluginContext(
-      { store, brick: newBrick },
+      { store, brick },
       props,
       plugins?.flat(),
     );
@@ -85,7 +92,7 @@ export function withBrickContext<P extends { value: BrickValue[] }>(
         <Component
           {...newProps as P}
           ref={ref}
-          brick={newBrick}
+          brick={brick}
         />
       </BrickContext.Provider>
     );
