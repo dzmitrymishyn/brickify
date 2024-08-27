@@ -4,8 +4,8 @@ import {
   previous,
   type PropsWithBrick,
   type PropsWithChange,
-  useBrickChildrenRegistry,
   useBrickRegistry,
+  useChildrenRenderer,
   useCommands,
   useMergedRefs,
   useMutation,
@@ -69,9 +69,10 @@ const TableCell = extend(
         } else {
           const currentRowStoredValue = getFromStore(target)!;
           const nextRowPath = next(currentRowStoredValue.pathRef.current());
-          onChange(new Array(target.childNodes.length).fill(''), {
+          onChange({
             type: 'add',
             path: nextRowPath,
+            value: new Array(target.childNodes.length).fill(''),
           });
           resultRange({
             start: {
@@ -86,7 +87,7 @@ const TableCell = extend(
         }
 
         // Empty change
-        onChange(null, {
+        onChange({
           type: 'add',
           path: [''],
         });
@@ -140,7 +141,7 @@ const TableCell = extend(
           });
         }
 
-        onChange(null, {
+        onChange({
           type: 'add',
           path: [''],
         });
@@ -156,12 +157,12 @@ const TableRow = extend(
       useCommands([TableCell]),
       useMutation(({ remove }) => {
         if (remove) {
-          onChange?.({ type: 'remove' }, brick);
+          onChange?.({ type: 'remove', path: brick.pathRef.current() });
         }
       })
     );
 
-    const childrenBricks = useBrickChildrenRegistry(
+    const childrenBricks = useChildrenRenderer(
       brick,
       null,
       children,
@@ -170,9 +171,12 @@ const TableRow = extend(
           component="td"
           brick={childBrick}
           key={index}
-          value={childBrick.value}
+          value={childBrick.value.value}
           style={{ border: '1px solid #ccc', padding: 10 }}
-          onChange={({ value }, change) => onChange?.(value, change)}
+          onChange={(change) => onChange?.({
+            ...change,
+            value: change.value?.value,
+          })}
         />
       ),
     );
@@ -205,12 +209,12 @@ const Table: FC<Props> = ({ children, brick, onChange }) => {
     useCommands([TableRow]),
     useMutation((mutation) => {
       if (mutation.remove) {
-        return onChange?.(null, { type: 'remove', brick });
+        return onChange?.({ type: 'remove', path: brick.pathRef.current() });
       }
     }),
   );
 
-  const childrenBricks = useBrickChildrenRegistry(
+  const childrenBricks = useChildrenRenderer(
     brick,
     'children',
     children,
@@ -220,7 +224,7 @@ const Table: FC<Props> = ({ children, brick, onChange }) => {
         brick={row}
         onChange={onChange}
       >
-        {row}
+        {row.value}
       </TableRow>
     ),
   );

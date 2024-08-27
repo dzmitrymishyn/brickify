@@ -30,17 +30,17 @@ const Page = () => {
       brick: 'Heading',
       value: 'Here is simple components that',
     },
-    // {
-    //   brick: 'Table',
-    //   id: newKey(),
-    //   children: [
-    //     [
-    //       'Click `Tab` to move to the next cell',
-    //       'Click `Shift + Tab` to move to the previous cell',
-    //       'Click `Tab` to create a new row',
-    //     ],
-    //   ],
-    // },
+    {
+      brick: 'Table',
+      id: newKey(),
+      children: [
+        [
+          'Click `Tab` to move to the next cell',
+          'Click `Shift + Tab` to move to the previous cell',
+          'Click `Tab` to create a new row',
+        ],
+      ],
+    },
     {
       brick: 'List',
       id: newKey(),

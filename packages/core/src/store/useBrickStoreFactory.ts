@@ -6,7 +6,6 @@ export type BrickStoreKey = object | Node;
 
 const createStore = () => {
   const store = new Map<BrickStoreKey, BrickStoreValue>();
-  console.log('store', store);
 
   return {
     get: <Value = unknown>(
