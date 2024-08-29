@@ -23,131 +23,7 @@ type TableRowProps = PropsWithBrick<object> & PropsWithChange & {
 const TableCell = extend(
   Paragraph,
   withName('TableCell'),
-  withShortcuts([
-    {
-      name: 'nextCellOrNewRow',
-      shortcuts: ['tab'],
-      handle: ({
-        originalEvent,
-        target,
-        descendants,
-        resultRange,
-        getFromStore,
-        onChange,
-      }) => {
-        originalEvent.preventDefault();
-
-        const currentCell = descendants.at(-1)!;
-
-        if (currentCell?.nextSibling) {
-          const currentCellStoredValue = getFromStore(currentCell)!;
-          const nextCellPath = next(currentCellStoredValue.pathRef.current());
-
-          resultRange({
-            start: {
-              offset: 0,
-              path: nextCellPath,
-            },
-            end: {
-              offset: 0,
-              path: nextCellPath,
-            },
-          });
-        } else if (target.nextSibling) {
-          const currentRowStoredValue = getFromStore(target)!;
-          const nextRowPath = next(currentRowStoredValue.pathRef.current());
-          resultRange({
-            start: {
-              offset: 0,
-              path: nextRowPath,
-            },
-            end: {
-              offset: 0,
-              path: nextRowPath,
-            },
-          });
-        } else {
-          const currentRowStoredValue = getFromStore(target)!;
-          const nextRowPath = next(currentRowStoredValue.pathRef.current());
-          onChange({
-            type: 'add',
-            path: nextRowPath,
-            value: new Array(target.childNodes.length).fill(''),
-          });
-          resultRange({
-            start: {
-              offset: 0,
-              path: [...nextRowPath, '0'],
-            },
-            end: {
-              offset: 0,
-              path: [...nextRowPath, '0'],
-            },
-          });
-        }
-
-        // Empty change
-        onChange({
-          type: 'add',
-          path: [''],
-        });
-      },
-    },
-    {
-      name: 'nextCellOrNewRow',
-      shortcuts: ['shift+tab'],
-      handle: ({
-        originalEvent,
-        target,
-        descendants,
-        resultRange,
-        getFromStore,
-        onChange,
-      }) => {
-        originalEvent.preventDefault();
-
-        const currentCell = descendants.at(-1)!;
-
-        if (currentCell?.previousSibling) {
-          const currentCellStoredValue = getFromStore(currentCell)!;
-          const nextCellPath = previous(
-            currentCellStoredValue.pathRef.current(),
-          );
-
-          resultRange({
-            start: {
-              offset: 0,
-              path: nextCellPath,
-            },
-            end: {
-              offset: 0,
-              path: nextCellPath,
-            },
-          });
-        } else if (target.previousSibling) {
-          const currentRowStoredValue = getFromStore(target)!;
-          const nextRowPath = [...previous(
-            currentRowStoredValue.pathRef.current(),
-          ), `${target.childNodes.length - 1}`];
-          resultRange({
-            start: {
-              offset: 0,
-              path: nextRowPath,
-            },
-            end: {
-              offset: 0,
-              path: nextRowPath,
-            },
-          });
-        }
-
-        onChange({
-          type: 'add',
-          path: [''],
-        });
-      },
-    },
-  ]),
+  withShortcuts([]),
 );
 
 const TableRow = extend(
@@ -230,11 +106,13 @@ const Table: FC<Props> = ({ children, brick, onChange }) => {
   );
 
   return (
-    <table ref={ref} data-brick="table">
-      <tbody>
-        {childrenBricks}
-      </tbody>
-    </table>
+    <div contentEditable={false}>
+      <table ref={ref} data-brick="table">
+        <tbody>
+          {childrenBricks}
+        </tbody>
+      </table>
+    </div>
   );
 };
 

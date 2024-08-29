@@ -86,6 +86,8 @@ const Paragraph: React.FC<Props> = ({
       ref={ref}
       style={style}
       {...editable && {
+        role: 'textbox',
+        tabIndex: 0,
         contentEditable: true,
         suppressContentEditableWarning: true,
       }}

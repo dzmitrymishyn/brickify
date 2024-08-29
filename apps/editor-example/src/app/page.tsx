@@ -37,7 +37,7 @@ const Page = () => {
         [
           'Click `Tab` to move to the next cell',
           'Click `Shift + Tab` to move to the previous cell',
-          'Click `Tab` to create a new row',
+          'Click `Tab` to move to the next element',
         ],
       ],
     },
