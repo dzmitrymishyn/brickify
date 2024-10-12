@@ -24,7 +24,6 @@ type Props = PropsWithBrick<BrickValue | BrickValue[]> & PropsWithChange & {
 };
 
 const Editor = forwardRef<HTMLDivElement, Props>(({
-  value,
   bricks = [],
   brick,
   onChange,
@@ -38,7 +37,11 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
     useCommands(bricks),
   );
 
-  const nodes = useRenderer(brick, value, bricks, onChange);
+  const { value } = useRenderer({
+    brick,
+    slotsMeta: { value: bricks },
+    props: { onChange },
+  });
 
   return (
     <div
@@ -50,7 +53,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
         suppressContentEditableWarning: true,
       }}
     >
-      {nodes}
+      {value}
     </div>
   );
 });

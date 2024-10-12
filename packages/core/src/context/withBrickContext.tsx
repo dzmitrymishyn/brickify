@@ -58,8 +58,10 @@ export function withBrickContext<P extends { value: BrickValue[] }>(
 
     const store = useBrickStoreFactory();
     const brick = {
-      value: props.value,
+      value: { value: props.value },
       pathRef: { current: () => [] },
+      parentRef: { current: null },
+      currentRef: { current: null },
     };
 
     const { pluginsRef, props: newProps } = usePluginContext(

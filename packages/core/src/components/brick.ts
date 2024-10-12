@@ -20,5 +20,5 @@ export type NamedComponent = {
 };
 
 export type PropsWithBrick<Value extends object = BrickValue> = {
-  brick: Pick<BrickStoreValue<Value>, 'pathRef' | 'value'>;
+  brick: BrickStoreValue<Value>;
 };

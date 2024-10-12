@@ -148,8 +148,8 @@ export const traverseAndApplyChanges = (
   );
 };
 
-export const patch = (
-  value: unknown,
+export const patch = <T = unknown>(
+  value: T,
   changes: Change[],
 ) => pipe(
   makeChangesMap(changes),
@@ -160,6 +160,9 @@ export const patch = (
   (newValue) => {
     // TODO: do I really want to assert it? Maybe it's ok to return null?
     assert(newValue !== undefined, 'Unpredictable removal of root element');
-    return newValue;
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any --
+     * we need to make an array
+     */
+    return newValue as T extends any[] ? T : T[];
   },
 );

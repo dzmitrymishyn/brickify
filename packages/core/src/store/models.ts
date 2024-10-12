@@ -8,6 +8,8 @@ import { type PathRef } from '../utils';
 export type BrickStoreValue<Value = any> = {
   value: Value;
   pathRef: PathRef;
+  parentRef: { current: object | null };
+  currentRef: { current: object | null };
   react?: ReactElement;
   domNode?: Node;
 

@@ -19,7 +19,7 @@ import { subscribeFactory } from '../utils';
 export const changesToken = Symbol('ChangesPlugin');
 
 const createController = (
-  valueRef: RefObject<BrickValue[]>,
+  valueRef: RefObject<{ value: BrickValue[] }>,
   onChangeRef: RefObject<undefined | ((value: object) => void)>,
 ) => {
   const applyHandlers = new Map<Node, () => void>();
@@ -42,13 +42,14 @@ const createController = (
 
       return handledNodes;
     }),
-    () => O.fromNullable(onChangeRef.current),
-    O.ap(pipe(
-      changes.length ? patch(valueRef.current, changes) : null,
-      O.fromNullable,
-      // eslint-disable-next-line no-console -- TODO: Replace it with logger
-      O.map(tap(console.log.bind(null, 'new value'))),
-    )),
+    () => changes.length && valueRef.current
+      ? patch(valueRef.current, changes)
+      : null,
+    O.fromNullable,
+    O.map(([{ value }]) => value as object),
+    // eslint-disable-next-line no-console -- TODO: Replace it with logger
+    O.map(tap<object>(console.log.bind(null, 'new value'))),
+    O.map((value) => onChangeRef.current?.(value)),
   );
 
   const clear = () => {
@@ -110,8 +111,8 @@ export const useChangesPluginFactory: UsePluginFactory<
   const onChangeRef = useRef(props.onChange);
   onChangeRef.current = props.onChange;
 
-  const valueRef = useRef(props.value);
-  valueRef.current = props.value;
+  const valueRef = useRef({ value: props.value });
+  valueRef.current = { value: props.value };
 
   const controller = useMemo(
     () => createController(valueRef, onChangeRef),
