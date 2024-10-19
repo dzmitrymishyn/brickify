@@ -14,14 +14,14 @@
   "dependencies": {
     "@brickifyio/operators": "*",
     "fp-ts": "^2.16.9",
-    "typescript": "^5.5.4"
+    "typescript": "^5.6.3"
   },
   "devDependencies": {
     "@brickifyio/eslint-config": "*",
     "@brickifyio/tsconfig": "*",
     "@testing-library/dom": "^10.4.0",
-    "@testing-library/jest-dom": "^6.5.0",
-    "@types/jest": "^29.5.12",
+    "@testing-library/jest-dom": "^6.6.2",
+    "@types/jest": "^29.5.13",
     "ts-jest": "^29.2.5"
   }
 }
