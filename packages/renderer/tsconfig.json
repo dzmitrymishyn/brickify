@@ -1,0 +1,10 @@
+{
+  "extends": "@brickifyio/tsconfig/react.json",
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

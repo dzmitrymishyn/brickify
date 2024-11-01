@@ -1,0 +1,28 @@
+{
+  "name": "@brickifyio/renderer",
+  "version": "0.0.1",
+  "description": "The library can render and cache a json with different bricks",
+  "keywords": ["brick", "renderer"],
+  "scripts": {
+    "lint": "eslint .",
+    "test:watch": "jest --watch",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@brickifyio/eslint-config": "*",
+    "@brickifyio/operators": "*",
+    "@brickifyio/tsconfig": "*",
+    "typescript": "^5.6.3"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.0.1",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.8.6",
+    "@types/react": "^18.3.12",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "ts-node": "^10.9.2"
+  }
+}
