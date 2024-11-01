@@ -20,8 +20,8 @@
     "@brickifyio/eslint-config": "*",
     "@brickifyio/tsconfig": "*",
     "@testing-library/dom": "^10.4.0",
-    "@testing-library/jest-dom": "^6.6.2",
-    "@types/jest": "^29.5.13",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@types/jest": "^29.5.14",
     "ts-jest": "^29.2.5"
   }
 }
