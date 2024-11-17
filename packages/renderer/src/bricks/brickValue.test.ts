@@ -22,5 +22,7 @@ it('should declare the values are not brick values', () => {
     'lorem ipsum',
   ];
 
-  values.forEach((value) => { expect(isBrickValue(value)).toBeFalsy(); });
+  values.forEach((value) => {
+    expect(isBrickValue(value)).toBeFalsy();
+  });
 });

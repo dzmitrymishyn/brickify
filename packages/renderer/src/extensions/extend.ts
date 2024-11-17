@@ -3,25 +3,26 @@ import { type FC, forwardRef } from 'react';
 import { type Component, getName } from '../components';
 
 export const extend = <C extends Component, Enhancer extends object[]>(
-  brick: C,
+  component: C,
   ...enhancers: Enhancer
 ): C & Enhancer[number] => {
-  // eslint-disable-next-line -- brick is a component so it should have name
+  // eslint-disable-next-line -- component should have name
   const config: { render?: Function } = Object.assign(
-    { displayName: getName(brick) },
+    { displayName: getName(component) },
     ...enhancers,
   );
 
-  const newBrick = typeof brick === 'function'
-    ? brick.bind(null)
+  const newBrick = typeof component === 'function'
+    ? component.bind(null)
     // If it's a forwardRef we need to handle render function that isn't
     // described in the types
     : forwardRef(
-      (props, ref) => (brick as { render: FC<unknown> }).render(props, ref),
+      (props, ref) => (component as { render: FC<unknown> })
+        .render(props, ref),
     );
 
-  // We need to exclude render fn from the old ForwardedRef component
-  const { render: _componentRender, ...oldBrick } = brick as unknown as {
+  // Exclude render fn from the old ForwardedRef component
+  const { render: _componentRender, ...oldBrick } = component as unknown as {
     render: FC<unknown>;
   };
   const { render: _configRender, ...restConfig } = config;
