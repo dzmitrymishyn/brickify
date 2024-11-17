@@ -22,6 +22,7 @@
     "@brickifyio/core": "*",
     "@brickifyio/eslint-config": "*",
     "@brickifyio/operators": "*",
+    "@brickifyio/renderer": "*",
     "@brickifyio/tsconfig": "*",
     "css-select": "^5.1.0",
     "domhandler": "^5.0.3",

@@ -1,5 +1,5 @@
-import { type NamedComponent } from '@brickifyio/core';
 import { array } from '@brickifyio/operators';
+import { type NamedComponent } from '@brickifyio/renderer';
 import {
   isDocument,
   isTag,

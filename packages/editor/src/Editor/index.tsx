@@ -1,45 +1,56 @@
 import {
   type BrickValue,
   type Component,
-  extend,
-  type PropsWithBrick,
+  // extend,
+  // type PropsWithBrick,
   type PropsWithChange,
-  useBrickContext,
-  useBrickRegistry,
-  useCommands,
+  // useBrickContext,
+  // useBrickRegistry,
+  // useCommands,
+  // useMergedRefs,
+  // useRenderer,
+  // withBrickContext,
+  // withBrickName,
+} from '@brickifyio/core';
+import {
+  extend,
+  type PropsWithStoredValue,
   useMergedRefs,
   useRenderer,
-  withBrickContext,
-  withBrickName,
-} from '@brickifyio/core';
+  useRendererRegistry,
+  withName,
+  withRendererContext,
+} from '@brickifyio/renderer';
 import { pipe } from 'fp-ts/lib/function';
 import {
   forwardRef,
 } from 'react';
 
-type Props = PropsWithBrick<BrickValue | BrickValue[]> & PropsWithChange & {
-  value: BrickValue[];
-  bricks?: Component[];
+type Props = PropsWithStoredValue<BrickValue[]> & PropsWithChange & {
+  // value: BrickValue[];
+  components?: Component[];
   style?: object;
 };
 
 const Editor = forwardRef<HTMLDivElement, Props>(({
-  bricks = [],
-  brick,
+  components = [],
+  stored,
   onChange,
   style,
 }, refProp) => {
-  const { editable } = useBrickContext();
+  // const { editable } = useRendererContext();
+  const editable = true;
 
   const ref = useMergedRefs(
     refProp,
-    useBrickRegistry(brick),
-    useCommands(bricks),
+    // useBrickRegistry(storedValue),
+    useRendererRegistry(stored),
+    // useCommands(bricks),
   );
 
   const { value } = useRenderer({
-    brick,
-    slotsMeta: { value: bricks },
+    slotsValue: { value: stored.value },
+    slotsMeta: { value: components },
     props: { onChange },
   });
 
@@ -58,11 +69,9 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   );
 });
 
-Editor.displayName = 'Editor';
-
 export default pipe(
-  extend(Editor, withBrickName('Editor')),
-  withBrickContext,
+  extend(Editor, withName('Editor')),
+  withRendererContext,
 );
 
 export { Editor as EditorWithoutContext };

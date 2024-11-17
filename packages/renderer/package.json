@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "The library can render and cache a json with different bricks",
   "keywords": ["brick", "renderer"],
+  "main": "./index.ts",
   "scripts": {
     "lint": "eslint .",
     "test:watch": "jest --watch",
@@ -12,6 +13,7 @@
     "@brickifyio/eslint-config": "*",
     "@brickifyio/operators": "*",
     "@brickifyio/tsconfig": "*",
+    "fp-ts": "^2.16.9",
     "typescript": "^5.6.3"
   },
   "devDependencies": {
