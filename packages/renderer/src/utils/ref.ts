@@ -1,7 +1,9 @@
-import { type MutableRefObject } from 'react';
+import { createRef, type RefObject } from 'react';
 
-export const makeRef = <Value>(
-  value: Value
-): MutableRefObject<Value> => ({
-  current: value,
-});
+export const makeRef = <Value>(value: Value) => {
+  const ref = createRef<Value>();
+
+  ref.current = value;
+
+  return ref as RefObject<Value>;
+};

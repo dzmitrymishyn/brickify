@@ -1,3 +1,3 @@
-import { type MutableRefObject } from 'react';
+import { type RefObject } from 'react';
 
-export type PathRef = MutableRefObject<() => string[]>;
+export type PathRef = RefObject<() => string[]>;

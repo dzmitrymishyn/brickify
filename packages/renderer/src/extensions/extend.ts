@@ -1,4 +1,4 @@
-import { type FC, forwardRef } from 'react';
+import { type FC, forwardRef, type ForwardRefRenderFunction } from 'react';
 
 import { type Component, getName } from '../components';
 
@@ -17,8 +17,9 @@ export const extend = <C extends Component, Enhancer extends object[]>(
     // If it's a forwardRef we need to handle render function that isn't
     // described in the types
     : forwardRef(
-      (props, ref) => (component as { render: FC<unknown> })
-        .render(props, ref),
+      (props, ref) => (component as {
+        render: ForwardRefRenderFunction<unknown>;
+      }).render(props, ref),
     );
 
   // Exclude render fn from the old ForwardedRef component

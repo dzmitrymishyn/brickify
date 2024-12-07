@@ -16,7 +16,7 @@ export const useRendererRegistry = (
 
   const { store } = useRendererContext();
 
-  const storedBrickRef = useRef<object>();
+  const storedBrickRef = useRef<object>({});
 
   // If we get a new value that doesn't match the old one we need to clear
   // the store from the old value

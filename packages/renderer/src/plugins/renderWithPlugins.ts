@@ -20,8 +20,5 @@ export const renderWithPlugins = (
   element: ReactElement,
 ) => pipe(
   getRenderFromPlugins(plugins),
-  A.reduce(
-    element,
-    (acc, fn) => fn?.(acc) ?? acc,
-  ),
+  A.reduce(element, (acc, fn) => fn?.(acc) ?? acc),
 );
