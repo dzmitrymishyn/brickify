@@ -15,12 +15,12 @@ import {
 import {
   extend,
   type PropsWithStoredValue,
-  useMergedRefs,
   useRenderer,
   useRendererRegistry,
   withProps,
   withRendererContext,
 } from '@brickifyio/renderer';
+import { useMergedRefs } from '@brickifyio/utils/hooks';
 import {
   forwardRef,
 } from 'react';

@@ -9,11 +9,11 @@ import {
   useChangesApplier,
   useChildrenRenderer,
   useCommands,
-  useMergedRefs,
   useMutation,
   withName,
   withShortcuts,
 } from '@brickifyio/core';
+import { useMergedRefs } from '@brickifyio/utils/hooks';
 import { Children, type FC, useCallback, useRef } from 'react';
 
 import { ShiftEnterBr } from './Br';

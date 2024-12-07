@@ -10,12 +10,12 @@ import {
   // useBrickRegistry,
   // useChange,
   // useCommands,
-  useMergedRefs,
   // useMutation,
   // withShortcuts,
 } from '@brickifyio/core';
 // import { pipe } from 'fp-ts/lib/function';
 import { type PropsWithStoredValue, useRendererRegistry, withName } from '@brickifyio/renderer';
+import { useMergedRefs } from '@brickifyio/utils/hooks';
 import { parseDocument } from 'htmlparser2';
 import {
   type ElementType,

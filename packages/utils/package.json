@@ -2,7 +2,8 @@
   "name": "@brickifyio/utils",
   "version": "0.0.1",
   "exports": {
-    "./object": "./object"
+    "./object": "./object",
+    "./hooks": "./hooks"
   },
   "scripts": {
     "lint": "eslint .",
@@ -18,6 +19,10 @@
     "@brickifyio/eslint-config": "*",
     "@brickifyio/tsconfig": "*",
     "@types/jest": "^29.5.14",
+    "@types/react": "^19.0.1",
     "ts-jest": "^29.2.5"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
   }
 }

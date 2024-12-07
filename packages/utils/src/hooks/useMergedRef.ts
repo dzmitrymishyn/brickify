@@ -12,6 +12,5 @@ export const useMergedRefs = <T>(...refs: Ref<T>[]): React.RefCallback<T> =>
         }
       });
     },
-    // eslint-disable-next-line -- here could be any array of deps
     refs,
   );

@@ -1,4 +1,5 @@
 import { tap } from '@brickifyio/operators';
+import { useSyncedRef } from '@brickifyio/utils/hooks';
 import * as A from 'fp-ts/lib/Array';
 import { pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
@@ -57,8 +58,7 @@ export const useChildrenRenderer = <Value = unknown>(
   const previoueValues = useRef<Record<string, Value>>({});
   const previousObjectValues = useRef<Record<string, ObjectValue<Value>>>({});
 
-  const makeRef = useRef(make);
-  makeRef.current = make;
+  const makeRef = useSyncedRef(make);
 
   return useMemo(() => {
     let brickValuesForSlot: Record<string, object>;
@@ -118,5 +118,5 @@ export const useChildrenRenderer = <Value = unknown>(
         ),
       )),
     );
-  }, [slotName, slotValues, store, storedParent, plugins]);
+  }, [slotName, slotValues, store, storedParent, plugins, makeRef]);
 };

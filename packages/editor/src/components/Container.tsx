@@ -1,15 +1,14 @@
 import {
-  useMergedRefs,
-} from '@brickifyio/core';
-import {
   extend,
   type PropsWithStoredValue,
   useRendererRegistry,
   withName,
   withSlots,
 } from '@brickifyio/renderer';
+import { useMergedRefs } from '@brickifyio/utils/hooks';
 import { type FC, type PropsWithChildren, useState } from 'react';
-import { PropsWithChange } from '../changes';
+
+import { type PropsWithChange } from '../changes';
 
 type Props = PropsWithStoredValue & PropsWithChange & PropsWithChildren;
 

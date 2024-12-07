@@ -7,11 +7,11 @@ import {
   useBrickRegistry,
   useChildrenRenderer,
   useCommands,
-  useMergedRefs,
   useMutation,
   withName,
   withShortcuts,
 } from '@brickifyio/core';
+import { useMergedRefs } from '@brickifyio/utils/hooks';
 import { type FC } from 'react';
 
 import Paragraph from '../Paragraph';

@@ -4,6 +4,7 @@
  * added it
  */
 import { array } from '@brickifyio/operators';
+import { useMergedRefs } from '@brickifyio/utils/hooks';
 import {
   forwardRef,
   type ForwardRefExoticComponent,
@@ -15,7 +16,6 @@ import { type BrickValue } from './bricks';
 import { getName } from './components';
 import { RendererContext, useRendererContextUnsafe } from './context';
 import { extend, withBrickName } from './extensions';
-import { useMergedRefs } from './hooks';
 import {
   getPlugins,
   usePluginContextFactory,

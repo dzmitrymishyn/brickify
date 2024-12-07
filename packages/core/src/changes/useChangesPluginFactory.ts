@@ -1,4 +1,5 @@
 import { tap } from '@brickifyio/operators';
+import { useSyncedRef } from '@brickifyio/utils/hooks';
 import { patch } from '@brickifyio/utils/object';
 import * as A from 'fp-ts/lib/Array';
 import { pipe } from 'fp-ts/lib/function';
@@ -8,7 +9,6 @@ import {
   type ReactElement,
   type RefObject,
   useMemo,
-  useRef,
 } from 'react';
 
 import { type Change, type PropsWithChange } from './models';
@@ -108,15 +108,12 @@ export const useChangesPluginFactory: UsePluginFactory<
   Props,
   ChangesController
 > = (props) => {
-  const onChangeRef = useRef(props.onChange);
-  onChangeRef.current = props.onChange;
-
-  const valueRef = useRef({ value: props.value });
-  valueRef.current = { value: props.value };
+  const onChangeRef = useSyncedRef(props.onChange);
+  const valueRef = useSyncedRef({ value: props.value });
 
   const controller = useMemo(
     () => createController(valueRef, onChangeRef),
-    [],
+    [valueRef, onChangeRef],
   );
 
   return useMemo(() => ({

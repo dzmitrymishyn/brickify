@@ -1,3 +1,4 @@
+import { useSyncedRef } from '@brickifyio/utils/hooks';
 import {
   type RefObject,
   useEffect,
@@ -15,10 +16,8 @@ export const useMutation = <Element extends HTMLElement>(
 ): RefObject<Element> => {
   const { subscribe } = useMutations();
 
-  const mutateRef = useRef(mutate);
+  const mutateRef = useSyncedRef(mutate);
   const ref = useRef<Element>(null);
-
-  mutateRef.current = mutate;
 
   useEffect(() => {
     assert(ref.current, 'ref for useMutation should be attached to a node');
@@ -27,7 +26,7 @@ export const useMutation = <Element extends HTMLElement>(
       ref.current,
       (mutation) => mutateRef.current?.(mutation),
     );
-  }, [mutate, subscribe]);
+  }, [mutate, subscribe, mutateRef]);
 
   return ref;
 };

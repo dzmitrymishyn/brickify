@@ -1,3 +1,4 @@
+import { useSyncedRef } from '@brickifyio/utils/hooks';
 import { useRef } from 'react';
 
 // import { useChanges } from './useChangesPluginFactory';
@@ -6,9 +7,10 @@ import { useRef } from 'react';
 export const useChangesApplier = (applyChanges: () => void) => {
   const ref = useRef<HTMLElement>(null);
   // const { subscribeApply } = useChanges();
-  const subscriberRef = useRef<() => void>();
+  const subscriberRef = useSyncedRef<() => void>(applyChanges);
 
-  subscriberRef.current = applyChanges;
+  // Just for usage
+  subscriberRef;
 
   // useEffect(() => {
   //   assert(ref.current, 'useChangesApplier: ref should be attached to a node');
