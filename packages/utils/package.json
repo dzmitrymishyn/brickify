@@ -12,7 +12,7 @@
     "@brickifyio/operators": "*",
     "assert": "^2.1.0",
     "fp-ts": "^2.16.9",
-    "typescript": "^5.6.3"
+    "typescript": "^5.7.2"
   },
   "devDependencies": {
     "@brickifyio/eslint-config": "*",
