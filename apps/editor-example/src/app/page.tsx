@@ -6,10 +6,10 @@
 
 import { extend, withProps, withSlots } from '@brickifyio/core';
 // import { ShiftEnterBr } from '@brickifyio/editor/components/Br';
-// import Container, { Test } from '@brickifyio/editor/components/Container';
+import Container from '@brickifyio/editor/components/Container';
 import Em from '@brickifyio/editor/components/Em';
 import Heading from '@brickifyio/editor/components/Heading';
-import List from '@brickifyio/editor/components/List';
+// import List from '@brickifyio/editor/components/List';
 import Strong from '@brickifyio/editor/components/Strong';
 // import Table from '@brickifyio/editor/components/Table';
 import Editor from '@brickifyio/editor/Editor';
@@ -52,13 +52,13 @@ const Page = () => {
     // },
     // { brick: 'Test', id: newKey(), value: 'Test text', test: '123' },
     { brick: 'Paragraph', id: newKey(), value: 'It is a <strong>paragraph</strong>' },
-    // {
-    //   brick: 'Container',
-    //   id: newKey(),
-    //   children: [
-    //     { brick: 'Paragraph', id: newKey(), value: 'It is a <strong>paragraph</strong>' },
-    //   ],
-    // },
+    {
+      brick: 'Container',
+      id: newKey(),
+      children: [
+        { brick: 'Paragraph', id: newKey(), value: 'It is a <strong>paragraph</strong>' },
+      ],
+    },
     // { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
     // ...Array.from({ length: 2000 }, () => ({
     //   brick: 'Paragraph', id: newKey(), value: `${newKey()} hello world`,
@@ -77,7 +77,7 @@ const Page = () => {
           Heading,
           extend(Paragraph, withProps({ components: [Em, Strong] })),
           // Table,
-          // Container,
+          Container,
           // Test,
         ]}
       />

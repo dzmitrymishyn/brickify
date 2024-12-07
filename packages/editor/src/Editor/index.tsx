@@ -18,13 +18,14 @@ import {
   useMergedRefs,
   useRenderer,
   useRendererRegistry,
-  withName,
+  withProps,
   withRendererContext,
 } from '@brickifyio/renderer';
-import { pipe } from 'fp-ts/lib/function';
 import {
   forwardRef,
 } from 'react';
+
+import { useChangesPluginFactory } from '../changes';
 
 type Props = PropsWithStoredValue<BrickValue[]> & PropsWithChange & {
   // value: BrickValue[];
@@ -35,7 +36,7 @@ type Props = PropsWithStoredValue<BrickValue[]> & PropsWithChange & {
 const Editor = forwardRef<HTMLDivElement, Props>(({
   components = [],
   stored,
-  onChange,
+  // onChange,
   style,
 }, refProp) => {
   // const { editable } = useRendererContext();
@@ -51,7 +52,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   const { value } = useRenderer({
     slotsValue: { value: stored.value },
     slotsMeta: { value: components },
-    props: { onChange },
+    // props: { onChange },
   });
 
   return (
@@ -69,9 +70,10 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   );
 });
 
-export default pipe(
-  extend(Editor, withName('Editor')),
-  withRendererContext,
-);
+Editor.displayName = 'Editor';
+
+export default withRendererContext(Editor, {
+  plugins: [useChangesPluginFactory],
+});
 
 export { Editor as EditorWithoutContext };

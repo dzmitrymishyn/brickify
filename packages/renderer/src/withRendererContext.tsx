@@ -14,7 +14,7 @@ import {
 import { type BrickValue } from './bricks';
 import { getName } from './components';
 import { RendererContext, useRendererContextUnsafe } from './context';
-import { extend, withBrickName, withDisplayName } from './extensions';
+import { extend, withBrickName } from './extensions';
 import { useMergedRefs } from './hooks';
 import {
   getPlugins,
@@ -31,6 +31,7 @@ type Props = {
 
 export function withRendererContext<P extends object>(
   Component: ForwardRefExoticComponent<P>,
+  defaultProps: object,
 ) {
   type ContextProps = Props
     & Omit<P, 'stored' | 'value' | 'editable' | 'plugins'>;
@@ -38,7 +39,7 @@ export function withRendererContext<P extends object>(
     initialProps,
     refProp,
   ) => {
-    const props = initialProps as unknown as ContextProps;
+    const props = { ...defaultProps, ...initialProps } as ContextProps;
     const inheritedContext = useRendererContextUnsafe();
 
     if (inheritedContext) {
@@ -82,10 +83,13 @@ export function withRendererContext<P extends object>(
     );
   });
 
+  WithRendererContext.displayName = (
+    `WithRendererContext(${getName(Component)})`
+  );
+
   return extend(
     WithRendererContext,
     Component,
     withBrickName(getName(Component)),
-    withDisplayName(`WithRendererContext(${getName(Component) ?? 'Unnamed'})`),
   );
 };

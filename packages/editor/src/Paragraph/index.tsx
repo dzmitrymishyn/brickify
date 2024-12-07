@@ -15,7 +15,7 @@ import {
   // withShortcuts,
 } from '@brickifyio/core';
 // import { pipe } from 'fp-ts/lib/function';
-import { PropsWithStoredValue, useRendererRegistry, withName } from '@brickifyio/renderer';
+import { type PropsWithStoredValue, useRendererRegistry, withName } from '@brickifyio/renderer';
 import { parseDocument } from 'htmlparser2';
 import {
   type ElementType,
@@ -45,7 +45,6 @@ const Paragraph: React.FC<Props> = ({
   component: Component = 'div',
   // onChange,
   stored,
-  // brick,
   style,
 }) => {
   const rootRef = useRef<HTMLElement>(null);
