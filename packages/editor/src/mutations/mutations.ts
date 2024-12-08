@@ -1,8 +1,9 @@
-export type Mutation = {
-  remove: boolean;
-  removedNodes: Node[];
-  addedNodes: Node[];
-  target: Node;
+export type ComponentMutations = {
+  mutations: MutationRecord[];
+  removedDescendants: Node[];
+  addedDescendants: Node[];
+  removed: boolean;
+  domNode: Node;
 };
 
-export type MutationHandler = (mutation: Mutation) => void;
+export type ComponentMutationsHandler = (mutation: ComponentMutations) => void;

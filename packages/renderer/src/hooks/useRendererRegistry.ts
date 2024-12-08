@@ -1,3 +1,4 @@
+import { useActionableRef } from '@brickifyio/utils/hooks';
 import { useEffect, useRef } from 'react';
 
 import { useRendererContext } from '../context';
@@ -10,42 +11,49 @@ import assert from 'assert';
  * @returns ref function that should be set to a root DOM node
  */
 export const useRendererRegistry = (
-  stored?: RendererStoreValue<object>,
+  brickRecord?: RendererStoreValue<object>,
 ) => {
-  assert(stored, 'stored value must be specified');
+  assert(
+    brickRecord,
+    'To register brickRecord in the store it must be specified',
+  );
 
   const { store } = useRendererContext();
 
-  const storedBrickRef = useRef<object>({});
+  const brickRef = useRef<object>({});
 
   // If we get a new value that doesn't match the old one we need to clear
   // the store from the old value
-  if (stored.value !== storedBrickRef.current) {
-    const oldBrick = storedBrickRef.current || {};
-    const oldStored = store.get(oldBrick);
-    const newStored = {
-      ...oldStored,
-      ...stored,
+  if (brickRecord.value !== brickRef.current) {
+    const oldBrick = brickRef.current || {};
+    const oldBrickRecord = store.get(oldBrick);
+    const newBrickRecord = {
+      ...oldBrickRecord,
+      ...brickRecord,
     };
 
     store.delete(oldBrick);
-    store.set(newStored.value, newStored);
+    store.set(newBrickRecord.value, newBrickRecord);
 
-    if (newStored.domNode) {
-      store.set(newStored.domNode, newStored);
+    if (newBrickRecord.domNode) {
+      store.set(newBrickRecord.domNode, newBrickRecord);
     }
   }
 
-  storedBrickRef.current = stored.value;
+  brickRef.current = brickRecord.value;
 
-  const ref = (node?: Node | null) => {
-    if (!node || !storedBrickRef.current) {
+  const ref = useActionableRef<Node>((node) => {
+    if (!node || !brickRef.current) {
       return;
     }
 
-    const item = store.get<object>(storedBrickRef.current);
+    const item = store.get<object>(brickRef.current);
 
-    assert(item, 'item should be defined');
+    assert(
+      item,
+      'Cannot store dom node for a brick. '
+        + 'Stored value should be specified before setting dom node.',
+    );
 
     const newBrick: RendererStoreValue<object> = {
       ...item,
@@ -54,17 +62,16 @@ export const useRendererRegistry = (
 
     store.set(newBrick.value, newBrick);
     store.set(node, newBrick);
-  };
+  });
 
   const timer = useRef(0);
-
   useEffect(function destroyStoreItemOnUnmount() {
     if (timer.current) {
       cancelAnimationFrame(timer.current);
     }
 
     return () => {
-      const value = storedBrickRef.current;
+      const value = brickRef.current;
 
       if (!value) {
         return;

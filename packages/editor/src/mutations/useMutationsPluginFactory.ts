@@ -1,98 +1,119 @@
-import { addRange, fromRangeLike } from '@brickifyio/browser/selection';
-import { pipe } from 'fp-ts/lib/function';
+import { createUsePlugin, type UsePluginFactory } from '@brickifyio/renderer';
 import { type RefObject, useEffect, useMemo, useRef } from 'react';
 
-import { type Mutation, type MutationHandler } from './mutations';
+import { type ComponentMutations, type ComponentMutationsHandler } from './mutations';
 import { revertDomByMutations } from './revertDomByMutations';
-import { type ChangesController, useChanges } from '../changes';
-import { createUsePlugin, type UsePluginFactory } from '../plugins';
-import {
-  type BeforeAfterRangesController,
-  useBeforeAfterRanges,
-} from '../ranges';
-import { type BrickStore } from '../store';
 import assert from 'assert';
 
 const token = Symbol('MutationsPlugin');
 
 export const createController = ({
-  store,
-  rangesController,
-  changesController,
+  // rangesController,
+  // changesController,
   observerRef,
 }: {
-  store: BrickStore;
-  rangesController: BeforeAfterRangesController;
-  changesController: ChangesController;
-  observerRef: RefObject<MutationObserver | undefined>;
+  // rangesController: BeforeAfterRangesController;
+  // changesController: ChangesController;
+  observerRef: RefObject<MutationObserver | null>;
 }) => {
-  let recordsToRevert: MutationRecord[] = [];
+  const mutationsToRevert = new Set<MutationRecord>();
+  const subscriptions = new Map<Node, ComponentMutationsHandler>();
 
   const markToRevert = (mutations: MutationRecord[]) => {
-    recordsToRevert.push(...mutations);
+    mutations.forEach((record) => mutationsToRevert.add(record));
   };
 
   const clear = () => {
-    recordsToRevert = [];
+    mutationsToRevert.clear();
     return observerRef.current?.takeRecords();
   };
 
   const handle = (mutations: MutationRecord[]) => {
     try {
-      recordsToRevert = [];
-      const defaultOptions: Omit<Mutation, 'target'> = {
-        remove: false,
-        removedNodes: [],
-        addedNodes: [],
+      mutationsToRevert.clear();
+      const defaultComponentMutation: Omit<ComponentMutations, 'domNode'> = {
+        removed: false,
+        removedDescendants: [],
+        addedDescendants: [],
+        mutations: [],
       };
-      const handleOptions = new Map<Node, Mutation>();
 
-      mutations.forEach((mutation) => {
+      const affectedSubscriptions = new Map<Node, ComponentMutations>();
+      const removedNodesMutations = new Map<Node, ComponentMutations>();
+      const mutationWithoutParent = new Map<Node, MutationRecord[]>();
+
+      mutations.reduceRight<void>((_, mutation) => {
         mutation.removedNodes.forEach((node) => {
-          const storedElement = store.get(node);
-          if (storedElement) {
-            const options = handleOptions.get(node)
-              ?? { ...defaultOptions, target: node };
-            options.remove = true;
-            handleOptions.set(node, options);
+          const hasSubscription = Boolean(subscriptions.get(node));
+
+          if (hasSubscription) {
+            const options = affectedSubscriptions.get(node)
+              ?? { ...defaultComponentMutation, domNode: node };
+
+            options.removed = true;
+            options.mutations.push(mutation);
+
+            affectedSubscriptions.set(node, options);
           }
         });
 
         let current: Node | null = mutation.target;
 
         while (current) {
-          const storedElement = store.get(current);
-          if (storedElement) {
-            const options = handleOptions.get(current)
-              ?? { ...defaultOptions, target: current };
+          const hasSubscription = Boolean(subscriptions.get(current));
 
-            options.removedNodes.push(
+          if (hasSubscription) {
+            const options = affectedSubscriptions.get(current)
+              ?? { ...defaultComponentMutation, domNode: current };
+
+            options.mutations.push(mutation);
+            options.removedDescendants.push(
               ...Array.from(mutation.removedNodes),
             );
-            options.addedNodes.push(...Array.from(mutation.addedNodes));
+            options.addedDescendants.push(...Array.from(mutation.addedNodes));
 
-            handleOptions.set(current, options);
+            mutation.removedNodes.forEach((node) => {
+              removedNodesMutations.set(node, options);
+            });
+
+            affectedSubscriptions.set(current, options);
+            break;
+          }
+
+          if (!current.parentNode) {
+            const storedNodeMutations = mutationWithoutParent.get(current)
+              ?? [];
+            storedNodeMutations.push(mutation);
+            mutationWithoutParent.set(current, storedNodeMutations);
           }
 
           current = current.parentNode ?? null;
         }
+
+        return undefined;
+      }, undefined);
+
+      mutationWithoutParent.forEach((mutation, node) => {
+        removedNodesMutations.get(node)?.mutations.push(...mutation);
       });
 
-      handleOptions.forEach(
+      affectedSubscriptions.forEach(
         (options, node) => {
           try {
             // changesController.markForApply(options.target);
-            store.get(node)?.mutate?.(options);
+            subscriptions.get(node)?.(options);
           } catch (error) {
             // TODO: Add logger
           }
         },
       );
 
-      if (recordsToRevert.length) {
-      // if (changesController.changes().length) {
+      if (mutationsToRevert.size) {
         // rangesController.saveAfter();
-        revertDomByMutations(recordsToRevert);
+        revertDomByMutations(
+          // We can optimize this if we move filtering inside the function
+          mutations.filter((mutation) => mutationsToRevert.has(mutation)),
+        );
         // pipe(
         //   rangesController.getBefore(),
         //   fromRangeLike,
@@ -107,11 +128,11 @@ export const createController = ({
     }
   };
 
-  const subscribe = (element: HTMLElement, mutate: MutationHandler) => {
-    store.update(element, { mutate });
+  const subscribe = (element: Node, mutate: ComponentMutationsHandler) => {
+    subscriptions.set(element, mutate);
 
     return () => {
-      store.update(element, { mutate: undefined });
+      subscriptions.delete(element);
     };
   };
 
@@ -121,32 +142,33 @@ export const createController = ({
 export type MutationsController = ReturnType<typeof createController>;
 
 export const useMutationsPluginFactory: UsePluginFactory<
+  object,
   MutationsController
 > = (_, deps) => {
   const ref = useRef<Element>(null);
-  const rangesController = useBeforeAfterRanges(deps.plugins);
-  const changesController = useChanges(deps.plugins);
-  const observerRef = useRef<MutationObserver>();
+  // const rangesController = useBeforeAfterRanges(deps.plugins);
+  // const changesController = useChanges(deps.plugins);
+  const observerRef = useRef<MutationObserver>(null);
 
   const controller = useMemo(() => createController({
-    rangesController,
-    changesController,
-    store: deps.store,
+    // rangesController,
+    // changesController,
     observerRef,
   }), [
-    rangesController,
-    changesController,
-    deps.store,
+    // rangesController,
+    // changesController,
   ]);
 
   useEffect(() => {
     assert(
       ref.current,
-      'ref for useMutationsController should be attached to a node',
+      'The ref passed to useMutationsController must be attached to a valid '
+        + 'DOM node. Ensure that the ref is properly assigned.',
     );
 
     const observer = new MutationObserver(
-      changesController.handle(controller.handle),
+      controller.handle,
+      // changesController.handle(controller.handle),
     );
 
     observer.observe(ref.current, {
@@ -161,7 +183,7 @@ export const useMutationsPluginFactory: UsePluginFactory<
     observerRef.current = observer;
 
     return () => observer.disconnect();
-  }, [changesController, controller]);
+  }, [controller]);
 
   // When the value is updated we need to clear our MutationsArray.
   // It will be performed after all the React's mutations in the DOM.
@@ -169,7 +191,7 @@ export const useMutationsPluginFactory: UsePluginFactory<
     () => {
       controller.clear();
     },
-    [deps.brick.value, controller]
+    [deps.stored.value, controller]
   );
 
   return {
@@ -179,4 +201,6 @@ export const useMutationsPluginFactory: UsePluginFactory<
   };
 };
 
-export const useMutations = createUsePlugin<MutationsController>(token);
+export const useMutationsController = createUsePlugin<MutationsController>(
+  token,
+);

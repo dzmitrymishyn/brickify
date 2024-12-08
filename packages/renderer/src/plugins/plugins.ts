@@ -9,7 +9,7 @@ export type PluginMap = Record<PluginToken, Plugin>;
 export type Plugin<Controller = unknown> = {
   token: symbol;
   controller: Controller;
-  ref?: RefObject<Node>;
+  ref?: RefObject<Node | null>;
   render?: (element: ReactElement) => ReactElement;
   props?: object | null;
 };

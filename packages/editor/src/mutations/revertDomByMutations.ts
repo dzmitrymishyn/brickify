@@ -4,10 +4,10 @@ import { flow } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
 
 type MutationHandler = (mutation: MutationRecord) => void;
-type HandlersMap = Partial<Record<MutationRecordType, MutationHandler>>;
+type HandlersMap = Record<MutationRecordType, MutationHandler>;
 
 const mutationHandlers: HandlersMap = {
-  characterData: (mutation: MutationRecord) => {
+  characterData: (mutation) => {
     // DOM mutation to revert changes
     mutation.target.textContent = mutation.oldValue;
   },
@@ -25,7 +25,7 @@ const mutationHandlers: HandlersMap = {
       )
     )),
   ),
-  attributes: (mutation: MutationRecord) => {
+  attributes: (mutation) => {
     const name = mutation.attributeName ?? '';
     const target = mutation.target as HTMLElement;
     if (!mutation.oldValue) {

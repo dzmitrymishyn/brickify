@@ -13,11 +13,9 @@ import {
   // withBrickName,
 } from '@brickifyio/core';
 import {
-  extend,
   type PropsWithStoredValue,
   useRenderer,
   useRendererRegistry,
-  withProps,
   withRendererContext,
 } from '@brickifyio/renderer';
 import { useMergedRefs } from '@brickifyio/utils/hooks';
@@ -26,6 +24,7 @@ import {
 } from 'react';
 
 import { useChangesPluginFactory } from '../changes';
+import { useMutationsPluginFactory } from '../mutations';
 
 type Props = PropsWithStoredValue<BrickValue[]> & PropsWithChange & {
   // value: BrickValue[];
@@ -41,11 +40,12 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
 }, refProp) => {
   // const { editable } = useRendererContext();
   const editable = true;
+  const rootRef = useRendererRegistry(stored);
 
   const ref = useMergedRefs(
     refProp,
+    rootRef,
     // useBrickRegistry(storedValue),
-    useRendererRegistry(stored),
     // useCommands(bricks),
   );
 
@@ -73,7 +73,10 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
 Editor.displayName = 'Editor';
 
 export default withRendererContext(Editor, {
-  plugins: [useChangesPluginFactory],
+  plugins: [
+    useChangesPluginFactory,
+    useMutationsPluginFactory,
+  ],
 });
 
 export { Editor as EditorWithoutContext };
