@@ -9,11 +9,9 @@ const token = Symbol('MutationsPlugin');
 
 export const createController = ({
   // rangesController,
-  // changesController,
   observerRef,
 }: {
   // rangesController: BeforeAfterRangesController;
-  // changesController: ChangesController;
   observerRef: RefObject<MutationObserver | null>;
 }) => {
   const mutationsToRevert = new Set<MutationRecord>();
@@ -147,16 +145,13 @@ export const useMutationsPluginFactory: UsePluginFactory<
 > = (_, deps) => {
   const ref = useRef<Element>(null);
   // const rangesController = useBeforeAfterRanges(deps.plugins);
-  // const changesController = useChanges(deps.plugins);
   const observerRef = useRef<MutationObserver>(null);
 
   const controller = useMemo(() => createController({
     // rangesController,
-    // changesController,
     observerRef,
   }), [
     // rangesController,
-    // changesController,
   ]);
 
   useEffect(() => {

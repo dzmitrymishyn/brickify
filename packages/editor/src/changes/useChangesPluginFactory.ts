@@ -6,7 +6,6 @@ import {
 } from '@brickifyio/renderer';
 import { useSyncedRef } from '@brickifyio/utils/hooks';
 import { patch } from '@brickifyio/utils/object';
-// import * as A from 'fp-ts/lib/Array';
 import { pipe } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
 import {
@@ -24,31 +23,13 @@ const createController = (
   valueRef: RefObject<{ value: BrickValue[] }>,
   onChangeRef: RefObject<undefined | ((value: object) => void)>,
 ) => {
-  // const applyHandlers = new Map<Node, () => void>();
-
   let changes: Change[] = [];
-  // let markedForChanges: Node[] = [];
 
   const clear = () => {
     changes = [];
-    // markedForChanges = [];
   };
 
-  /**
-   * When we apply current changes we go through markedForChanges elements
-   * and call apply function in each element if it exists. After that we
-   * patch current value with the updates and pass it to the parent component
-   */
   const apply = () => pipe(
-    // markedForChanges,
-    // A.reduce(new Set<Node>(), (handledNodes, node: Node) => {
-    //   if (!handledNodes.has(node)) {
-    //     handledNodes.add(node);
-    //     applyHandlers.get(node)?.();
-    //   }
-
-    //   return handledNodes;
-    // }),
     changes.length && valueRef.current
       ? patch(valueRef.current, changes)
       : null,
@@ -63,12 +44,6 @@ const createController = (
   return {
     changes: () => changes,
 
-    // markForApply: (node?: Node) => {
-    //   if (node) {
-    //     markedForChanges.push(node);
-    //   }
-    // },
-
     handle: <T>(fn?: (params: T) => void) => (params: T) => {
       clear();
 
@@ -78,15 +53,13 @@ const createController = (
       clear();
     },
 
-    // subscribeApply: subscribeFactory(applyHandlers),
-
     onChange: <Value = unknown>(event: Change<Value>) => {
       if (!event.path) {
         return;
       }
 
       /**
-       * if it's a single onChange not in mutations or commands we just call
+       * If it's a single onChange not in mutations or commands we just call
        * the apply function on the next render.
        */
       if (!changes.length) {

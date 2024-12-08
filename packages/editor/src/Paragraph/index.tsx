@@ -1,11 +1,11 @@
 import {
-  type BrickStoreValue,
   type BrickValue,
   type Component,
   extend,
-  type PropsWithChange,
-} from '@brickifyio/core';
-import { type PropsWithStoredValue, useRendererRegistry, withName } from '@brickifyio/renderer';
+  type PropsWithStoredValue,
+  useRendererRegistry,
+  withName,
+} from '@brickifyio/renderer';
 import { pipe } from 'fp-ts/lib/function';
 import { parseDocument } from 'htmlparser2';
 import {
@@ -16,17 +16,17 @@ import {
 } from 'react';
 
 import { domToReactFactory } from './domToReactFactory';
+import { type PropsWithChange, useOnChange } from '../changes';
 import { useMutation } from '../mutations';
 
 type Value = BrickValue & {
   value: string | number;
 };
 
-type Props = PropsWithStoredValue & PropsWithChange<Value> & {
+type Props = PropsWithStoredValue<Value> & PropsWithChange<Value> & {
   components?: Component[];
   component?: ElementType;
   value: Value['value'];
-  brick: BrickStoreValue;
   style?: object;
 };
 
@@ -34,8 +34,8 @@ const Paragraph: React.FC<Props> = ({
   value,
   components = [],
   component: Component = 'div',
-  // onChange,
-  stored,
+  onChange,
+  stored: brickRecord,
   style,
 }) => {
   // const ref = useRef<HTMLElement>(null);
@@ -45,24 +45,23 @@ const Paragraph: React.FC<Props> = ({
   // const change = useChange(stored as any, onChange);
 
   // const ref = useMergedRefs(
-  //   rootRef,
   //   useCommands(bricks),
   // );
-  const ref = useRendererRegistry(stored);
+  const ref = useRendererRegistry(brickRecord);
 
+  const change = useOnChange(brickRecord, onChange);
   const { markToRevert } = useMutation(ref, (mutation) => {
     markToRevert(mutation.mutations);
 
     if (mutation.removed) {
-      // return change({ type: 'remove' });
-      return;
+      return change({ type: 'remove' });
     }
 
     return pipe(
       mutation.domNode as HTMLElement,
       (element?: HTMLElement | null) => element?.innerHTML ?? '',
       (html) => html === '<br>' ? '' : html,
-      // (newValue) => change({ value: { value: newValue } }),
+      (newValue) => change({ value: { value: newValue } }),
     );
   });
 

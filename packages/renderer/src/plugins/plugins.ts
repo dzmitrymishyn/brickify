@@ -10,7 +10,10 @@ export type Plugin<Controller = unknown> = {
   token: symbol;
   controller: Controller;
   ref?: RefObject<Node | null>;
-  render?: (element: ReactElement) => ReactElement;
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any --
+   * Props for the component could be any object.
+   */
+  render?: (element: ReactElement<any>) => ReactElement;
   props?: object | null;
 };
 
