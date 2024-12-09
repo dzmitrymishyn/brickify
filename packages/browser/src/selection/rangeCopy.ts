@@ -3,12 +3,12 @@ import * as O from 'fp-ts/lib/Option';
 
 import { getRange } from './range';
 
-export type RangeLike = Pick<
+export type RangeCopy = Pick<
   Range,
   'startContainer' | 'endContainer' | 'startOffset' | 'endOffset'
 >;
 
-export const getRangeLike = flow(
+export const getRangeCopy = flow(
   getRange,
   O.fromNullable,
   O.map(({ startContainer, startOffset, endContainer, endOffset }) => ({
@@ -16,18 +16,18 @@ export const getRangeLike = flow(
     startOffset,
     endContainer,
     endOffset,
-  } as RangeLike)),
+  } as RangeCopy)),
   O.toUndefined,
 );
 
-export const fromRangeLike = flow(
-  O.fromNullable<RangeLike | null | undefined>,
+export const fromRangeCopy = flow(
+  O.fromNullable<RangeCopy | null | undefined>,
   O.chain(O.fromPredicate((a) => Boolean(a.startContainer ?? a.endContainer))),
-  O.map((rangeLike: RangeLike) => {
+  O.map((rangeCopy: RangeCopy) => {
     try {
       const range = new Range();
-      range.setStart(rangeLike.startContainer, rangeLike.startOffset);
-      range.setEnd(rangeLike.endContainer, rangeLike.endOffset);
+      range.setStart(rangeCopy.startContainer, rangeCopy.startOffset);
+      range.setEnd(rangeCopy.endContainer, rangeCopy.endOffset);
       return range;
     } catch {
       return null;
@@ -36,9 +36,9 @@ export const fromRangeLike = flow(
   O.toNullable,
 );
 
-export const toRangeLike = flow(
+export const toRangeCopy = flow(
   O.fromNullable<Range | null | undefined>,
-  O.map(({ startContainer, startOffset, endContainer, endOffset}) => ({
+  O.map(({ startContainer, startOffset, endContainer, endOffset }) => ({
     startContainer,
     startOffset,
     endContainer,

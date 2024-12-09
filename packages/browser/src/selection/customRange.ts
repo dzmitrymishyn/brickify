@@ -2,12 +2,17 @@ import { flow } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
 
 import { getCursorPosition, getNodeByOffset } from './offset';
-import { fromRangeLike } from './rangeLike';
+import { fromRangeCopy } from './rangeCopy';
+
+type CustomPathSegment = {
+  offset: number;
+  childOffset: number;
+  childOffsetType: 'start' | 'end' | 'center';
+};
 
 export type CustomRange = {
-  startPath: { offset: number, childOffset: number, childOffsetType: 'start' | 'end' | 'center' };
-  endPath: { offset: number, childOffset: number, childOffsetType: 'start' | 'end' | 'center' };
-  // endPath: number[];
+  startPath: CustomPathSegment;
+  endPath: CustomPathSegment;
   container: Node;
 };
 
@@ -71,7 +76,7 @@ export const fromCustomRange = flow(
   //   makePath(customRange.container, customRange.startPath)),
   // O.bind('end', ({ customRange }) =>
   //   makePath(customRange.container, customRange.endPath)),
-  O.map(({ start, end }) => fromRangeLike({
+  O.map(({ start, end }) => fromRangeCopy({
     startContainer: start.node,
     startOffset: start.offset,
     endContainer: end.node,

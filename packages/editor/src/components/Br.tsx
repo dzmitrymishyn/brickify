@@ -1,4 +1,4 @@
-// import { fromRangeLike } from '@brickifyio/browser/selection';
+// import { fromRangeCopy } from '@brickifyio/browser/selection';
 // import { isText } from '@brickifyio/browser/utils';
 // import {
 //   extend,
@@ -12,7 +12,7 @@ import React from 'react';
 const Br: React.FC = () => <br />;
 
 // const addBr = ({ range, resultRange, results }: HandleCommandOptions) => {
-//   const newRange = fromRangeLike(range());
+//   const newRange = fromRangeCopy(range());
 
 //   if (newRange) {
 //     const brNode = document.createElement('br');

@@ -3,8 +3,8 @@ import {
   type CustomRange,
   fromCustomRange,
   getRange,
-  getRangeLike,
-  type RangeLike,
+  getRangeCopy,
+  type RangeCopy,
   toCustomRange,
 } from '@brickifyio/browser/selection';
 import { pipe } from 'fp-ts/lib/function';
@@ -26,12 +26,12 @@ const token = Symbol('BeforeAfterRangesPlugin');
 const createController = (
   ref: RefObject<HTMLElement>,
   ranges: MutableRefObject<{
-    before?: RangeLike;
+    before?: RangeCopy;
     after?: CustomRange | PathRange;
   }>,
 ) => ({
   saveBefore() {
-    ranges.current.before = getRangeLike();
+    ranges.current.before = getRangeCopy();
   },
   getAfter() {
     return ranges.current.after;
@@ -64,7 +64,7 @@ export const useBeforeAfterRangesPluginFactory: UsePluginFactory<
 > = ({ value }, deps) => {
   const ref = useRef<HTMLElement>(null);
   const ranges = useRef<{
-    before?: RangeLike;
+    before?: RangeCopy;
     after?: CustomRange | PathRange;
   }>({
     before: undefined,

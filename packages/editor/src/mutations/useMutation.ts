@@ -9,7 +9,7 @@ export const useMutation = (
   ref: RefObject<Node | null>,
   mutate: ComponentMutationsHandler,
 ) => {
-  const controller = useMutationsController();
+  const { markToRevert, subscribe } = useMutationsController();
   const mutateRef = useSyncedRef(mutate);
 
   useEffect(() => {
@@ -19,12 +19,12 @@ export const useMutation = (
         + 'attached.',
     );
 
-    return controller.subscribe(
+    return subscribe(
       ref.current,
       // Each time we can use new function
       (mutation) => mutateRef.current?.(mutation),
     );
-  }, [controller, mutateRef, ref]);
+  }, [subscribe, mutateRef, ref]);
 
-  return controller;
+  return { markToRevert };
 };

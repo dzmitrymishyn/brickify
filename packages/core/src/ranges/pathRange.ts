@@ -1,6 +1,6 @@
 export type PathRangeItem = {
-  path: string[];
-  offset: number;
+  path: string[]; // path in tree to a component
+  offset: number; // offset inside the component
 };
 
 export type PathRange = {

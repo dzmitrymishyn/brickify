@@ -1,4 +1,4 @@
-import { addRange, fromRangeLike } from '@brickifyio/browser/selection';
+import { addRange, fromRangeCopy } from '@brickifyio/browser/selection';
 import { pipe } from 'fp-ts/lib/function';
 import { type RefObject, useEffect, useMemo, useRef } from 'react';
 
@@ -82,7 +82,7 @@ export const createController = ({
         revertDomByMutations(mutations);
         pipe(
           rangesController.getBefore(),
-          fromRangeLike,
+          fromRangeCopy,
           addRange,
           () => rangesController.clearBefore(),
         );

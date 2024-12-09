@@ -1,17 +1,37 @@
+import {
+  addRange,
+  fromRangeCopy,
+  getRange,
+  type RangeCopy,
+  toCustomRange,
+} from '@brickifyio/browser/selection';
 import { createUsePlugin, type UsePluginFactory } from '@brickifyio/renderer';
+import { pipe } from 'fp-ts/lib/function';
 import { type RefObject, useEffect, useMemo, useRef } from 'react';
 
-import { type ComponentMutations, type ComponentMutationsHandler } from './mutations';
+import {
+  type ComponentMutations,
+  type ComponentMutationsHandler,
+} from './mutations';
 import { revertDomByMutations } from './revertDomByMutations';
+import { useBeforeMutationRangeSaver } from './useBeforeMutationRangeSaver';
+import { useChanges } from '../changes';
+import {
+  AFTER_CHANGE,
+  type RangesController,
+  useRangesController,
+} from '../ranges';
 import assert from 'assert';
 
 const token = Symbol('MutationsPlugin');
 
 export const createController = ({
-  // rangesController,
+  ref,
+  rangesController,
   observerRef,
 }: {
-  // rangesController: BeforeAfterRangesController;
+  ref: RefObject<Element>;
+  rangesController: RangesController;
   observerRef: RefObject<MutationObserver | null>;
 }) => {
   const mutationsToRevert = new Set<MutationRecord>();
@@ -107,17 +127,17 @@ export const createController = ({
       );
 
       if (mutationsToRevert.size) {
-        // rangesController.saveAfter();
+        rangesController.set(AFTER_CHANGE, toCustomRange(ref.current)(getRange()));
         revertDomByMutations(
           // We can optimize this if we move filtering inside the function
           mutations.filter((mutation) => mutationsToRevert.has(mutation)),
         );
-        // pipe(
-        //   rangesController.getBefore(),
-        //   fromRangeLike,
-        //   addRange,
-        //   () => rangesController.clearBefore(),
-        // );
+        pipe(
+          rangesController.get('beforeMutation') as RangeCopy,
+          fromRangeCopy,
+          addRange,
+          () => rangesController.delete('beforeMutation'),
+        );
       }
     } catch (error) {
       // TODO: Add logger
@@ -140,19 +160,19 @@ export const createController = ({
 export type MutationsController = ReturnType<typeof createController>;
 
 export const useMutationsPluginFactory: UsePluginFactory<
-  object,
+  { value: unknown },
   MutationsController
-> = (_, deps) => {
+> = ({ value }, deps) => {
+  const changesController = useChanges(deps.plugins);
   const ref = useRef<Element>(null);
-  // const rangesController = useBeforeAfterRanges(deps.plugins);
+  const rangesController = useRangesController(deps.plugins);
   const observerRef = useRef<MutationObserver>(null);
 
   const controller = useMemo(() => createController({
-    // rangesController,
+    ref,
+    rangesController,
     observerRef,
-  }), [
-    // rangesController,
-  ]);
+  }), [rangesController]);
 
   useEffect(() => {
     assert(
@@ -162,8 +182,7 @@ export const useMutationsPluginFactory: UsePluginFactory<
     );
 
     const observer = new MutationObserver(
-      controller.handle,
-      // changesController.handle(controller.handle),
+      changesController.handle(controller.handle),
     );
 
     observer.observe(ref.current, {
@@ -178,7 +197,7 @@ export const useMutationsPluginFactory: UsePluginFactory<
     observerRef.current = observer;
 
     return () => observer.disconnect();
-  }, [controller]);
+  }, [controller, changesController]);
 
   // When the value is updated we need to clear our MutationsArray.
   // It will be performed after all the React's mutations in the DOM.
@@ -186,8 +205,10 @@ export const useMutationsPluginFactory: UsePluginFactory<
     () => {
       controller.clear();
     },
-    [deps.stored.value, controller]
+    [value, controller],
   );
+
+  useBeforeMutationRangeSaver(ref, rangesController);
 
   return {
     token,

@@ -1,4 +1,4 @@
-import { fromRangeLike, getNodeByOffset } from '@brickifyio/browser/selection';
+import { fromRangeCopy, getNodeByOffset } from '@brickifyio/browser/selection';
 import { pipe } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
 
@@ -54,6 +54,6 @@ export const fromPathRange = (
     endContainer: end.node,
     endOffset: end.offset,
   })),
-  O.map(fromRangeLike),
+  O.map(fromRangeCopy),
   O.getOrElseW(() => null),
 );
