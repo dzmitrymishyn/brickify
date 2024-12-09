@@ -25,7 +25,7 @@ import {
 
 import { useChangesPluginFactory } from '../changes';
 import { useMutationsPluginFactory } from '../mutations';
-import { useRangesPluginFactory } from '../ranges';
+import { useSelectionPluginFactory } from '../selection';
 
 type Props = PropsWithStoredValue<BrickValue[]> & PropsWithChange & {
   // value: BrickValue[];
@@ -76,7 +76,7 @@ Editor.displayName = 'Editor';
 export default withRendererContext(Editor, {
   plugins: [
     useChangesPluginFactory,
-    useRangesPluginFactory,
+    useSelectionPluginFactory,
     useMutationsPluginFactory,
   ],
 });

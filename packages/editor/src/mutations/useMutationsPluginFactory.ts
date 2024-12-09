@@ -1,12 +1,8 @@
 import {
-  addRange,
-  fromRangeCopy,
   getRange,
-  type RangeCopy,
   toCustomRange,
 } from '@brickifyio/browser/selection';
 import { createUsePlugin, type UsePluginFactory } from '@brickifyio/renderer';
-import { pipe } from 'fp-ts/lib/function';
 import { type RefObject, useEffect, useMemo, useRef } from 'react';
 
 import {
@@ -16,22 +12,18 @@ import {
 import { revertDomByMutations } from './revertDomByMutations';
 import { useBeforeMutationRangeSaver } from './useBeforeMutationRangeSaver';
 import { useChanges } from '../changes';
-import {
-  AFTER_CHANGE,
-  type RangesController,
-  useRangesController,
-} from '../ranges';
+import { RangeType, type SelectionController, useSelectionController } from '../selection';
 import assert from 'assert';
 
 const token = Symbol('MutationsPlugin');
 
 export const createController = ({
   ref,
-  rangesController,
+  selectionController,
   observerRef,
 }: {
-  ref: RefObject<Element>;
-  rangesController: RangesController;
+  ref: RefObject<Element | null>;
+  selectionController: SelectionController;
   observerRef: RefObject<MutationObserver | null>;
 }) => {
   const mutationsToRevert = new Set<MutationRecord>();
@@ -127,17 +119,15 @@ export const createController = ({
       );
 
       if (mutationsToRevert.size) {
-        rangesController.set(AFTER_CHANGE, toCustomRange(ref.current)(getRange()));
+        selectionController.range.save(
+          RangeType.AfterValueChange,
+          toCustomRange(ref.current!)(getRange()),
+        );
         revertDomByMutations(
           // We can optimize this if we move filtering inside the function
           mutations.filter((mutation) => mutationsToRevert.has(mutation)),
         );
-        pipe(
-          rangesController.get('beforeMutation') as RangeCopy,
-          fromRangeCopy,
-          addRange,
-          () => rangesController.delete('beforeMutation'),
-        );
+        selectionController.range.restore(RangeType.Temp);
       }
     } catch (error) {
       // TODO: Add logger
@@ -164,15 +154,15 @@ export const useMutationsPluginFactory: UsePluginFactory<
   MutationsController
 > = ({ value }, deps) => {
   const changesController = useChanges(deps.plugins);
+  const selectionController = useSelectionController(deps.plugins);
   const ref = useRef<Element>(null);
-  const rangesController = useRangesController(deps.plugins);
   const observerRef = useRef<MutationObserver>(null);
 
   const controller = useMemo(() => createController({
     ref,
-    rangesController,
+    selectionController,
     observerRef,
-  }), [rangesController]);
+  }), [selectionController]);
 
   useEffect(() => {
     assert(
@@ -208,7 +198,7 @@ export const useMutationsPluginFactory: UsePluginFactory<
     [value, controller],
   );
 
-  useBeforeMutationRangeSaver(ref, rangesController);
+  useBeforeMutationRangeSaver(ref, selectionController);
 
   return {
     token,

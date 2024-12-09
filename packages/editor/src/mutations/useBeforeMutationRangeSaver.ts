@@ -2,11 +2,11 @@ import { getRangeCopy } from '@brickifyio/browser/selection';
 import { useRendererContextUnsafe } from '@brickifyio/renderer';
 import { type RefObject, useEffect } from 'react';
 
-import { type RangesController } from '../ranges';
+import { RangeType, type SelectionController } from '../selection';
 
 export const useBeforeMutationRangeSaver = (
   ref: RefObject<Node | null>,
-  rangesController: RangesController,
+  selectionController: SelectionController,
 ) => {
   const hasInheritedContext = useRendererContextUnsafe();
 
@@ -23,7 +23,7 @@ export const useBeforeMutationRangeSaver = (
     ];
 
     const saveSelection = () => {
-      rangesController.set('beforeMutation', getRangeCopy());
+      selectionController.range.save(RangeType.Temp, getRangeCopy());
     };
 
     // Add event listeners to save the selection range before any mutation
@@ -36,5 +36,5 @@ export const useBeforeMutationRangeSaver = (
         (event) => element.removeEventListener(event, saveSelection, true),
       );
     };
-  }, [ref, hasInheritedContext, rangesController]);
+  }, [ref, hasInheritedContext, selectionController]);
 };

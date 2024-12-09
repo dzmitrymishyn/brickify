@@ -1,7 +1,7 @@
 import { flow } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
 
-import { getRange } from './range';
+import { createRange, getRange } from './range';
 
 export type RangeCopy = Pick<
   Range,
@@ -23,16 +23,12 @@ export const getRangeCopy = flow(
 export const fromRangeCopy = flow(
   O.fromNullable<RangeCopy | null | undefined>,
   O.chain(O.fromPredicate((a) => Boolean(a.startContainer ?? a.endContainer))),
-  O.map((rangeCopy: RangeCopy) => {
-    try {
-      const range = new Range();
-      range.setStart(rangeCopy.startContainer, rangeCopy.startOffset);
-      range.setEnd(rangeCopy.endContainer, rangeCopy.endOffset);
-      return range;
-    } catch {
-      return null;
-    }
-  }),
+  O.map((rangeCopy: RangeCopy) => createRange(
+    rangeCopy.startContainer,
+    rangeCopy.endContainer,
+    rangeCopy.startOffset,
+    rangeCopy.endOffset,
+  )),
   O.toNullable,
 );
 
