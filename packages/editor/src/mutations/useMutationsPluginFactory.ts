@@ -12,7 +12,7 @@ import {
 import { revertDomByMutations } from './revertDomByMutations';
 import { useBeforeMutationRangeSaver } from './useBeforeMutationRangeSaver';
 import { useChanges } from '../changes';
-import { RangeType, type SelectionController, useSelectionController } from '../selection';
+import { type SelectionController, useSelectionController } from '../selection';
 import assert from 'assert';
 
 const token = Symbol('MutationsPlugin');
@@ -119,15 +119,15 @@ export const createController = ({
       );
 
       if (mutationsToRevert.size) {
-        selectionController.range.save(
-          RangeType.AfterValueChange,
-          toCustomRange(ref.current!)(getRange()),
-        );
+        const nextRange = toCustomRange(ref.current!)(getRange());
+
         revertDomByMutations(
           // We can optimize this if we move filtering inside the function
           mutations.filter((mutation) => mutationsToRevert.has(mutation)),
         );
-        selectionController.range.restore(RangeType.Temp);
+
+        selectionController.apply();
+        selectionController.storeRange(nextRange, 'applyOnRender');
       }
     } catch (error) {
       // TODO: Add logger

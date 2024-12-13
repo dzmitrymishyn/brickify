@@ -1,30 +1,34 @@
-import { type AnyRange, getRange, restoreRange } from '@brickifyio/browser/selection';
+import { type AnyRange, restoreRange } from '@brickifyio/browser/selection';
 import { createUsePlugin, type UsePluginFactory } from '@brickifyio/renderer';
 import { useMemo } from 'react';
 
-import { useAfterMutationRangeRestore } from './useAfterMutationRangeRestore';
-import { type RangeType } from './utils';
+import { useAfterRenderRangeRestore } from './useAfterRenderRangeRestore';
 
 const token = Symbol('SelectionPlugin');
 
-const createController = () => {
-  const rangesStore: Partial<Record<RangeType, AnyRange>> = {};
+type SelectionRangeApplier = 'applyOnRender' | null;
 
-  const clearRange = (type: RangeType) => {
-    rangesStore[type] = undefined;
-  };
+const createController = () => {
+  let range: AnyRange | null = null;
+  let applier: SelectionRangeApplier = null;
 
   return {
-    range: {
-      restore: (type: RangeType) => {
-        restoreRange(rangesStore[type]);
-        clearRange(type);
-      },
-      clear: clearRange,
-      save: (type: RangeType, range: AnyRange | null = getRange()) => {
-        rangesStore[type] = range ?? undefined;
-      },
-      get: (type: RangeType) => rangesStore[type],
+    apply: () => {
+      restoreRange(range);
+    },
+    storeRange: (
+      newRange: AnyRange | null = null,
+      newApplier: SelectionRangeApplier = null,
+    ) => {
+      range = newRange;
+      applier = newApplier;
+    },
+    getRange: () => range,
+    applyRangeIfActive: (neededApplier: NonNullable<SelectionRangeApplier>) => {
+      if (neededApplier === applier) {
+        restoreRange(range);
+        applier = null;
+      }
     },
   };
 };
@@ -37,7 +41,7 @@ export const useSelectionPluginFactory: UsePluginFactory<
 > = ({ value }) => {
   const controller = useMemo(createController, []);
 
-  useAfterMutationRangeRestore(controller.range.restore, value);
+  useAfterRenderRangeRestore(controller.applyRangeIfActive, value);
 
   return {
     controller,

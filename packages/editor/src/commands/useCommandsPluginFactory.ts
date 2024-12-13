@@ -1,6 +1,7 @@
 import { match } from '@brickifyio/browser/hotkeys';
 import {
   type AnyRange,
+  anyRangeToRange,
   getRange,
   isElementWithinRange,
 } from '@brickifyio/browser/selection';
@@ -13,7 +14,7 @@ import { type Command } from './models';
 import { useDisallowHotkeys } from './useDisallowHotkeys';
 import { useChanges } from '../changes';
 import { useMutationsController } from '../mutations';
-import { RangeType, useSelectionController } from '../selection';
+import { useSelectionController } from '../selection';
 import assert from 'assert';
 
 const token = Symbol('CommandsPlugin');
@@ -21,26 +22,31 @@ const token = Symbol('CommandsPlugin');
 const metaKeyDisallowList = [
   'enter',
   'shift+enter',
-  ...[
+  [
     'z', // undo
     'b', // bold
     'i', // italic
     'u', // underline
   ].map((key) => [`ctrl+${key}`, `cmd+${key}`]),
-].flat();
+].flat(2);
 
 const createController = () => {
-  const store = new Map<Node, Command[]>();
+  const subscriptions = new Map<Node, Command[]>();
+  // let resuts: Record<string, unknown> = {};
+  // let range: Range | null = null;
 
   const subscribe = (element: Node, commands: Command[]) => {
-    store.set(element, commands);
+    subscriptions.set(element, commands);
 
     return () => {
-      store.delete(element);
+      subscriptions.delete(element);
     };
   };
 
-  return { subscribe, store };
+  return {
+    subscribe,
+    subscriptions,
+  };
 };
 
 export type CommandsController = ReturnType<typeof createController>;
@@ -113,7 +119,7 @@ export const useCommandsPluginFactory: UsePluginFactory<
           break;
         }
 
-        const commands = controller.store.get(current);
+        const commands = controller.subscriptions.get(current);
 
         if (commands?.length) {
           const options = {
@@ -124,7 +130,6 @@ export const useCommandsPluginFactory: UsePluginFactory<
             results: getOrUpdateResults,
             resultRange: setResultRange,
             range: getOrUpdateRange,
-            getFromStore: deps.store.get,
 
             stopBrickPropagation: () => getOrUpdateResults({
               stopPropagation: true,
@@ -132,8 +137,6 @@ export const useCommandsPluginFactory: UsePluginFactory<
             stopImmediatePropagation: () => getOrUpdateResults({
               stopImmediatePropagation: true,
             }),
-
-            onChange: changesController.onChange,
           };
 
           commands.find((handler) => {
@@ -162,17 +165,14 @@ export const useCommandsPluginFactory: UsePluginFactory<
         }
       }
 
-      const mutationsAfterCommands = mutationsController.clear() ?? [];
+      const nextRange = anyRangeToRange(resultRange);
 
-      if (resultRange) {
-        selectionController.range.save(RangeType.AfterValueChange, resultRange ?? null);
-      }
-      const nextRange = selectionController.range.get(RangeType.AfterValueChange);
+      const mutationsAfterCommands = mutationsController.clear() ?? [];
 
       mutationsController.handle(mutationsAfterCommands);
 
-      if (resultRange) {
-        selectionController.range.save(RangeType.AfterValueChange, nextRange);
+      if (nextRange) {
+        selectionController.storeRange(nextRange, 'applyOnRender');
       }
 
       changesController.apply();
@@ -184,7 +184,7 @@ export const useCommandsPluginFactory: UsePluginFactory<
     changesController,
     selectionController,
     mutationsController,
-    controller.store,
+    controller.subscriptions,
     deps.store,
   ]);
 
@@ -197,4 +197,6 @@ export const useCommandsPluginFactory: UsePluginFactory<
   };
 };
 
-export const useCommandsController = createUsePlugin<CommandsController>(token);
+export const useCommandsController = createUsePlugin<CommandsController>(
+  token,
+);

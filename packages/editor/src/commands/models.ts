@@ -1,7 +1,4 @@
 import { type AnyRange } from '@brickifyio/browser/selection';
-import { type RendererStore } from '@brickifyio/renderer';
-
-import { type OnChange } from '../changes';
 
 export type ResultsCallback = {
   (name: string): unknown;
@@ -18,8 +15,6 @@ export type HandleCommandOptions = {
   results: ResultsCallback;
   resultRange: (range?: AnyRange) => void;
   range: RangeCallback;
-  getFromStore: RendererStore['get'];
-  onChange: OnChange;
 
   stopBrickPropagation: () => void;
   stopImmediatePropagation: () => void;

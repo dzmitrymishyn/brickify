@@ -1,24 +1,29 @@
-import { pipe } from 'fp-ts/lib/function';
+import { flow, pipe } from 'fp-ts/lib/function';
 
 import { fromCustomRange } from './customRange';
 import { type AnyRange } from './models';
 import { addRange } from './range';
 import { fromRangeCopy } from './rangeCopy';
 
-export const restoreRange = (
+export const anyRangeToRange = (
   range?: null | AnyRange,
 ) => {
   if (!range || typeof range !== 'object') {
-    return false;
+    return null;
   }
 
   if ('startContainer' in range && 'endContainer' in range) {
-    return pipe(range, fromRangeCopy, addRange);
+    return pipe(range, fromRangeCopy);
   }
 
   if ('container' in range) {
-    return pipe(range, fromCustomRange, addRange);
+    return pipe(range, fromCustomRange);
   }
 
   throw new Error('Unknown range type', range);
 };
+
+export const restoreRange = flow(
+  anyRangeToRange,
+  addRange,
+);

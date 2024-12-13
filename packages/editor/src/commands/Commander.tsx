@@ -25,6 +25,11 @@ export type CommanderProps = {
   containerRef: RefObject<Node | null>;
 };
 
+/**
+ * The component is used for safe register of N hooks. You can pass N
+ * components with a hook and it render them in its own components. It secure
+ * components modification (you can remove or add components) without errors.
+ */
 export const Commander: React.FC<CommanderProps> = ({
   components,
   containerRef,

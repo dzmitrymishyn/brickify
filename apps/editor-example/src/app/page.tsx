@@ -73,7 +73,7 @@ const Page = () => {
         style={{ padding: 20 }}
         // eslint-disable-next-line -- TODO: check it
         value={state as any}
-        onChange={(newValue) => { setState(newValue); }}
+        onChange={setState}
         components={[
           // List,
           Heading,
