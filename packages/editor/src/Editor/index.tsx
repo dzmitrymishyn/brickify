@@ -24,7 +24,8 @@ import {
 } from 'react';
 
 import { useChangesPluginFactory } from '../changes';
-import { useMutationsPluginFactory } from '../mutations';
+import { Commander, useCommandsPluginFactory } from '../commands';
+import { useMutation, useMutationsPluginFactory } from '../mutations';
 import { useSelectionPluginFactory } from '../selection';
 
 type Props = PropsWithStoredValue<BrickValue[]> & PropsWithChange & {
@@ -36,7 +37,7 @@ type Props = PropsWithStoredValue<BrickValue[]> & PropsWithChange & {
 const Editor = forwardRef<HTMLDivElement, Props>(({
   components = [],
   stored,
-  // onChange,
+  onChange,
   style,
 }, refProp) => {
   // const { editable } = useRendererContext();
@@ -50,6 +51,10 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
     // useCommands(bricks),
   );
 
+  const { markToRevert } = useMutation(rootRef, ({ mutations }) => {
+    markToRevert(mutations);
+  });
+
   const { value } = useRenderer({
     slotsValue: { value: stored.value },
     slotsMeta: { value: components },
@@ -57,17 +62,20 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   });
 
   return (
-    <div
-      ref={ref}
-      data-brick="editor"
-      style={style}
-      {...editable && {
-        contentEditable: true,
-        suppressContentEditableWarning: true,
-      }}
-    >
-      {value}
-    </div>
+    <>
+      <Commander containerRef={rootRef} components={components} />
+      <div
+        ref={ref}
+        data-brick="editor"
+        style={style}
+        {...editable && {
+          contentEditable: true,
+          suppressContentEditableWarning: true,
+        }}
+      >
+        {value}
+      </div>
+    </>
   );
 });
 
@@ -78,6 +86,7 @@ export default withRendererContext(Editor, {
     useChangesPluginFactory,
     useSelectionPluginFactory,
     useMutationsPluginFactory,
+    useCommandsPluginFactory,
   ],
 });
 

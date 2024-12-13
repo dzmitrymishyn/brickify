@@ -79,7 +79,7 @@ const Page = () => {
           Heading,
           extend(Paragraph, withProps({ components: [Em, Strong] })),
           // Table,
-          Container,
+          // Container,
           // Test,
         ]}
       />

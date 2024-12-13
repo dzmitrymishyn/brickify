@@ -44,14 +44,7 @@ const createController = (
   return {
     changes: () => changes,
 
-    handle: <T>(fn?: (params: T) => void) => (params: T) => {
-      clear();
-
-      fn?.(params);
-      apply();
-
-      clear();
-    },
+    apply,
 
     onChange: <Value = unknown>(event: Change<Value>) => {
       if (!event.path) {

@@ -1,6 +1,6 @@
 import { type FC, forwardRef, type ForwardRefRenderFunction } from 'react';
 
-import { type Component, getName } from '../components';
+import { type Component } from '../components';
 
 export const extend = <C extends Component, Enhancer extends object[]>(
   component: C,
@@ -8,7 +8,7 @@ export const extend = <C extends Component, Enhancer extends object[]>(
 ): C & Enhancer[number] => {
   // eslint-disable-next-line -- component should have name
   const config: { render?: Function } = Object.assign(
-    { displayName: getName(component) },
+    {},
     ...enhancers,
   );
 

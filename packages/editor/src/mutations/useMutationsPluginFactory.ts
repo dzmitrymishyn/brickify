@@ -3,7 +3,7 @@ import {
   toCustomRange,
 } from '@brickifyio/browser/selection';
 import { createUsePlugin, type UsePluginFactory } from '@brickifyio/renderer';
-import { type RefObject, useEffect, useMemo, useRef } from 'react';
+import { type RefObject, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
 import {
   type ComponentMutations,
@@ -164,6 +164,8 @@ export const useMutationsPluginFactory: UsePluginFactory<
     observerRef,
   }), [selectionController]);
 
+  const renderingPhase = useRef(false);
+
   useEffect(() => {
     assert(
       ref.current,
@@ -171,9 +173,14 @@ export const useMutationsPluginFactory: UsePluginFactory<
         + 'DOM node. Ensure that the ref is properly assigned.',
     );
 
-    const observer = new MutationObserver(
-      changesController.handle(controller.handle),
-    );
+    const observer = new MutationObserver((mutation) => {
+      if (renderingPhase.current) {
+        return;
+      }
+
+      controller.handle(mutation);
+      changesController.apply();
+    });
 
     observer.observe(ref.current, {
       subtree: true,
@@ -189,11 +196,15 @@ export const useMutationsPluginFactory: UsePluginFactory<
     return () => observer.disconnect();
   }, [controller, changesController]);
 
+  useLayoutEffect(() => {
+    renderingPhase.current = true;
+  }, [value]);
   // When the value is updated we need to clear our MutationsArray.
   // It will be performed after all the React's mutations in the DOM.
   useEffect(
     () => {
       controller.clear();
+      renderingPhase.current = false;
     },
     [value, controller],
   );

@@ -24,6 +24,7 @@ const createController = () => {
       save: (type: RangeType, range: AnyRange | null = getRange()) => {
         rangesStore[type] = range ?? undefined;
       },
+      get: (type: RangeType) => rangesStore[type],
     },
   };
 };

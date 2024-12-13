@@ -17,6 +17,7 @@ import {
 
 import { domToReactFactory } from './domToReactFactory';
 import { type PropsWithChange, useOnChange } from '../changes';
+import { Commander } from '../commands';
 import { useMutation } from '../mutations';
 
 type Value = BrickValue & {
@@ -45,8 +46,7 @@ const Paragraph: React.FC<Props> = ({
   // const change = useChange(stored as any, onChange);
 
   // const ref = useMergedRefs(
-  //   useCommands(bricks),
-  // );
+    // );
   const ref = useRendererRegistry(brickRecord);
 
   const change = useOnChange(brickRecord, onChange);
@@ -86,6 +86,7 @@ const Paragraph: React.FC<Props> = ({
         suppressContentEditableWarning: true,
       }}
     >
+      <Commander containerRef={ref} components={components} />
       {/* <span> */}
       {nodes.length ? nodes : <br />}
       {/* </span>

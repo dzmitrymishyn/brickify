@@ -1,6 +1,6 @@
 // import { reshape } from '@brickifyio/browser/manipulations';
 // import { extend, withShortcuts } from '@brickifyio/core';
-import { extend } from '@brickifyio/renderer';
+import { extend, withName } from '@brickifyio/renderer';
 import { compile } from 'css-select';
 import React from 'react';
 import { type PropsWithChildren } from 'react';
@@ -11,6 +11,7 @@ const Strong: React.FC<PropsWithChildren> = ({ children }) => (
 
 export default extend(
   Strong,
+  withName('Strong'),
   { is: compile('strong') },
   // withShortcuts([
   //   {
