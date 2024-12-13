@@ -1,5 +1,4 @@
 import { reshape } from '@brickifyio/browser/manipulations';
-// import { extend, withShortcuts } from '@brickifyio/core';
 import { extend, withName } from '@brickifyio/renderer';
 import { compile } from 'css-select';
 import React, { type PropsWithChildren, type RefObject } from 'react';

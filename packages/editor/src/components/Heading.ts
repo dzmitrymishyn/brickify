@@ -1,5 +1,3 @@
-// import { extend, withName, withProps, withShortcuts } from '@brickifyio/core';
-
 import { extend, withName, withProps } from '@brickifyio/renderer';
 
 import Paragraph from '../Paragraph';

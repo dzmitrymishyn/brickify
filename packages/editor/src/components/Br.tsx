@@ -1,10 +1,5 @@
 // import { fromRangeCopy } from '@brickifyio/browser/selection';
 // import { isText } from '@brickifyio/browser/utils';
-// import {
-//   extend,
-//   type HandleCommandOptions,
-//   withShortcuts,
-// } from '@brickifyio/core';
 import { extend } from '@brickifyio/renderer';
 import { compile } from 'css-select';
 import React from 'react';

@@ -1,29 +1,15 @@
 import {
   type BrickValue,
   type Component,
-  // extend,
-  // type PropsWithBrick,
-  type PropsWithChange,
-  // useBrickContext,
-  // useBrickRegistry,
-  // useCommands,
-  // useMergedRefs,
-  // useRenderer,
-  // withBrickContext,
-  // withBrickName,
-} from '@brickifyio/core';
-import {
   type PropsWithStoredValue,
   useRenderer,
   useRendererRegistry,
   withRendererContext,
 } from '@brickifyio/renderer';
 import { useMergedRefs } from '@brickifyio/utils/hooks';
-import {
-  forwardRef,
-} from 'react';
+import { forwardRef } from 'react';
 
-import { useChangesPluginFactory } from '../changes';
+import { type PropsWithChange, useChangesPluginFactory } from '../changes';
 import { Commander, useCommandsPluginFactory } from '../commands';
 import { useMutation, useMutationsPluginFactory } from '../mutations';
 import { useSelectionPluginFactory } from '../selection';
@@ -37,7 +23,6 @@ type Props = PropsWithStoredValue<BrickValue[]> & PropsWithChange & {
 const Editor = forwardRef<HTMLDivElement, Props>(({
   components = [],
   stored,
-  onChange,
   style,
 }, refProp) => {
   // const { editable } = useRendererContext();

@@ -19,7 +19,6 @@
   },
   "dependencies": {
     "@brickifyio/browser": "*",
-    "@brickifyio/core": "*",
     "@brickifyio/eslint-config": "*",
     "@brickifyio/operators": "*",
     "@brickifyio/renderer": "*",
