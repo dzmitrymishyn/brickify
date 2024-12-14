@@ -1,4 +1,4 @@
-import { type AnyRange } from '@brickifyio/browser/selection';
+// import { type AnyRange } from '@brickifyio/browser/selection';
 
 export type ResultsCallback = {
   (name: string): unknown;
@@ -13,8 +13,7 @@ export type HandleCommandOptions = {
   descendants: Node[];
 
   results: ResultsCallback;
-  resultRange: (range?: AnyRange) => void;
-  range: RangeCallback;
+  range: Range;
 
   stopBrickPropagation: () => void;
   stopImmediatePropagation: () => void;

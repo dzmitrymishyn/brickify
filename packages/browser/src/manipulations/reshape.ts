@@ -1,11 +1,10 @@
-import { tap } from '@brickifyio/operators';
 import { pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
 
 import { expose } from './expose';
 import { type Component } from './models';
 import { surround } from './surround';
-import { fromRangeCopy, toRangeCopy } from '../selection';
+import { toRangeCopy } from '../selection';
 import { closest } from '../traverse';
 
 type Action = 'surround' | 'expose';
@@ -31,12 +30,8 @@ export const reshape = (
         : 'surround'
     )
   ),
-  tap(({ type }) => actions[type](component, range, container)),
-  ({ type, rangeCopy }) => ({
+  ({ type }) => ({
     type,
-    range: pipe(
-      rangeCopy,
-      fromRangeCopy,
-    ),
+    range: actions[type](component, range, container),
   }),
 );

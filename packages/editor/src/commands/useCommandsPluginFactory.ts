@@ -1,15 +1,14 @@
 import { match } from '@brickifyio/browser/hotkeys';
 import {
-  type AnyRange,
-  anyRangeToRange,
   getRange,
   isElementWithinRange,
+  toCustomRange,
 } from '@brickifyio/browser/selection';
 import { getFirstDeepLeaf } from '@brickifyio/browser/utils';
 import { createUsePlugin, type UsePluginFactory } from '@brickifyio/renderer';
 import { useEffect, useMemo, useRef } from 'react';
 
-import { type RangeCallback, type ResultsCallback } from ".";
+import { type ResultsCallback } from ".";
 import { type Command } from './models';
 import { useDisallowHotkeys } from './useDisallowHotkeys';
 import { useChanges } from '../changes';
@@ -32,14 +31,24 @@ const metaKeyDisallowList = [
 
 const createController = () => {
   const subscriptions = new Map<Node, Command[]>();
-  // let resuts: Record<string, unknown> = {};
-  // let range: Range | null = null;
 
   const subscribe = (element: Node, commands: Command[]) => {
-    subscriptions.set(element, commands);
+    subscriptions.set(element, [
+      ...subscriptions.get(element) ?? [],
+      ...commands,
+    ]);
 
     return () => {
-      subscriptions.delete(element);
+      const allCommands = subscriptions.get(element) ?? [];
+      const restCommands = allCommands.filter(
+        (command) => !commands.includes(command),
+      );
+
+      if (!restCommands.length) {
+        subscriptions.delete(element);
+      } else {
+        subscriptions.set(element, restCommands);
+      }
     };
   };
 
@@ -72,8 +81,11 @@ export const useCommandsPluginFactory: UsePluginFactory<
 
     const element = ref.current;
     const handle = (originalEvent: KeyboardEvent) => {
-      let range: Range | null = getRange();
-      let resultRange: AnyRange | undefined;
+      const range: Range | null = getRange();
+
+      if (!range) {
+        return;
+      }
 
       const results: Record<string, unknown> = {};
       const getOrUpdateResults: ResultsCallback = (nameOrOptions) => {
@@ -85,15 +97,6 @@ export const useCommandsPluginFactory: UsePluginFactory<
           Object.assign(results, nameOrOptions || {});
         }
       };
-      const setResultRange = (newRange?: AnyRange) => {
-        resultRange = newRange;
-      };
-      const getOrUpdateRange: RangeCallback = (newRange) => {
-        if (newRange) {
-          range = newRange;
-        }
-        return range instanceof Range ? range : null;
-      };
 
       mutationsController.clear();
 
@@ -102,7 +105,7 @@ export const useCommandsPluginFactory: UsePluginFactory<
       );
       let descendants: Node[] = [];
 
-      while (range) {
+      while (current) {
         // For the current brick it should be not set since we're going through
         // all the siblings
         getOrUpdateResults({ stopImmediatePropagation: undefined });
@@ -128,8 +131,7 @@ export const useCommandsPluginFactory: UsePluginFactory<
             descendants,
 
             results: getOrUpdateResults,
-            resultRange: setResultRange,
-            range: getOrUpdateRange,
+            range,
 
             stopBrickPropagation: () => getOrUpdateResults({
               stopPropagation: true,
@@ -165,16 +167,10 @@ export const useCommandsPluginFactory: UsePluginFactory<
         }
       }
 
-      const nextRange = anyRangeToRange(resultRange);
+      const nextRange = toCustomRange(ref.current!)(range);
 
-      const mutationsAfterCommands = mutationsController.clear() ?? [];
-
-      mutationsController.handle(mutationsAfterCommands);
-
-      if (nextRange) {
-        selectionController.storeRange(nextRange, 'applyOnRender');
-      }
-
+      mutationsController.handle(mutationsController.clear() ?? []);
+      selectionController.storeRange(nextRange, 'applyOnRender');
       changesController.apply();
     };
 

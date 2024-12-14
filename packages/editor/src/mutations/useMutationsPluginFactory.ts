@@ -3,7 +3,13 @@ import {
   toCustomRange,
 } from '@brickifyio/browser/selection';
 import { createUsePlugin, type UsePluginFactory } from '@brickifyio/renderer';
-import { type RefObject, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import {
+  type RefObject,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from 'react';
 
 import {
   type ComponentMutations,
@@ -12,7 +18,10 @@ import {
 import { revertDomByMutations } from './revertDomByMutations';
 import { useBeforeMutationRangeSaver } from './useBeforeMutationRangeSaver';
 import { useChanges } from '../changes';
-import { type SelectionController, useSelectionController } from '../selection';
+import {
+  type SelectionController,
+  useSelectionController,
+} from '../selection';
 import assert from 'assert';
 
 const token = Symbol('MutationsPlugin');
@@ -110,7 +119,6 @@ export const createController = ({
       affectedSubscriptions.forEach(
         (options, node) => {
           try {
-            // changesController.markForApply(options.target);
             subscriptions.get(node)?.(options);
           } catch (error) {
             // TODO: Add logger
