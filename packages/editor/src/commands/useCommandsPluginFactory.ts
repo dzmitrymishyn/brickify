@@ -19,8 +19,8 @@ import assert from 'assert';
 const token = Symbol('CommandsPlugin');
 
 const metaKeyDisallowList = [
-  'enter',
-  'shift+enter',
+  // 'enter',
+  // 'shift+enter',
   [
     'z', // undo
     'b', // bold

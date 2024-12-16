@@ -1,8 +1,10 @@
 import {
   type BrickValue,
   type Component,
+  getName,
   type PropsWithStoredValue,
   useRenderer,
+  useRendererContext,
   useRendererRegistry,
   withRendererContext,
 } from '@brickifyio/renderer';
@@ -24,9 +26,11 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   components = [],
   stored,
   style,
+  onChange,
 }, refProp) => {
   // const { editable } = useRendererContext();
   const editable = true;
+  const { store } = useRendererContext();
   const rootRef = useRendererRegistry(stored);
 
   const ref = useMergedRefs(
@@ -38,6 +42,46 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
 
   const { markToRevert } = useMutation(rootRef, ({ mutations }) => {
     markToRevert(mutations);
+
+    mutations.reduceRight((_, mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node.parentNode !== rootRef.current) {
+          return;
+        }
+
+        let current = node.previousSibling;
+        let index = 0;
+        while (current) {
+          if (store.get(current)) {
+            index += 1;
+          }
+          current = current.previousSibling;
+        }
+
+        const Component = components.find((component) => (
+          'is' in component
+          && typeof component.is === 'function'
+          && component.is(node)
+        ));
+
+        if (Component) {
+          const innerHTML = node instanceof HTMLElement ? node.innerHTML : '';
+          const innerText = node instanceof HTMLElement ? node.innerText.trim() : '';;
+          onChange?.({
+            path: [...stored.pathRef.current(), 'value', `${index}`],
+            value: {
+              brick: getName(Component),
+              value: innerText ? innerHTML : `<br>`,
+              id: Math.random().toFixed(5),
+            },
+            type: 'add',
+          });
+        }
+
+      });
+
+      return _;
+    }, null);
   });
 
   const { value } = useRenderer({
