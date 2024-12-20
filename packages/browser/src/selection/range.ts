@@ -1,4 +1,4 @@
-import { flow } from 'fp-ts/lib/function';
+import { flow, pipe } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
 
 import { getSelection } from './selection';
@@ -73,3 +73,16 @@ export const isElementWithinRange = (range: Range, element?: Node | null) => {
     range.comparePoint(element, element.childNodes.length) >= 0
   );
 };
+
+export const isRangeWithinContainer = (
+  range: Range,
+  container?: Node | null,
+) => pipe(
+  O.fromNullable(container),
+  O.map((c) => ({
+    start: c.contains(range.startContainer)
+      || range.startContainer === container,
+    end: c.contains(range.endContainer) || range.endContainer === container,
+  })),
+  O.getOrElse(() => ({ start: false, end: false })),
+)

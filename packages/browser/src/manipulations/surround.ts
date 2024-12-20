@@ -1,13 +1,12 @@
-import { pipe } from 'fp-ts/lib/function';
+import { flow, pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
 
 import { clearNodes } from './clearNodes';
 import { type Component } from './models';
-import { prepareRange } from './prepareRange';
+import { prepareRange, restoreRange } from './prepareRange';
 import { wrapToNode } from './wrapToNode';
-import { createRange, isElementWithinRange } from '../selection';
+import { createRange, fromRangeCopy, isRangeWithinContainer, toRangeCopy } from '../selection';
 import { getSibling } from '../traverse';
-import { getFirstDeepLeaf, getLastDeepLeaf, isText } from '../utils';
 
 const surroundAscendedUntilPath = (
   startNode: Node,
@@ -55,49 +54,24 @@ const surroundAscendedUntilPath = (
   return current;
 };
 
-export const surround = (
-  component: Component,
-  inputRange: Range,
-  container?: HTMLElement | null,
-) => (inputRange.collapsed ? inputRange : pipe(
-  container,
-  () => {
-    if (!container) {
-      return inputRange;
-    }
-
-    const firstNode = getFirstDeepLeaf(container)!;
-    const lastNode = getLastDeepLeaf(container)!;
-
-    const newRange = new Range();
-
-    if (isElementWithinRange(inputRange, firstNode)) {
-      newRange.setStart(
-        firstNode,
-        firstNode === inputRange.startContainer ? inputRange.startOffset : 0,
-      );
-    } else {
-      newRange.setStart(inputRange.startContainer, inputRange.startOffset);
-    }
-
-    if (isElementWithinRange(inputRange, lastNode)) {
-      newRange.setEnd(
-        lastNode,
-        // eslint-disable-next-line no-nested-ternary -- test
-        lastNode === inputRange.endContainer
-          ? inputRange.endOffset
-          : isText(lastNode)
-            ? lastNode.textContent?.length ?? 0
-            : lastNode.childNodes.length - 1,
-      );
-    } else {
-      newRange.setEnd(inputRange.endContainer, inputRange.endOffset);
-    }
-
-    return newRange;
-  },
-  prepareRange,
-  ({ startContainer, endContainer, commonAncestorContainer }) => pipe(
+export const surround = flow(
+  (
+    component: Component,
+    range: Range,
+    container?: HTMLElement | null,
+  ) => ({
+    range: prepareRange(range, container),
+    rangeWithinContainer: isRangeWithinContainer(range, container),
+    rangeCopy: toRangeCopy(range),
+    component,
+    container,
+  }),
+  ({
+    range: { startContainer, endContainer, commonAncestorContainer, collapsed },
+    component,
+    rangeCopy,
+    rangeWithinContainer,
+  }) => collapsed ? fromRangeCopy(rangeCopy) : pipe(
     I.Do,
     I.bind('start', () => surroundAscendedUntilPath(
       startContainer,
@@ -115,9 +89,11 @@ export const surround = (
         wrapToNode(wrapper, start, end);
         clearNodes(wrapper, component.selector);
       }
-      return { startContainer, endContainer };
     },
+    () => restoreRange(
+      rangeCopy,
+      createRange(startContainer, endContainer),
+      rangeWithinContainer,
+    ),
   ),
-  ({ startContainer, endContainer }) =>
-    createRange(startContainer, endContainer),
-));
+);

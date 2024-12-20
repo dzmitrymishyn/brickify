@@ -1,14 +1,14 @@
 import { tap } from '@brickifyio/operators';
-import { pipe } from 'fp-ts/lib/function';
+import { flow, pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
 
 import { clearSiblings } from './clearSiblings';
 import { type Component } from './models';
-import { prepareRange } from './prepareRange';
+import { prepareRange, restoreRange } from './prepareRange';
 import { wrapToNode } from './wrapToNode';
-import { createRange, isElementWithinRange } from '../selection';
+import { createRange, fromRangeCopy, isRangeWithinContainer, toRangeCopy } from '../selection';
 import { getSibling } from '../traverse';
-import { createPath, getFirstDeepLeaf, getLastDeepLeaf } from '../utils';
+import { createPath } from '../utils';
 
 const exposeSiblings = (
   component: Component,
@@ -81,104 +81,96 @@ const exposeSiblings = (
   return parentMatched ? 'parent-removed' : 'parent-replaced';
 };
 
-export const expose = (
-  component: Component,
-  inputRange: Range,
-  container?: HTMLElement | null,
-) => (inputRange.collapsed ? inputRange : pipe(
-  container,
-  () => {
-    if (!container) {
-      return inputRange;
-    }
-
-    const firstNode = getFirstDeepLeaf(container)!;
-    const lastNode = getLastDeepLeaf(container)!;
-
-    const newRange = new Range();
-
-    if (isElementWithinRange(inputRange, firstNode)) {
-      newRange.setStart(firstNode, inputRange.startOffset);
-    } else {
-      newRange.setStart(inputRange.startContainer, inputRange.startOffset);
-    }
-
-    if (isElementWithinRange(inputRange, lastNode)) {
-      newRange.setEnd(lastNode, inputRange.endOffset);
-    } else {
-      newRange.setEnd(inputRange.endContainer, inputRange.endOffset);
-    }
-
-    return newRange;
-  },
-  prepareRange,
-  ({ startContainer, endContainer }) => ({ startContainer, endContainer }),
-  I.bind('leftPath', ({ startContainer }) =>
-    createPath(startContainer, container)),
-  I.bind('rightPath', ({ endContainer }) =>
-    createPath(endContainer, container)),
-  tap(({ leftPath, rightPath }) => {
-    let leftMatched = false;
-    let rightMatched = false;
-
-    for (let i = 0; i < Math.max(leftPath.length, rightPath.length); i += 1) {
-      const leftParent = leftPath.at(i);
-      const leftChild = leftPath.at(i + 1);
-      const rightParent = rightPath.at(i);
-      const rightChild = rightPath.at(i + 1);
-
-      if (
-        leftMatched
-        && leftParent
-        && leftChild !== leftParent.firstChild
-        && leftChild
-      ) {
-        wrapToNode(
-          component.create(),
-          leftParent.firstChild!,
-          leftChild.previousSibling,
-        );
-      }
-
-      if (
-        rightMatched
-        && rightParent
-        && rightChild
-        && rightChild !== rightParent.lastChild
-      ) {
-        wrapToNode(component.create(), rightChild.nextSibling!);
-      }
-
-      if (leftParent === rightParent) {
-        if (
-          leftChild
-          && leftChild !== rightChild
-          && leftChild.nextSibling !== rightChild
-        ) {
-          clearSiblings(component.selector, leftChild.nextSibling, rightChild);
-        }
-        if (exposeSiblings(component, leftChild, rightChild)) {
-          leftMatched = true;
-          rightMatched = true;
-        }
-
-        continue;
-      }
-
-      if (leftParent) {
-        clearSiblings(component.selector, leftChild?.nextSibling);
-        leftMatched = Boolean(exposeSiblings(component, leftChild))
-          || leftMatched;
-      }
-
-      if (rightParent) {
-        clearSiblings(component.selector, rightParent.firstChild, rightChild);
-        rightMatched = Boolean(
-          exposeSiblings(component, rightParent.firstChild, rightChild)
-        ) || rightMatched;
-      }
-    }
+export const expose = flow(
+  (
+    component: Component,
+    range: Range,
+    container?: HTMLElement | null,
+  ) => ({
+    range: prepareRange(range, container),
+    rangeWithinContainer: isRangeWithinContainer(range, container),
+    rangeCopy: toRangeCopy(range),
+    component,
+    container,
   }),
-  ({ startContainer, endContainer }) =>
-    createRange(startContainer, endContainer),
-));
+  ({
+    range: { startContainer, endContainer, collapsed },
+    rangeCopy,
+    rangeWithinContainer,
+    container,
+    component,
+  }) => collapsed ? fromRangeCopy(rangeCopy) : pipe(
+    I.Do,
+    I.bind('leftPath', () =>
+      createPath(startContainer, container)),
+    I.bind('rightPath', () =>
+      createPath(endContainer, container)),
+    tap(({ leftPath, rightPath }) => {
+      let leftMatched = false;
+      let rightMatched = false;
+
+      for (let i = 0; i < Math.max(leftPath.length, rightPath.length); i += 1) {
+        const leftParent = leftPath.at(i);
+        const leftChild = leftPath.at(i + 1);
+        const rightParent = rightPath.at(i);
+        const rightChild = rightPath.at(i + 1);
+
+        if (
+          leftMatched
+          && leftParent
+          && leftChild !== leftParent.firstChild
+          && leftChild
+        ) {
+          wrapToNode(
+            component.create(),
+            leftParent.firstChild!,
+            leftChild.previousSibling,
+          );
+        }
+
+        if (
+          rightMatched
+          && rightParent
+          && rightChild
+          && rightChild !== rightParent.lastChild
+        ) {
+          wrapToNode(component.create(), rightChild.nextSibling!);
+        }
+
+        if (leftParent === rightParent) {
+          if (
+            leftChild
+            && leftChild !== rightChild
+            && leftChild.nextSibling !== rightChild
+          ) {
+            clearSiblings(component.selector, leftChild.nextSibling, rightChild);
+          }
+          if (exposeSiblings(component, leftChild, rightChild)) {
+            leftMatched = true;
+            rightMatched = true;
+          }
+
+          continue;
+        }
+
+        if (leftParent) {
+          clearSiblings(component.selector, leftChild?.nextSibling);
+          leftMatched = Boolean(exposeSiblings(component, leftChild))
+            || leftMatched;
+        }
+
+        if (rightParent) {
+          clearSiblings(component.selector, rightParent.firstChild, rightChild);
+          rightMatched = Boolean(
+            exposeSiblings(component, rightParent.firstChild, rightChild)
+          ) || rightMatched;
+        }
+      }
+    }),
+    () => restoreRange(
+      rangeCopy,
+      createRange(startContainer, endContainer),
+      rangeWithinContainer,
+    ),
+  ),
+);
