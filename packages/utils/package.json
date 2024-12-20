@@ -2,6 +2,7 @@
   "name": "@brickifyio/utils",
   "version": "0.0.1",
   "exports": {
+    "./functions": "./functions",
     "./object": "./object",
     "./hooks": "./hooks"
   },
