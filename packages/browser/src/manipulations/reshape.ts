@@ -2,8 +2,8 @@ import { pipe } from 'fp-ts/lib/function';
 
 import { expose } from './expose';
 import { type Component } from './models';
-import { makeRangeWithinContainer } from './prepareRange';
 import { surround } from './surround';
+import { makeRangeWithinContainer } from './wrapContainerForReshape';
 import { closest } from '../traverse';
 
 type Action = 'surround' | 'expose';

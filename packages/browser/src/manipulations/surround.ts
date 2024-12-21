@@ -1,11 +1,11 @@
-import { flow, pipe } from 'fp-ts/lib/function';
+import { pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
 
 import { clearNodes } from './clearNodes';
 import { type Component } from './models';
-import { prepareRange, restoreRange } from './prepareRange';
+import { wrapContainerReshape } from './wrapContainerForReshape';
 import { wrapToNode } from './wrapToNode';
-import { createRange, fromRangeCopy, isRangeWithinContainer, toRangeCopy } from '../selection';
+import { createRange } from '../selection';
 import { getSibling } from '../traverse';
 
 const surroundAscendedUntilPath = (
@@ -54,46 +54,38 @@ const surroundAscendedUntilPath = (
   return current;
 };
 
-export const surround = flow(
-  (
-    component: Component,
-    range: Range,
-    container?: HTMLElement | null,
-  ) => ({
-    range: prepareRange(range, container),
-    rangeWithinContainer: isRangeWithinContainer(range, container),
-    rangeCopy: toRangeCopy(range),
-    component,
-    container,
-  }),
-  ({
-    range: { startContainer, endContainer, commonAncestorContainer, collapsed },
-    component,
-    rangeCopy,
-    rangeWithinContainer,
-  }) => collapsed ? fromRangeCopy(rangeCopy) : pipe(
-    I.Do,
-    I.bind('start', () => surroundAscendedUntilPath(
-      startContainer,
-      commonAncestorContainer,
-      { component, ltr: true },
-    )),
-    I.bind('end', () => surroundAscendedUntilPath(
-      endContainer,
-      commonAncestorContainer,
-      { component, ltr: false },
-    )),
-    ({ start, end }) => {
-      if (start?.parentElement) {
-        const wrapper = component.create();
-        wrapToNode(wrapper, start, end);
-        clearNodes(wrapper, component.selector);
-      }
-    },
-    () => restoreRange(
-      rangeCopy,
-      createRange(startContainer, endContainer),
-      rangeWithinContainer,
-    ),
-  ),
+const surroundFactory = (
+  component: Component,
+) => (
+  { startContainer, endContainer, commonAncestorContainer }: Range,
+) => pipe(
+  I.Do,
+  I.bind('start', () => surroundAscendedUntilPath(
+    startContainer,
+    commonAncestorContainer,
+    { component, ltr: true },
+  )),
+  I.bind('end', () => surroundAscendedUntilPath(
+    endContainer,
+    commonAncestorContainer,
+    { component, ltr: false },
+  )),
+  ({ start, end }) => {
+    if (start?.parentElement) {
+      const wrapper = component.create();
+      wrapToNode(wrapper, start, end);
+      clearNodes(wrapper, component.selector);
+    }
+  },
+  () => createRange(startContainer, endContainer),
+);
+
+export const surround = (
+  component: Component,
+  range: Range,
+  container?: HTMLElement | null,
+) => pipe(
+  surroundFactory(component),
+  wrapContainerReshape,
+  (reshape) => reshape(range, container),
 );

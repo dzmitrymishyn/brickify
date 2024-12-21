@@ -2,8 +2,18 @@ import { flow, pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
 import * as O from 'fp-ts/lib/Option';
 
-import { createRange, isRangeWithinContainer, type RangeCopy } from '../selection';
-import { getFirstDeepLeaf, getLastDeepLeaf, isText, splitBoundaryText } from '../utils';
+import {
+  createRange,
+  isRangeWithinContainer,
+  type RangeCopy,
+  toRangeCopy,
+} from '../selection';
+import {
+  getFirstDeepLeaf,
+  getLastDeepLeaf,
+  isText,
+  splitBoundaryText,
+} from '../utils';
 
 export const makeRangeWithinContainer = (range: Range) => flow(
   I.of<HTMLElement>,
@@ -34,9 +44,9 @@ export const makeRangeWithinContainer = (range: Range) => flow(
     start: [startContainer, startOffset],
     end: [endContainer, endOffset],
   }) => createRange(startContainer, endContainer, startOffset, endOffset)),
-)
+);
 
-export const prepareRange = (
+const prepareRange = (
   range: Range,
   container?: HTMLElement | null,
 ) => pipe(
@@ -46,7 +56,7 @@ export const prepareRange = (
   O.getOrElseW(() => range),
 );
 
-export const restoreRange = (
+const restoreRange = (
   initialRange: RangeCopy | null,
   containerRange: RangeCopy,
   rangeWithinContainer: ReturnType<typeof isRangeWithinContainer>,
@@ -67,3 +77,27 @@ export const restoreRange = (
 
   return createRange(startContainer, endContainer, startOffset, endOffset);
 };
+
+
+type Reshape = (
+  range: Range,
+  container?: HTMLElement | null,
+) => Range;
+
+export const wrapContainerReshape = (reshape: Reshape): Reshape =>
+  (range: Range, container?: HTMLElement | null) => {
+    if (range.collapsed) {
+      return range;
+    }
+
+    const rangeWithinContainer = isRangeWithinContainer(range, container);
+    const rangeCopy = toRangeCopy(range);
+
+    const nextRange = reshape(prepareRange(range, container), container);
+
+    return restoreRange(
+      rangeCopy,
+      createRange(nextRange.startContainer, nextRange.endContainer),
+      rangeWithinContainer,
+    );
+  };
