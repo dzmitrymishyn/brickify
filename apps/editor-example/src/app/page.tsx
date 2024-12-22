@@ -5,7 +5,6 @@
 /* eslint import/no-extraneous-dependencies: off -- TODO: check */
 /* eslint @typescript-eslint/no-unused-vars: off -- TODO: check */
 
-// import { extend, withProps, withSlots } fromyarn '@brickifyio/core';
 // import { ShiftEnterBr } from '@brickifyio/editor/components/Br';
 import Article from '@brickifyio/editor/components/Article';
 import Container from '@brickifyio/editor/components/Container';

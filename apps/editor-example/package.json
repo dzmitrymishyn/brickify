@@ -16,7 +16,6 @@
     "test": "jest"
   },
   "dependencies": {
-    "@brickifyio/core": "*",
     "@brickifyio/editor": "*",
     "@brickifyio/eslint-config": "*",
     "@brickifyio/renderer": "*",
