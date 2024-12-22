@@ -5,7 +5,10 @@ import {
   toCustomRange,
 } from '@brickifyio/browser/selection';
 import { getFirstDeepLeaf } from '@brickifyio/browser/utils';
+import { tap } from '@brickifyio/operators';
 import { createUsePlugin, type UsePluginFactory } from '@brickifyio/renderer';
+import { flow } from 'fp-ts/lib/function';
+import * as O from 'fp-ts/lib/Option';
 import { useEffect, useMemo, useRef } from 'react';
 
 import { type ResultsCallback } from ".";
@@ -44,6 +47,8 @@ const createController = () => {
         (command) => !commands.includes(command),
       );
 
+      // if there are no more commands for a node then we need to remove it
+      // otherwise we should save other commands
       if (!restCommands.length) {
         subscriptions.delete(element);
       } else {
@@ -65,10 +70,8 @@ export const useCommandsPluginFactory: UsePluginFactory<
   CommandsController
 > = (_, deps) => {
   const ref = useRef<HTMLElement>(null);
-  const controller = useMemo(
-    () => createController(),
-    [],
-  );
+  const controller = useMemo(() => createController(), []);
+
   const changesController = useChanges(deps.plugins);
   const selectionController = useSelectionController(deps.plugins);
   const mutationsController = useMutationsController(deps.plugins);
@@ -80,99 +83,101 @@ export const useCommandsPluginFactory: UsePluginFactory<
     );
 
     const element = ref.current;
-    const handle = (originalEvent: KeyboardEvent) => {
-      const range: Range | null = getRange();
 
-      if (!range) {
-        return;
-      }
+    const handle = flow(
+      O.of<KeyboardEvent>,
+      O.bindTo('originalEvent'),
+      O.bind('range', flow(getRange, O.fromNullable)),
+      O.bind('results', () => {
+        const results: Record<string, unknown> = {};
 
-      const results: Record<string, unknown> = {};
-      const getOrUpdateResults: ResultsCallback = (nameOrOptions) => {
-        if (typeof nameOrOptions === 'string') {
-          return results[nameOrOptions];
-        }
+        return O.of<ResultsCallback>((nameOrOptions) => {
+          if (typeof nameOrOptions === 'string') {
+            return results[nameOrOptions];
+          }
 
-        if (typeof nameOrOptions === 'object') {
-          Object.assign(results, nameOrOptions || {});
-        }
-      };
-
-      mutationsController.clear();
-
-      let current: Node | null = getFirstDeepLeaf(
-        range?.startContainer ?? null,
-      );
-      let descendants: Node[] = [];
-
-      while (current) {
-        // For the current brick it should be not set since we're going through
-        // all the siblings
-        getOrUpdateResults({ stopImmediatePropagation: undefined });
+          if (typeof nameOrOptions === 'object') {
+            Object.assign(results, nameOrOptions || {});
+          }
+        });
+      }),
+      O.map(tap(mutationsController.clear)),
+      O.map(({ range, originalEvent, results }) => {
+        let current: Node | null = getFirstDeepLeaf(
+          range?.startContainer ?? null,
+        );
+        let descendants: Node[] = [];
 
         while (current) {
-          if (deps.store.get(current)) {
+          // For the current node it should be not set since we're going
+          // through all the siblings
+          results({ stopImmediatePropagation: undefined });
+
+          while (current) {
+            if (deps.store.get(current)) {
+              break;
+            }
+
+            current = current.parentNode;
+          }
+
+          if (!current) {
             break;
           }
 
-          current = current.parentNode;
+          const commands = controller.subscriptions.get(current);
+
+          if (commands?.length) {
+            const options = {
+              originalEvent,
+              target: current,
+              descendants,
+
+              results,
+              range,
+
+              stopBrickPropagation: () => results({
+                stopPropagation: true,
+              }),
+              stopImmediatePropagation: () => results({
+                stopImmediatePropagation: true,
+              }),
+            };
+
+            commands.find((handler) => {
+              if (typeof handler === 'function') {
+                handler(options);
+              } else if (
+                handler.shortcuts
+                  ?.some((shortcut) => match(originalEvent, shortcut))
+              ) {
+                handler.handle?.(options);
+              }
+
+              return results('stopImmediatePropagation');
+            });
+          }
+
+          const nextDeepSiblingLeaf = getFirstDeepLeaf(current.nextSibling);
+          if (isElementWithinRange(range, nextDeepSiblingLeaf)) {
+            current = nextDeepSiblingLeaf;
+            descendants = [];
+          } else {
+            descendants.unshift(current);
+            current = results('stopPropagation')
+              ? null
+              : current.parentNode;
+          }
         }
 
-        if (!current) {
-          break;
-        }
-
-        const commands = controller.subscriptions.get(current);
-
-        if (commands?.length) {
-          const options = {
-            originalEvent,
-            target: current,
-            descendants,
-
-            results: getOrUpdateResults,
-            range,
-
-            stopBrickPropagation: () => getOrUpdateResults({
-              stopPropagation: true,
-            }),
-            stopImmediatePropagation: () => getOrUpdateResults({
-              stopImmediatePropagation: true,
-            }),
-          };
-
-          commands.find((handler) => {
-            if (typeof handler === 'function') {
-              handler(options);
-            } else if (
-              handler.shortcuts
-                ?.some((shortcut) => match(originalEvent, shortcut))
-            ) {
-              handler.handle?.(options);
-            }
-
-            return getOrUpdateResults('stopImmediatePropagation');
-          });
-        }
-
-        const nextDeepSiblingLeaf = getFirstDeepLeaf(current.nextSibling);
-        if (isElementWithinRange(range, nextDeepSiblingLeaf)) {
-          current = nextDeepSiblingLeaf;
-          descendants = [];
-        } else {
-          descendants.unshift(current);
-          current = getOrUpdateResults('stopPropagation')
-            ? null
-            : current.parentNode;
-        }
-      }
-
-      const nextRange = toCustomRange(ref.current!)(range);
-
-      mutationsController.handle(mutationsController.clear() ?? []);
-      selectionController.storeRange(nextRange, 'applyOnRender');
-      changesController.apply();
-    };
+        return toCustomRange(ref.current!)(range);
+      }),
+      O.map(tap(() => mutationsController.handle(
+        mutationsController.clear() ?? [],
+      ))),
+      O.map((range) => selectionController.storeRange(range, 'applyOnRender')),
+      O.map(changesController.apply),
+    );
 
     element.addEventListener('keydown', handle);
     return () => element.removeEventListener('keydown', handle);

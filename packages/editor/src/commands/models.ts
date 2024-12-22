@@ -1,5 +1,3 @@
-// import { type AnyRange } from '@brickifyio/browser/selection';
-
 export type ResultsCallback = {
   (name: string): unknown;
   (results: Record<string, unknown>): void;

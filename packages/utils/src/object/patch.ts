@@ -128,7 +128,7 @@ export const traverseAndApplyChanges = (
         const handledValue = (
           // eslint-disable-next-line no-nested-ternary -- ok
           newValue === 'unhandled'
-            ? value
+            ? { ...value }
             : typeof newValue === 'object' && newValue
               ? { ...value, ...newValue }
               : newValue

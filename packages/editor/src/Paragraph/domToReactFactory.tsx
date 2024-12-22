@@ -13,7 +13,6 @@ import {
   type RefObject,
 } from 'react';
 
-
 // eslint-disable-next-line -- TODO: check it
 const hasIs = (value: unknown): value is { is: any } => (
   (typeof value === 'function' || typeof value === 'object')

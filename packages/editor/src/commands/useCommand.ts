@@ -23,6 +23,4 @@ export const useCommand = (
       commandRef.current ? [commandRef.current] : [],
     );
   }, [subscribe, commandRef, ref]);
-
-  return ref;
 };

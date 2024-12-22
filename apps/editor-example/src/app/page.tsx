@@ -7,6 +7,7 @@
 
 // import { ShiftEnterBr } from '@brickifyio/editor/components/Br';
 import Article from '@brickifyio/editor/components/Article';
+import Br from '@brickifyio/editor/components/Br';
 import Container from '@brickifyio/editor/components/Container';
 import Em from '@brickifyio/editor/components/Em';
 import Heading from '@brickifyio/editor/components/Heading';
@@ -59,7 +60,7 @@ const Page = () => {
     //   ],
     // },
     // { brick: 'Test', id: newKey(), value: 'Test text', test: '123' },
-    { brick: 'Paragraph', id: newKey(), value: 'It is a <strong>paragraph</strong>' },
+        { brick: 'Paragraph', id: newKey(), value: 'It is a <strong>paragraph</strong>' },
     // {
     //   brick: 'Container',
     //   id: newKey(),
@@ -83,7 +84,7 @@ const Page = () => {
         components={[
           // List,
           Heading,
-          extend(Paragraph, withProps({ components: [Em, Strong] })),
+          extend(Paragraph, withProps({ components: [Em, Strong, Br] })),
           Article,
           // Table,
           // Container,

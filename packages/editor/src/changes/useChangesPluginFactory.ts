@@ -6,7 +6,7 @@ import {
   type UsePluginFactory,
 } from '@brickifyio/renderer';
 import { useSyncedRef } from '@brickifyio/utils/hooks';
-import { patch } from '@brickifyio/utils/object';
+import { type Change, patch } from '@brickifyio/utils/object';
 import { pipe } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
 import {
@@ -16,7 +16,7 @@ import {
   useMemo,
 } from 'react';
 
-import { type Change, type PropsWithChange } from './models';
+import { type PropsWithChange } from './models';
 
 export const changesToken = Symbol('ChangesPlugin');
 
@@ -62,12 +62,10 @@ const createController = (
     changes: () => changes,
 
     add: <Value = unknown>(path: string[], value: Value) => {
-      onChange({
-        type: 'add',
-        path,
-        value,
-      });
+      onChange({ type: 'add', path, value });
     },
+
+    remove: (path: string[]) => onChange({ type: 'remove', path }),
 
     apply,
 
@@ -116,10 +114,10 @@ export const useChangesPluginFactory: UsePluginFactory<
       }
 
       return cloneElement(element, {
-        onChange: (change: unknown) => controller.onChange({
+        onChange: (value: unknown) => controller.onChange({
           path: element.props.stored.pathRef.current(),
-          type: change === undefined ? 'remove' : 'update',
-          value: change,
+          type: value === undefined ? 'remove' : 'update',
+          value,
         }),
       });
     },

@@ -1,64 +1,51 @@
-// import { fromRangeCopy } from '@brickifyio/browser/selection';
-// import { isText } from '@brickifyio/browser/utils';
+import { isText } from '@brickifyio/browser/utils';
 import { extend } from '@brickifyio/renderer';
 import { compile } from 'css-select';
-import React from 'react';
+import React, { type RefObject } from 'react';
+
+import { useCommand, withCommands } from '../commands';
 
 const Br: React.FC = () => <br />;
 
-// const addBr = ({ range, resultRange, results }: HandleCommandOptions) => {
-//   const newRange = fromRangeCopy(range());
+const useBr = (ref: RefObject<Node | null>) => {
+  useCommand(ref, {
+    name: 'br',
+    shortcuts: ['enter'],
+    handle: ({ originalEvent, range }) => {
+      if (!ref.current?.contains(range.startContainer)) {
+        return;
+      }
 
-//   if (newRange) {
-//     const brNode = document.createElement('br');
+      originalEvent.preventDefault();
+      range.deleteContents();
 
-//     // Make sure we'll not lose the range element after extracting the content
-//     newRange.collapse(true);
-//     range()?.extractContents();
-//     newRange.insertNode(brNode);
+      const br = document.createElement('br');
+      range.insertNode(br);
 
-//     // If we don't have text after the last br node we should add additional
-//     // br to display new line. After user starts typing on the line browser
-//     // automatically deletes the second br
-//     if (
-//       (!brNode.nextSibling && brNode.previousSibling?.nodeName !== 'BR')
-//       || (
-//         isText(brNode.nextSibling)
-//         && !brNode.nextSibling.textContent?.length
-//         && !brNode.nextSibling.nextSibling
-//       )
-//     ) {
-//       newRange.insertNode(document.createElement('br'));
-//     }
+      if (
+        (!br.nextSibling && br.previousSibling?.nodeName !== 'BR')
+        || (
+          isText(br.nextSibling)
+          && !br.nextSibling.textContent?.length
+          && !br.nextSibling.nextSibling
+        )
+      ) {
+        range.insertNode(document.createElement('br'));
+      }
 
-//     newRange.setStartAfter(brNode);
-//     newRange.setEndAfter(brNode);
-
-//     resultRange(newRange);
-//     results({ stopPropagation: true });
-//   }
-// };
+      range.setStartAfter(br);
+      range.setEndAfter(br);
+    },
+  });
+};
 
 export default extend(
   Br,
   { is: compile('br') },
-  // withShortcuts([
-  //   {
-  //     name: 'addBr',
-  //     shortcuts: ['enter'],
-  //     handle: addBr,
-  //   },
-  // ]),
 );
 
-export const ShiftEnterBr = extend(
+export const EnterBr = extend(
   Br,
   { is: compile('br') },
-  // withShortcuts([
-  //   {
-  //     name: 'addBr',
-  //     shortcuts: ['shift + enter'],
-  //     handle: addBr,
-  //   },
-  // ]),
+  withCommands(useBr)
 );

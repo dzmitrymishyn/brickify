@@ -1,1 +1,1 @@
-export { ShiftEnterBr, default } from '../src/components/Br';
+export { EnterBr, default } from '../src/components/Br';

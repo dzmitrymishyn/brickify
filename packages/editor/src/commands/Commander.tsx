@@ -6,15 +6,15 @@ import { hasCommands, type WithCommands } from './withCommands';
 
 type CommandProps = {
   component: Component & WithCommands;
-  ref: RefObject<Node | null>;
+  containerRef: RefObject<Node | null>;
 };
 
 const Command: React.FC<CommandProps> = ({
   component,
-  ref,
+  containerRef,
 }) => {
   array(component.commands).forEach(
-    (command) => typeof command === 'function' && command(ref),
+    (command) => typeof command === 'function' && command(containerRef),
   );
 
   return null;
@@ -38,7 +38,7 @@ export const Commander: React.FC<CommanderProps> = ({
     hasCommands(component)
       ? <Command
           key={getName(component)}
-          ref={containerRef}
+          containerRef={containerRef}
           component={component}
         />
       : null
