@@ -11,13 +11,12 @@ import {
 import { useMergedRefs } from '@brickifyio/utils/hooks';
 import { forwardRef } from 'react';
 
-import { type PropsWithChange, useChangesPluginFactory } from '../changes';
+import { useChanges, useChangesPluginFactory } from '../changes';
 import { Commander, useCommandsPluginFactory } from '../commands';
 import { useMutation, useMutationsPluginFactory } from '../mutations';
 import { useSelectionPluginFactory } from '../selection';
 
-type Props = PropsWithStoredValue<BrickValue[]> & PropsWithChange & {
-  // value: BrickValue[];
+type Props = PropsWithStoredValue<BrickValue[]> & {
   components?: Component[];
   style?: object;
 };
@@ -26,7 +25,6 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   components = [],
   stored,
   style,
-  onChange,
 }, refProp) => {
   // const { editable } = useRendererContext();
   const editable = true;
@@ -36,10 +34,9 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   const ref = useMergedRefs(
     refProp,
     rootRef,
-    // useBrickRegistry(storedValue),
-    // useCommands(bricks),
   );
 
+  const { add } = useChanges();
   const { markToRevert } = useMutation(rootRef, ({ mutations }) => {
     markToRevert(mutations);
 
@@ -67,17 +64,12 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
         if (Component) {
           const innerHTML = node instanceof HTMLElement ? node.innerHTML : '';
           const innerText = node instanceof HTMLElement ? node.innerText.trim() : '';;
-          onChange?.({
-            path: [...stored.pathRef.current(), 'value', `${index}`],
-            value: {
-              brick: getName(Component),
-              value: innerText ? innerHTML : `<br>`,
-              id: Math.random().toFixed(5),
-            },
-            type: 'add',
+          add([...stored.pathRef.current(), 'value', `${index}`], {
+            brick: getName(Component),
+            value: innerText ? innerHTML : `<br>`,
+            id: Math.random().toFixed(5),
           });
         }
-
       });
 
       return _;
@@ -87,7 +79,6 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   const { value } = useRenderer({
     slotsValue: { value: stored.value },
     slotsMeta: { value: components },
-    // props: { onChange },
   });
 
   return (

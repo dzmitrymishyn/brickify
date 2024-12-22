@@ -52,7 +52,16 @@ export const handleChangesArray = (
   switch (change.type) {
     case 'update': {
       if (acc.value !== 'removed') {
-        acc.value = change.value;
+        if (acc.value === 'unhandled') {
+          acc.value = change.value;
+        } else if (typeof change.value !== 'object' || !change.value) {
+          acc.value = change.value;
+        } else if (typeof change.value === 'object') {
+          acc.value = {
+            ...typeof acc.value === 'object' ? acc.value : {},
+            ...change.value,
+          };
+        }
       }
       break;
     }
@@ -117,29 +126,38 @@ export const traverseAndApplyChanges = (
         result = [newValue === 'unhandled' ? value : newValue];
       } else {
         const handledValue = (
+          // eslint-disable-next-line no-nested-ternary -- ok
           newValue === 'unhandled'
-            ? { ...value }
-            : newValue
-        ) as Record<string, unknown>;
-        const keys = Object.keys(handledValue);
-        let handledKeys = newValue === 'unhandled' ? 0 : 1;
+            ? value
+            : typeof newValue === 'object' && newValue
+              ? { ...value, ...newValue }
+              : newValue
+        );
 
-        keys.forEach((key) => {
-          const subPath = [...path, key];
-          const isArray = Array.isArray(handledValue[key]);
-          const currentResult = traverseAndApplyChanges(
-            handledValue[key],
-            changesMap,
-            subPath,
-          );
+        if (typeof handledValue !== 'object' || !handledValue) {
+          result = [handledValue];
+        } else {
+          const recordValue = handledValue as Record<string, unknown>;
+          const keys = Object.keys(recordValue);
+          let handledKeys = newValue === 'unhandled' ? 0 : 1;
 
-          if (handledValue[key] !== currentResult) {
-            handledKeys += 1;
-          }
+          keys.forEach((key) => {
+            const subPath = [...path, key];
+            const isArray = Array.isArray(recordValue[key]);
+            const currentResult = traverseAndApplyChanges(
+              recordValue[key],
+              changesMap,
+              subPath,
+            );
 
-          handledValue[key] = isArray ? currentResult : array(currentResult)[0];
-        });
-        result = [handledKeys === 0 ? value : handledValue];
+            if (recordValue[key] !== currentResult) {
+              handledKeys += 1;
+            }
+
+            recordValue[key] = isArray ? currentResult : array(currentResult)[0];
+          });
+          result = [handledKeys === 0 ? value : recordValue];
+        }
       }
 
       return [...previousValues, ...result];

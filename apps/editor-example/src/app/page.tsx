@@ -7,6 +7,7 @@
 
 // import { extend, withProps, withSlots } fromyarn '@brickifyio/core';
 // import { ShiftEnterBr } from '@brickifyio/editor/components/Br';
+import Article from '@brickifyio/editor/components/Article';
 import Container from '@brickifyio/editor/components/Container';
 import Em from '@brickifyio/editor/components/Em';
 import Heading from '@brickifyio/editor/components/Heading';
@@ -31,6 +32,12 @@ const Page = () => {
       id: newKey(),
       brick: 'Heading',
       value: 'Here is simple components that',
+    },
+    {
+      id: newKey(),
+      brick: 'Article',
+      title: 'test title',
+      description: 'looong description text is here',
     },
     // {
     //   brick: 'Table',
@@ -78,6 +85,7 @@ const Page = () => {
           // List,
           Heading,
           extend(Paragraph, withProps({ components: [Em, Strong] })),
+          Article,
           // Table,
           // Container,
           // Test,

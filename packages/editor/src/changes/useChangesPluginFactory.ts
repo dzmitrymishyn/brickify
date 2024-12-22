@@ -2,6 +2,7 @@ import { tap } from '@brickifyio/operators';
 import {
   type BrickValue,
   createUsePlugin,
+  type PropsWithStoredValue,
   type UsePluginFactory,
 } from '@brickifyio/renderer';
 import { useSyncedRef } from '@brickifyio/utils/hooks';
@@ -41,26 +42,36 @@ const createController = (
     tap(clear),
   );
 
+  const onChange = <Value = unknown>(event: Change<Value>) => {
+    if (!event.path) {
+      return;
+    }
+
+    /**
+     * If it's a single onChange not in mutations or commands we just call
+     * the apply function on the next render.
+     */
+    if (!changes.length) {
+      requestAnimationFrame(apply);
+    }
+
+    changes.push(event);
+  };
+
   return {
     changes: () => changes,
 
+    add: <Value = unknown>(path: string[], value: Value) => {
+      onChange({
+        type: 'add',
+        path,
+        value,
+      });
+    },
+
     apply,
 
-    onChange: <Value = unknown>(event: Change<Value>) => {
-      if (!event.path) {
-        return;
-      }
-
-      /**
-       * If it's a single onChange not in mutations or commands we just call
-       * the apply function on the next render.
-       */
-      if (!changes.length) {
-        requestAnimationFrame(apply);
-      }
-
-      changes.push(event);
-    },
+    onChange,
   };
 };
 
@@ -99,13 +110,17 @@ export const useChangesPluginFactory: UsePluginFactory<
      * Each element will have onChange function.
      * If an element already has this function we don't need to override it.
      */
-    render: (element: ReactElement<PropsWithChange>) => {
+    render: (element: ReactElement<PropsWithChange & PropsWithStoredValue>) => {
       if (element.props.onChange) {
         return element;
       }
 
       return cloneElement(element, {
-        onChange: controller.onChange,
+        onChange: (change: unknown) => controller.onChange({
+          path: element.props.stored.pathRef.current(),
+          type: change === undefined ? 'remove' : 'update',
+          value: change,
+        }),
       });
     },
     controller,

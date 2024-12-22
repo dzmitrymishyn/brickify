@@ -18,7 +18,7 @@ import {
 } from 'react';
 
 import { domToReactFactory } from './domToReactFactory';
-import { type PropsWithChange, useOnChange } from '../changes';
+import { type PropsWithChange } from '../changes';
 import { Commander } from '../commands';
 import { useMutation } from '../mutations';
 
@@ -26,11 +26,12 @@ type Value = BrickValue & {
   value: string | number;
 };
 
-type Props = PropsWithStoredValue<Value> & PropsWithChange<Value> & {
+type Props = Partial<PropsWithStoredValue<Value>> & PropsWithChange<Value> & {
   components?: Component[];
   component?: ElementType;
   value: Value['value'];
   style?: object;
+  editable?: boolean;
 };
 
 const Paragraph: React.FC<Props> = ({
@@ -38,32 +39,28 @@ const Paragraph: React.FC<Props> = ({
   components = [],
   component: Component = 'div',
   onChange,
-  stored: brickRecord,
+  stored: brickRecord = { value: { value: '' } },
   style,
+  editable: editableProp = true,
 }) => {
-  // const ref = useRef<HTMLElement>(null);
   const oldNodes = useRef<ReactNode>(null);
   // const { editable } = useBrickContext();
-  const editable = true;
-  // const change = useChange(stored as any, onChange);
+  const editable = editableProp;
 
-  // const ref = useMergedRefs(
-    // );
   const ref = useRendererRegistry(brickRecord);
 
-  const change = useOnChange(brickRecord, onChange);
   const { markToRevert } = useMutation(ref, (mutation) => {
     markToRevert(mutation.mutations);
 
     if (mutation.removed) {
-      return change({ type: 'remove' });
+      return onChange?.(undefined);
     }
 
     return pipe(
       mutation.domNode as HTMLElement,
       (element?: HTMLElement | null) => element?.innerHTML ?? '',
       (html) => html === '<br>' ? '' : html,
-      (newValue) => change({ value: { value: newValue } }),
+      (newValue) => onChange?.({ value: newValue }),
     );
   });
 
@@ -83,8 +80,8 @@ const Paragraph: React.FC<Props> = ({
       data-brick="paragraph"
       ref={ref}
       style={style}
-      {...editable && {
-        contentEditable: true,
+      {...{
+        contentEditable: editable,
         suppressContentEditableWarning: true,
       }}
     >

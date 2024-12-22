@@ -3,7 +3,7 @@ import { type Change } from '@brickifyio/utils/object';
 export { type Change };
 
 export type OnChange<Value = unknown> = (
-  event: Change<Value>,
+  change: Partial<Value | undefined>,
 ) => void;
 
 export type PropsWithChange<Value = unknown> = {

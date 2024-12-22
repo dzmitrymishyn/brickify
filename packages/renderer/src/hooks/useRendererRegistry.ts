@@ -10,8 +10,9 @@ import assert from 'assert';
  * unmount.
  * @returns ref function that should be set to a root DOM node
  */
-export const useRendererRegistry = (
-  brickRecord?: RendererStoreValue<object>,
+export const useRendererRegistry = <Element extends Node = Node>(
+  brickRecord?: Pick<RendererStoreValue<object>, 'value'>
+    & Partial<Omit<RendererStoreValue<object>, 'value'>>,
 ) => {
   assert(
     brickRecord,
@@ -30,7 +31,7 @@ export const useRendererRegistry = (
     const newBrickRecord = {
       ...oldBrickRecord,
       ...brickRecord,
-    };
+    } as RendererStoreValue<object>;
 
     store.delete(oldBrick);
     store.set(newBrickRecord.value, newBrickRecord);
@@ -42,7 +43,7 @@ export const useRendererRegistry = (
 
   brickRef.current = brickRecord.value;
 
-  const ref = useActionableRef<Node>((node) => {
+  const ref = useActionableRef<Element>((node) => {
     if (!node || !brickRef.current) {
       return;
     }
