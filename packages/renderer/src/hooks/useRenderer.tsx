@@ -3,7 +3,7 @@ import * as A from 'fp-ts/lib/Array';
 import { flow, pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
 import * as O from 'fp-ts/lib/Option';
-import { type ReactNode, useMemo } from 'react';
+import { cloneElement, type ReactNode, useMemo, useRef } from 'react';
 
 import { type BrickValue, isBrickValue } from '../bricks';
 import { type Component, componentsToMap } from '../components';
@@ -29,6 +29,7 @@ type Deps = {
 const render = (
   deps: Deps,
   slotsMeta: Record<string, Component>,
+  previousBrickValue?: Record<string, unknown>,
 ) => flow(
   O.fromPredicate(isBrickValue),
   O.bindTo('brickValue'),
@@ -57,7 +58,6 @@ const render = (
         Object.fromEntries,
         buildSlots(
           deps,
-          // { ...deps, parentRef: brick.currentRef },
           brickValue,
         ),
         O.some,
@@ -68,13 +68,23 @@ const render = (
         ...slots,
         stored,
       })),
-      O.map(({ props, Component }) => renderWithPlugins(
-        deps.plugins,
-        <Component
-          {...props}
-          key={brickValue.id ?? stored.pathRef.current().join('/')}
-        />
-      )),
+      // O.map(tap(debug)),
+      O.map(({ props, Component }) => {
+        const react = deps.store.get(previousBrickValue ?? {})?.react;
+        const key = brickValue.id ?? stored.pathRef.current().join('/');
+        return react && key === react.key
+          ? renderWithPlugins(
+            deps.plugins,
+            cloneElement(react, props),
+          )
+          : renderWithPlugins(
+            deps.plugins,
+            <Component
+              {...props}
+              key={key}
+            />
+          );
+      }),
       O.map(tap((react) => {
         stored.react = react;
       })),
@@ -86,6 +96,7 @@ const render = (
 const traverseSlotValues = (
   deps: Deps,
   slotsMeta: Record<string, Component>,
+  previousValue?: Record<string, unknown>,
 ) => flow(
   I.bindTo('valueOriginal'),
   I.bind('valueArray', ({ valueOriginal }) => array(valueOriginal)),
@@ -100,6 +111,7 @@ const traverseSlotValues = (
         ]),
       },
       slotsMeta,
+      previousValue?.[index] as Record<string, unknown>,
     )(value)),
   ),
 );
@@ -111,6 +123,7 @@ type SlotsMetaToReactNode = (
 const buildSlots = (
   deps: Deps,
   brickValue: Value,
+  previousBrickValue?: Record<string, unknown>,
 ): SlotsMetaToReactNode => flow(
   O.fromPredicate(flow(Object.keys, (keys) => keys.length, Boolean)),
   O.map(Object.entries<Record<string, Component>>),
@@ -123,6 +136,7 @@ const buildSlots = (
           pathRef: makeRef(() => [...deps.pathRef.current(), name]),
         },
         components,
+        previousBrickValue?.[name] as Record<string, unknown>,
       )(brickValue[name]),
     ] as const,
   )),
@@ -148,6 +162,7 @@ export const useRenderer = ({
   props,
 }: UseRendererOptions) => {
   const { plugins, store } = useRendererContext();
+  const valueRef = useRef<Record<string, unknown>>(undefined);
 
   return useMemo(() => pipe(
     slotsMeta,
@@ -157,6 +172,9 @@ export const useRenderer = ({
       props,
       plugins,
       pathRef: makeRef(() => []),
-    }, slotsValue as Value),
+    }, slotsValue as Value, valueRef.current),
+    tap(() => {
+      valueRef.current = slotsValue;
+    }),
   ), [slotsValue, props, slotsMeta, plugins, store]);
 };

@@ -9,7 +9,7 @@ import {
   withRendererContext,
 } from '@brickifyio/renderer';
 import { useMergedRefs } from '@brickifyio/utils/hooks';
-import { forwardRef } from 'react';
+import { forwardRef, useMemo } from 'react';
 
 import { useChanges, useChangesPluginFactory } from '../changes';
 import { Commander, useCommandsPluginFactory } from '../commands';
@@ -76,10 +76,10 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
     }, null);
   });
 
-  const { value } = useRenderer({
+  const { value } = useRenderer(useMemo(() => ({
     slotsValue: { value: stored.value },
     slotsMeta: { value: components },
-  });
+  }), [components, stored.value]));
 
   return (
     <>
