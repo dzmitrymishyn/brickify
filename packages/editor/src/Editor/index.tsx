@@ -63,9 +63,19 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
         if (Component) {
           const innerHTML = node instanceof HTMLElement ? node.innerHTML : '';
           const innerText = node instanceof HTMLElement ? node.innerText.trim() : '';;
+          const brick = getName(Component);
           add([...stored.pathRef.current(), 'value', `${index}`], {
-            brick: getName(Component),
-            value: innerText ? innerHTML : `<br>`,
+            brick,
+            ...brick === 'Paragraph' && {
+              value: innerText ? innerHTML : `<br>`,
+            },
+            ...brick === 'List' && {
+              children: Array.from(node.childNodes ?? []).map((child: any) => ({
+                brick: 'ListItem',
+                id: Math.random().toFixed(5),
+                value: child?.innerHTML ?? node.innerText?.trim() ?? '',
+              })) ?? [],
+            },
             id: Math.random().toFixed(5),
           });
         }

@@ -11,12 +11,12 @@ import Br from '@brickifyio/editor/components/Br';
 import Container from '@brickifyio/editor/components/Container';
 import Em from '@brickifyio/editor/components/Em';
 import Heading from '@brickifyio/editor/components/Heading';
-// import List from '@brickifyio/editor/components/List';
+import List from '@brickifyio/editor/components/List';
 import Strong from '@brickifyio/editor/components/Strong';
 // import Table from '@brickifyio/editor/components/Table';
 import Editor from '@brickifyio/editor/Editor';
 import Paragraph from '@brickifyio/editor/Paragraph';
-import { extend, withProps } from '@brickifyio/renderer';
+import { extend, withName, withProps } from '@brickifyio/renderer';
 import React, { useMemo, useState } from 'react';
 
 const Page = () => {
@@ -50,15 +50,19 @@ const Page = () => {
     //     ],
     //   ],
     // },
-    // {
-    //   brick: 'List',
-    //   id: newKey(),
-    //   children: [
-    //     'It is a single level list',
-    //     'Click enter to create a new line',
-    //     'Click enter twice to create a new paragraph',
-    //   ],
-    // },
+    {
+      brick: 'List',
+      id: newKey(),
+      children: [
+        { id: newKey(), brick: 'ListItem', value: 'line1' },
+        { id: newKey(), brick: 'ListItem', value: 'line2' },
+      ]
+      // children: [
+      //   'It is a single level list',
+      //   'Click enter to create a new line',
+      //   'Click enter twice to create a new paragraph',
+      // ],
+    },
     // { brick: 'Test', id: newKey(), value: 'Test text', test: '123' },
         { brick: 'Paragraph', id: newKey(), value: 'It is a <strong>paragraph</strong>' },
     // {
@@ -84,8 +88,15 @@ const Page = () => {
         components={[
           // List,
           Heading,
-          extend(Paragraph, withProps({ components: [Em, Strong, Br] })),
+          List,
+          extend(
+            Paragraph,
+            withProps({ component: 'li', components: [Em, Strong, Br] }),
+            withName('ListItem'),
+            { is: null },
+          ),
           Article,
+          extend(Paragraph, withProps({ components: [Em, Strong, Br] })),
           // Table,
           // Container,
           // Test,
