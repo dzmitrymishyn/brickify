@@ -11,12 +11,12 @@ import {
 import { useMergedRefs } from '@brickifyio/utils/hooks';
 import { forwardRef, useMemo } from 'react';
 
-import { useChanges, useChangesPluginFactory } from '../changes';
+import { type PropsWithChange, useChanges, useChangesPluginFactory } from '../changes';
 import { Commander, useCommandsPluginFactory } from '../commands';
 import { useMutation, useMutationsPluginFactory } from '../mutations';
 import { useSelectionPluginFactory } from '../selection';
 
-type Props = PropsWithStoredValue<BrickValue[]> & {
+type Props = PropsWithStoredValue<BrickValue[]> & PropsWithChange & {
   components?: Component[];
   style?: object;
 };
@@ -26,7 +26,6 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   stored,
   style,
 }, refProp) => {
-  // const { editable } = useRendererContext();
   const editable = true;
   const { store } = useRendererContext();
   const rootRef = useRendererRegistry(stored);

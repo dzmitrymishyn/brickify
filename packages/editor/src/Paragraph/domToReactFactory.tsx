@@ -38,7 +38,7 @@ export const domToReactFactory = (
     // eslint-disable-next-line -- TODO: check it
     const oldChildNodes = isValidElement(oldDocument)
       // eslint-disable-next-line -- TODO: check it
-      ? array(oldDocument.props.children) || []
+      ? array((oldDocument.props as any).children) || []
       : [];
 
     if (!Component) {
