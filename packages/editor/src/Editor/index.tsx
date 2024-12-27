@@ -95,7 +95,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
       <Commander containerRef={rootRef} components={components} />
       <div
         ref={ref}
-        data-brick="editor"
+        data-brick="Editor"
         style={style}
         {...editable && {
           contentEditable: true,

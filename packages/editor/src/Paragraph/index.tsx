@@ -2,6 +2,7 @@ import {
   type BrickValue,
   type Component,
   extend,
+  type PropsWithBrick,
   type PropsWithStoredValue,
   useRendererRegistry,
   withName,
@@ -26,13 +27,17 @@ type Value = BrickValue & {
   value: string | number;
 };
 
-type Props = Partial<PropsWithStoredValue<Value>> & PropsWithChange<Value> & {
-  components?: Component[];
-  component?: ElementType;
-  value: Value['value'];
-  style?: object;
-  editable?: boolean;
-};
+type Props =
+  & Partial<PropsWithStoredValue<Value>>
+  & PropsWithChange<Value>
+  & PropsWithBrick
+  & {
+    components?: Component[];
+    component?: ElementType;
+    value: Value['value'];
+    style?: object;
+    editable?: boolean;
+  };
 
 const Paragraph: React.FC<Props> = ({
   value,
@@ -42,6 +47,7 @@ const Paragraph: React.FC<Props> = ({
   stored: brickRecord = { value: { value: '' } },
   style,
   editable: editableProp = true,
+  brick = 'Paragraph',
 }) => {
   const oldNodes = useRef<ReactNode>(null);
   // const { editable } = useBrickContext();
@@ -77,7 +83,7 @@ const Paragraph: React.FC<Props> = ({
 
   return (
     <Component
-      data-brick="paragraph"
+      data-brick={brick}
       ref={ref}
       style={style}
       {...{

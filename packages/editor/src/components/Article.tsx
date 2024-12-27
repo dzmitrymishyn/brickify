@@ -29,7 +29,11 @@ export const Article: React.FC<Props> = ({ stored, title, description, onChange 
   });
 
   return (
-    <article ref={ref} style={{ border: '1px solid #ccc' }}>
+    <article
+      data-brick="Article"
+      ref={ref}
+      style={{ border: '1px solid #ccc' }}
+    >
       <Paragraph
         style={{ marginTop: 0 }}
         onChange={(value) => onChange?.(

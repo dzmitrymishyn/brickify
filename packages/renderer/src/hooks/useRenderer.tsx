@@ -14,7 +14,7 @@ import { type RendererStore, type RendererStoreValue } from '../store';
 import { makeRef, type PathRef } from '../utils';
 
 const sanitizeBrick = (
-  { id: _id, brick: _brick, ...rest }: BrickValue,
+  { id: _id, ...rest }: BrickValue,
 ) => rest;
 
 type Value = Record<string, unknown>;
