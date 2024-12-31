@@ -15,7 +15,3 @@ export type NamedComponent = {
   name: string;
   brick?: string;
 };
-
-export type PropsWithBrick = {
-  brick?: string;
-};

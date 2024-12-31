@@ -17,12 +17,12 @@ import { useMutation, useMutationsPluginFactory } from '../mutations';
 import { useSelectionPluginFactory } from '../selection';
 
 type Props = PropsWithStoredValue<BrickValue[]> & PropsWithChange & {
-  components?: Component[];
+  components?: Record<string, Component>;
   style?: object;
 };
 
 const Editor = forwardRef<HTMLDivElement, Props>(({
-  components = [],
+  components = {},
   stored,
   style,
 }, refProp) => {
@@ -39,55 +39,41 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   const { markToRevert } = useMutation(rootRef, ({ mutations }) => {
     markToRevert(mutations);
 
-    mutations.reduceRight((_, mutation) => {
-      mutation.addedNodes.forEach((node) => {
-        if (node.parentNode !== rootRef.current) {
-          return;
-        }
+    let addedItemsCount = 0;
+    Array.from(rootRef.current?.childNodes ?? []).forEach((node, index) => {
+      if (store.get(node)) {
+        return;
+      }
 
-        let current = node.previousSibling;
-        let index = 0;
-        while (current) {
-          if (store.get(current)) {
-            index += 1;
-          }
-          current = current.previousSibling;
-        }
+      const Component = Object.values(components).find((component) => (
+        'is' in component
+        && typeof component.is === 'function'
+        && component.is(node)
+      ));
 
-        const Component = components.find((component) => (
-          'is' in component
-          && typeof component.is === 'function'
-          && component.is(node)
-        ));
-
-        if (Component) {
-          const innerHTML = node instanceof HTMLElement ? node.innerHTML : '';
-          const innerText = node instanceof HTMLElement ? node.innerText.trim() : '';;
-          const brick = getName(Component);
-          add([...stored.pathRef.current(), 'value', `${index}`], {
-            brick,
-            ...brick === 'Paragraph' && {
-              value: innerText ? innerHTML : `<br>`,
-            },
-            ...brick === 'List' && {
-              children: Array.from(node.childNodes ?? []).map((child: any) => ({
-                brick: 'ListItem',
-                id: Math.random().toFixed(5),
-                value: child?.innerHTML ?? node.innerText?.trim() ?? '',
-              })) ?? [],
-            },
-            id: Math.random().toFixed(5),
-          });
-        }
-      });
-
-      return _;
-    }, null);
+      if (Component) {
+        const innerHTML = node instanceof HTMLElement ? node.innerHTML : '';
+        const innerText = node instanceof HTMLElement ? node.innerText.trim() : '';;
+        const brick = getName(Component);
+        add([...stored.pathRef.current(), 'value', `${index - addedItemsCount}`], {
+          brick,
+          id: Math.random().toFixed(5),
+          ...(brick === 'Paragraph' || brick === 'Heading') && {
+            value: innerText ? innerHTML : `<br>`,
+          },
+          ...brick === 'List' && {
+            children: Array.from(node.childNodes ?? []).map((child: any) => child.innerHTML) ?? [],
+          },
+        });
+        addedItemsCount += 1;
+      }
+    });
   });
 
-  const { value } = useRenderer(useMemo(() => ({
-    slotsValue: { value: stored.value },
-    slotsMeta: { value: components },
+  const value = useRenderer(useMemo(() => ({
+    value: stored.value,
+    components,
+    pathPrefix: () => ['value'],
   }), [components, stored.value]));
 
   return (

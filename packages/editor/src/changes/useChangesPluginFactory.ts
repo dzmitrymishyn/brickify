@@ -114,8 +114,11 @@ export const useChangesPluginFactory: UsePluginFactory<
       }
 
       return cloneElement(element, {
-        onChange: (value: unknown) => controller.onChange({
-          path: element.props.stored.pathRef.current(),
+        onChange: (
+          value: unknown,
+          pathSuffix: string[] = [],
+        ) => controller.onChange({
+          path: [...element.props.stored.pathRef.current(), ...pathSuffix],
           type: value === undefined ? 'remove' : 'update',
           value,
         }),

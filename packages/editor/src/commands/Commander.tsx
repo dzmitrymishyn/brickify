@@ -21,7 +21,7 @@ const Command: React.FC<CommandProps> = ({
 };
 
 export type CommanderProps = {
-  components: Component[];
+  components: Component[] | Record<string, Component>;
   containerRef: RefObject<Node | null>;
 };
 
@@ -34,7 +34,7 @@ export const Commander: React.FC<CommanderProps> = ({
   components,
   containerRef,
 }) => {
-  const nodes = useMemo(() => components.map((component) => (
+  const nodes = useMemo(() => Object.values(components || {}).map((component) => (
     hasCommands(component)
       ? <Command
           key={getName(component)}

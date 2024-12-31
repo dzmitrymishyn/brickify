@@ -1,118 +1,140 @@
 import { array, tap } from '@brickifyio/operators';
+import { curry } from '@brickifyio/utils/functions';
 import * as A from 'fp-ts/lib/Array';
+import * as E from 'fp-ts/lib/Either';
 import { flow, pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
 import * as O from 'fp-ts/lib/Option';
-import { cloneElement, type ReactNode, useMemo, useRef } from 'react';
+import {
+  cloneElement,
+  type ReactElement,
+  type ReactNode,
+  useMemo,
+  useRef,
+} from 'react';
 
 import { type BrickValue, isBrickValue } from '../bricks';
-import { type Component, componentsToMap } from '../components';
+import { type Component } from '../components';
 import { useRendererContext } from '../context';
-import { hasProps, hasSlots } from '../extensions';
+import { applySlots, hasProps, hasSlots } from '../extensions';
 import { type PluginMap, renderWithPlugins } from '../plugins';
 import { type RendererStore, type RendererStoreValue } from '../store';
 import { makeRef, type PathRef } from '../utils';
 
 const sanitizeBrick = (
-  { id: _id, ...rest }: BrickValue,
+  { id: _id, brick: _brick, ...rest }: BrickValue,
 ) => rest;
 
 type Value = Record<string, unknown>;
 
-type Deps = {
+type Options = {
   pathRef: PathRef;
-  props?: object;
   store: RendererStore;
+  render?: (
+    value: unknown, options: Omit<Options, 'render'>
+  ) => ReactElement | null;
   plugins: PluginMap;
+  previousValue?: unknown;
+  components: Record<string, Component>;
 };
 
-const render = (
-  deps: Deps,
-  slotsMeta: Record<string, Component>,
-  previousBrickValue?: Record<string, unknown>,
-) => flow(
-  O.fromPredicate(isBrickValue),
-  O.bindTo('brickValue'),
-  O.bind('stored', ({ brickValue }) => O.of<RendererStoreValue>({
-    pathRef: deps.pathRef,
-    value: brickValue,
-  })),
-  O.chain(({ brickValue, stored }) => pipe(
-    deps.store.get(brickValue),
-    O.fromNullable,
-    O.map(tap((oldStored) => {
-      oldStored.pathRef.current = deps.pathRef.current;
-    })),
-    O.chain(({ react }) => O.fromNullable(react)),
-    O.alt(() => pipe(
-      O.fromNullable(slotsMeta[brickValue.brick]),
+const renderBrickValue = curry(
+  (options: Options, value: BrickValue): O.Option<ReactElement> => {
+    const stored: RendererStoreValue = {
+      pathRef: options.pathRef,
+      value,
+      components: options.components,
+      name: value.brick,
+    };
+
+    return pipe(
+      O.fromNullable(options.components[value.brick]),
       O.bindTo('Component'),
       O.bind('slots', ({ Component }) => pipe(
         Object.entries(hasSlots(Component) ? Component.slots : {}),
         A.map(([key, propertySlots]) => [
           key,
-          propertySlots === 'inherit'
-            ? slotsMeta
-            : propertySlots
+          applySlots(propertySlots, options.components),
         ]),
         Object.fromEntries,
-        buildSlots(
-          deps,
-          brickValue,
-        ),
+        buildSlots(options, value),
         O.some,
       )),
       O.bind('props', ({ Component, slots }) => O.fromNullable({
+        ...sanitizeBrick(value),
         ...hasProps(Component) && Component.props,
-        ...sanitizeBrick(brickValue),
         ...slots,
         stored,
       })),
-      // O.map(tap(debug)),
       O.map(({ props, Component }) => {
-        const react = deps.store.get(previousBrickValue ?? {})?.react;
-        const key = brickValue.id ?? stored.pathRef.current().join('/');
-        return react && key === react.key
-          ? renderWithPlugins(
-            deps.plugins,
-            cloneElement(react, props),
-          )
+        const oldReact = options.store.get(options.previousValue)?.react;
+        const key = value.id ?? stored.pathRef.current().join('/');
+
+        return oldReact && key === oldReact.key
+          ? cloneElement(oldReact, props)
           : renderWithPlugins(
-            deps.plugins,
-            <Component
-              {...props}
-              key={key}
-            />
-          );
+              options.plugins,
+              <Component
+                {...props}
+                key={key}
+              />
+            );
       }),
       O.map(tap((react) => {
         stored.react = react;
       })),
-    )),
-  )),
-  O.getOrElseW(() => null),
+    );
+  },
 );
 
-const traverseSlotValues = (
-  deps: Deps,
-  slotsMeta: Record<string, Component>,
-  previousValue?: Record<string, unknown>,
-) => flow(
+const renderUnknownValue = curry(
+  (options: Options, value: unknown): O.Option<ReactElement> => {
+    const stored: RendererStoreValue = {
+      pathRef: options.pathRef,
+      value,
+      components: options.components,
+    };
+    const react = options.render?.(value, options);
+
+    stored.react = react ?? undefined;
+
+    return O.fromNullable(stored.react);
+  },
+);
+
+const render = curry((options: Options, value: unknown): ReactNode => pipe(
+  options.store.get(value),
+  O.fromNullable,
+  O.map(tap((oldStored) => {
+    oldStored.pathRef.current = options.pathRef.current;
+  })),
+  O.chain(({ react }) => O.fromNullable(react)),
+  O.altW(() => pipe(
+    value,
+    E.fromPredicate(isBrickValue, I.of),
+    E.foldW(
+      renderUnknownValue(options),
+      renderBrickValue({ ...options, render: undefined }),
+    ),
+  )),
+  O.getOrElseW(() => null),
+));
+
+const traverseSlotValues = (options: Options) => flow(
   I.bindTo('valueOriginal'),
   I.bind('valueArray', ({ valueOriginal }) => array(valueOriginal)),
   ({ valueArray, valueOriginal }) => pipe(
     valueArray,
-    A.mapWithIndex((index, value) => render(
-      {
-        ...deps,
-        pathRef: makeRef(() => [
-          ...deps.pathRef.current(),
-          ...(Array.isArray(valueOriginal) ? [`${index}`] : []),
-        ]),
-      },
-      slotsMeta,
-      previousValue?.[index] as Record<string, unknown>,
-    )(value)),
+    A.mapWithIndex((index, value) => render({
+      ...options,
+      previousValue: Array.isArray(valueOriginal)
+        ? (options.previousValue as unknown[])?.[index]
+        : options.previousValue,
+      pathRef: makeRef(() => [
+        ...options.pathRef.current(),
+        ...(Array.isArray(valueOriginal) ? [`${index}`] : []),
+      ]),
+    })(value)),
   ),
 );
 
@@ -121,9 +143,8 @@ type SlotsMetaToReactNode = (
 ) => Record<string, ReactNode>;
 
 const buildSlots = (
-  deps: Deps,
-  brickValue: Value,
-  previousBrickValue?: Record<string, unknown>,
+  options: Options,
+  value: Value,
 ): SlotsMetaToReactNode => flow(
   O.fromPredicate(flow(Object.keys, (keys) => keys.length, Boolean)),
   O.map(Object.entries<Record<string, Component>>),
@@ -132,49 +153,47 @@ const buildSlots = (
       name,
       traverseSlotValues(
         {
-          ...deps,
-          pathRef: makeRef(() => [...deps.pathRef.current(), name]),
+          ...options,
+          previousValue: (options.previousValue as Record<string, unknown>)
+            ?.[name],
+          components,
+          pathRef: makeRef(() => [...options.pathRef.current(), name]),
         },
-        components,
-        previousBrickValue?.[name] as Record<string, unknown>,
-      )(brickValue[name]),
+      )(value[name]),
     ] as const,
   )),
   O.map(Object.fromEntries<ReactNode>),
   O.getOrElseW(() => ({})),
 );
 
-const toSlotsMetaMap = flow(
-  Object.entries<Component[]>,
-  A.map(([key, components]) => [key, componentsToMap(components)]),
-  Object.fromEntries,
-);
-
 export type UseRendererOptions = {
-  slotsValue: Record<string, unknown>;
-  slotsMeta: Record<string, Component[]>;
-  props?: object;
+  value: unknown;
+  components?: Record<string, Component>;
+  pathPrefix?: () => string[];
+  render?: Options['render'];
 };
 
 export const useRenderer = ({
-  slotsValue,
-  slotsMeta,
-  props,
+  value,
+  components = {},
+  pathPrefix = () => [],
+  render: renderProp,
 }: UseRendererOptions) => {
   const { plugins, store } = useRendererContext();
-  const valueRef = useRef<Record<string, unknown>>(undefined);
+  const valueRef = useRef<unknown>(undefined);
 
   return useMemo(() => pipe(
-    slotsMeta,
-    toSlotsMetaMap,
-    buildSlots({
+    value,
+    traverseSlotValues({
       store,
-      props,
       plugins,
-      pathRef: makeRef(() => []),
-    }, slotsValue as Value, valueRef.current),
-    tap(() => {
-      valueRef.current = slotsValue;
+      components,
+      pathRef: makeRef(pathPrefix),
+      previousValue: valueRef.current,
+      render: renderProp,
     }),
-  ), [slotsValue, props, slotsMeta, plugins, store]);
+    tap(() => {
+      valueRef.current = value;
+    }),
+  ), [value, components, pathPrefix, plugins, store, renderProp]);
 };

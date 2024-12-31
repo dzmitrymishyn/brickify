@@ -1,6 +1,7 @@
 import { type ReactElement } from 'react';
 
 import { type BrickValue } from '../bricks';
+import { type Component } from '../components';
 import { type PathRef } from '../utils';
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any --
@@ -8,6 +9,8 @@ import { type PathRef } from '../utils';
  * Each place that uses it should identify its type.
  */
 export type RendererStoreValue<Value = any> = {
+  name?: string;
+
   /**
    * The value associated with this item. Usually we don't mutate the original
    * object and it's just a link. For primitive types we can transform it
@@ -25,6 +28,8 @@ export type RendererStoreValue<Value = any> = {
    * and tracking
    */
   pathRef: PathRef;
+
+  components?: Record<string, Component>;
 
   /**
    * react element that is used for caching purposes. Could be undefined on

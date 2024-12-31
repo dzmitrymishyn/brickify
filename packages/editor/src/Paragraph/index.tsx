@@ -2,7 +2,6 @@ import {
   type BrickValue,
   type Component,
   extend,
-  type PropsWithBrick,
   type PropsWithStoredValue,
   useRendererRegistry,
   withName,
@@ -30,7 +29,6 @@ type Value = BrickValue & {
 type Props =
   & Partial<PropsWithStoredValue<Value>>
   & PropsWithChange<Value>
-  & PropsWithBrick
   & {
     components?: Component[];
     component?: ElementType;
@@ -47,7 +45,6 @@ const Paragraph: React.FC<Props> = ({
   stored: brickRecord = { value: { value: '' } },
   style,
   editable: editableProp = true,
-  brick = 'Paragraph',
 }) => {
   const oldNodes = useRef<ReactNode>(null);
   // const { editable } = useBrickContext();
@@ -80,10 +77,9 @@ const Paragraph: React.FC<Props> = ({
   );
 
   oldNodes.current = <>{nodes}</>;
-
   return (
     <Component
-      data-brick={brick}
+      data-brick={brickRecord?.name ?? 'Paragraph'}
       ref={ref}
       style={style}
       {...{
@@ -125,57 +121,4 @@ export default extend(
     return false;
   }},
   withName('Paragraph'),
-  // withShortcuts([
-  //   {
-  //     name: 'newLine',
-  //     shortcuts: ['enter'],
-  //     handle: ({ onChange, range, resultRange, getFromStore, descendants, stopBrickPropagation }) => {
-  //       const currentRange = range();
-  //       const target = descendants[0];
-
-  //       assert(target, 'This handler should be called by it\'s parent and descendants should be defined');
-
-  //       if (currentRange) {
-  //         const cacheItem = getFromStore(target);
-  //         assert(cacheItem, 'Cache item should exist');
-
-  //         currentRange.extractContents();
-
-  //         const tempDiv = document.createElement('div');
-  //         const tempRange = new Range();
-  //         tempRange.setStart(currentRange.startContainer, currentRange.startOffset);
-  //         tempRange.setEnd(
-  //           getLastDeepLeaf(target)!,
-  //           getLastDeepLeaf(target)?.textContent?.length
-  //             ?? getLastDeepLeaf(target)?.childNodes?.length
-  //             ?? 0,
-  //         );
-
-  //         if (!tempRange.collapsed) {
-  //           tempDiv.append(tempRange.extractContents());
-  //         }
-
-  //         const nextPath = next(cacheItem.pathRef.current());
-
-  //         resultRange({
-  //           start: { path: nextPath, offset: 0 },
-  //           end: { path: nextPath, offset: 0 },
-  //         });
-
-  //         onChange?.({
-  //           type: 'add',
-  //           path: nextPath,
-  //           value: {
-  //             brick: 'Paragraph',
-  //             id: Math.random().toFixed(3),
-  //             // BR is a native browser behaviour to make an empty new line
-  //             value: tempDiv.innerHTML ?? '',
-  //           },
-  //         });
-
-  //         stopBrickPropagation();
-  //       }
-  //     },
-  //   },
-  // ]),
 );

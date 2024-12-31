@@ -54,6 +54,7 @@ const Page = () => {
       brick: 'List',
       id: newKey(),
       children: [
+        '123',
         { id: newKey(), brick: 'ListItem', value: 'line1' },
         { id: newKey(), brick: 'ListItem', value: 'line2' },
       ]
@@ -79,30 +80,24 @@ const Page = () => {
   ]).flat());
 
   return (
-    <div>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
       <Editor
         style={{ padding: 20 }}
         // eslint-disable-next-line -- TODO: check it
         value={state as any}
         onChange={setState}
-        components={[
+        components={{
           // List,
           Heading,
           List,
-          extend(
-            Paragraph,
-            withProps({ component: 'li', components: [Em, Strong, Br] }),
-            withName('ListItem'),
-            { is: null },
-          ),
           Article,
-          extend(Paragraph, withProps({ components: [Em, Strong, Br] })),
+          Paragraph: extend(Paragraph, withProps({ style: { margin: '16px 0' }, components: [Em, Strong, Br] })),
           // Table,
           // Container,
           // Test,
-        ]}
+        }}
       />
-      <pre>
+      <pre style={{ overflow: 'scroll' }}>
         {JSON.stringify(state, null, 2)}
       </pre>
     </div>

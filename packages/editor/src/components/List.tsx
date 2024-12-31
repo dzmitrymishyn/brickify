@@ -1,63 +1,98 @@
 import {
+  applySlots,
+  type BrickValue,
   extend,
+  hasProps,
   type PropsWithStoredValue,
-  useRendererContext,
+  useRenderer,
   useRendererRegistry,
   withName,
-  withSlots,
 } from '@brickifyio/renderer';
 import { compile } from 'css-select';
 import { Node as DomhandlerNode } from 'domhandler';
-import { type PropsWithChildren } from 'react';
 
 import { type PropsWithChange, useChanges } from '../changes';
 import { useMutation } from '../mutations';
+import Paragraph from '../Paragraph';
 
-type Props = PropsWithStoredValue & PropsWithChange & PropsWithChildren;
+type Value = BrickValue & {
+  children: string[];
+};
 
-const List: React.FC<Props> = ({ children, stored, onChange }) => {
+type Props = PropsWithStoredValue<Value> & PropsWithChange & {
+  children: Value['children'];
+};
+
+const List: React.FC<Props> = ({ stored, children, onChange }) => {
   const ref = useRendererRegistry<HTMLUListElement>(stored);
-  const { store } = useRendererContext();
   const { add } = useChanges();
 
-  const { markToRevert } = useMutation(ref, ({ mutations, removed }) => {
+  const { markToRevert } = useMutation(ref, ({ mutations, removed, addedDescendants }) => {
     markToRevert(mutations);
 
     if (removed) {
       return onChange?.(undefined);
     }
 
-    mutations.reduceRight((_, mutation) => {
-      mutation.addedNodes.forEach((node) => {
-        if (node.parentNode !== ref.current) {
-          return;
+    if (addedDescendants.length) {
+      let addedItemsCount = 0;
+      ref.current?.childNodes.forEach((node, index) => {
+        if (addedDescendants.includes(node)) {
+          const innerHTML = node instanceof HTMLElement ? node.innerHTML : '';
+          add([
+            ...stored.pathRef.current(),
+            'children',
+            `${index - addedItemsCount}`
+          ], innerHTML);
+          addedItemsCount += 1;
         }
-
-        let current = node.previousSibling;
-        let index = 0;
-        while (current) {
-          if (store.get(current)) {
-            index += 1;
-          }
-          current = current.previousSibling;
-        }
-
-        const innerHTML = node instanceof HTMLElement ? node.innerHTML : '';
-        const innerText = node instanceof HTMLElement ? node.innerText.trim() : '';
-        add([...stored.pathRef.current(), 'children', `${index}`], {
-          brick: 'ListItem',
-          value: innerText ? innerHTML : '',
-          id: Math.random().toFixed(5),
-        });
       });
+    }
+  });
 
-      return _;
-    }, null);
+  const childrenElements = useRenderer({
+    value: children,
+    components: applySlots([
+      ['ListItem', 'Paragraph', Paragraph, { component: 'li', style: { margin: 0 } }],
+    ], stored?.components),
+    pathPrefix: () => [...stored.pathRef.current(), 'children'],
+    render(value, options) {
+      const index = options.pathRef.current().at(-1);
+
+      if (typeof value !== 'string' || !index) {
+        return null;
+      }
+
+      const Component = options.components.ListItem;
+      const pathPrefix = ['children', index];
+      const childStored = {
+        name: 'ListItem',
+        components: options.components,
+        pathRef: {
+          current: () => pathPrefix,
+        },
+        value: { value },
+      };
+
+      return (
+        <Component
+          {...hasProps(Component) ? Component.props : {}}
+          value={value}
+          stored={childStored}
+          key={index}
+          component="li"
+          style={{ margin: 0 }}
+          onChange={(event: { value: string }) => {
+            onChange?.(event?.value, pathPrefix);
+          }}
+        />
+      );
+    },
   });
 
   return (
     <ul ref={ref}>
-      {children}
+      {childrenElements}
     </ul>
   );
 };
@@ -65,18 +100,17 @@ const List: React.FC<Props> = ({ children, stored, onChange }) => {
 export default extend(
   List,
   withName('List'),
-  withSlots({
-    children: 'inherit',
-  }),
-  { is: (node: DomhandlerNode | Node) => {
-    if (node instanceof DomhandlerNode) {
-      return compile('ul')(node);
-    }
+  {
+    is: (node: DomhandlerNode | Node) => {
+      if (node instanceof DomhandlerNode) {
+        return compile('ul')(node);
+      }
 
-    if (node instanceof HTMLElement) {
-      return node.matches('ul');
-    }
+      if (node instanceof HTMLElement) {
+        return node.matches('ul');
+      }
 
-    return false;
-  }},
+      return false;
+    },
+  },
 );

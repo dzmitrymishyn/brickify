@@ -2,17 +2,15 @@ import { useMemo } from 'react';
 
 import { type RendererStoreValue } from './models';
 
-export type RendererStoreKey = object | Node;
-
 const createStore = () => {
-  const store = new Map<RendererStoreKey, RendererStoreValue>();
+  const store = new Map<unknown, RendererStoreValue>();
 
   return {
     get: <Value = unknown>(
-      key: RendererStoreKey,
+      key: unknown,
     ): RendererStoreValue<Value> | undefined => store.get(key),
     set: store.set.bind(store),
-    update: (key: RendererStoreKey, value: object) => {
+    update: (key: unknown, value: object) => {
       const stored = store.get(key);
 
       if (stored) {
