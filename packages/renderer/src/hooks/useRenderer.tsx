@@ -88,18 +88,9 @@ const renderBrickValue = curry(
 );
 
 const renderUnknownValue = curry(
-  (options: Options, value: unknown): O.Option<ReactElement> => {
-    const stored: RendererStoreValue = {
-      pathRef: options.pathRef,
-      value,
-      components: options.components,
-    };
-    const react = options.render?.(value, options);
-
-    stored.react = react ?? undefined;
-
-    return O.fromNullable(stored.react);
-  },
+  (options: Options, value: unknown) => O.fromNullable(
+    options.render?.(value, options),
+  ),
 );
 
 const render = curry((options: Options, value: unknown): ReactNode => pipe(

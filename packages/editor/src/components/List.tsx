@@ -4,12 +4,16 @@ import {
   extend,
   hasProps,
   type PropsWithStoredValue,
+  type RendererStoreValue,
+  usePrimitiveChildrenCache,
   useRenderer,
+  useRendererContext,
   useRendererRegistry,
   withName,
 } from '@brickifyio/renderer';
 import { compile } from 'css-select';
 import { Node as DomhandlerNode } from 'domhandler';
+import { cloneElement } from 'react';
 
 import { type PropsWithChange, useChanges } from '../changes';
 import { useMutation } from '../mutations';
@@ -36,12 +40,19 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
 
     if (addedDescendants.length) {
       let addedItemsCount = 0;
+      const path = [
+        ...stored.pathRef.current(),
+        'children',
+      ];
       ref.current?.childNodes.forEach((node, index) => {
+        if (addedItemsCount === addedDescendants.length) {
+          return;
+        }
+
         if (addedDescendants.includes(node)) {
           const innerHTML = node instanceof HTMLElement ? node.innerHTML : '';
           add([
-            ...stored.pathRef.current(),
-            'children',
+            ...path,
             `${index - addedItemsCount}`
           ], innerHTML);
           addedItemsCount += 1;
@@ -50,6 +61,8 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
     }
   });
 
+  const cache = usePrimitiveChildrenCache();
+  const { store } = useRendererContext();
   const childrenElements = useRenderer({
     value: children,
     components: applySlots([
@@ -63,18 +76,41 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
         return null;
       }
 
-      const Component = options.components.ListItem;
-      const pathPrefix = ['children', index];
-      const childStored = {
+      const cachedValue = cache.get(index, options.previousValue);
+      const oldStored = cachedValue
+        && store.get<{ value: unknown }>(cachedValue.value);
+
+      if (oldStored?.react) {
+        if (oldStored.value.value === value) {
+          return oldStored.react;
+        }
+
+        const props = {
+          stored: {
+            ...oldStored,
+            value: cache.save(index, value),
+          },
+          value,
+        };
+        props.stored.value = cache.save(index, value);
+        props.stored.react = cloneElement(oldStored.react, props);
+
+        return props.stored.react;
+      }
+
+      const childStored: RendererStoreValue<{ value: unknown } | undefined> = {
         name: 'ListItem',
         components: options.components,
         pathRef: {
           current: () => pathPrefix,
         },
-        value: { value },
+        value: cache.save(index, value),
       };
 
-      return (
+      const Component = options.components.ListItem;
+      const pathPrefix = ['children', index];
+
+      childStored.react = (
         <Component
           {...hasProps(Component) ? Component.props : {}}
           value={value}
@@ -87,6 +123,8 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
           }}
         />
       );
+
+      return childStored.react;
     },
   });
 
