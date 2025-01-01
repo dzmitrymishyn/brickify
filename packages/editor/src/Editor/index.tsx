@@ -2,6 +2,7 @@ import {
   type BrickValue,
   type Component,
   getName,
+  hasMatcher,
   type PropsWithStoredValue,
   useRenderer,
   useRendererContext,
@@ -46,9 +47,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
       }
 
       const Component = Object.values(components).find((component) => (
-        'is' in component
-        && typeof component.is === 'function'
-        && component.is(node)
+        hasMatcher(component) && component.is(node)
       ));
 
       if (Component) {
