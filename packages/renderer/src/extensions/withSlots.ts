@@ -52,9 +52,9 @@ export const applySlots = (
           : parentSlots[slot[0]] ?? slot[1]
       ) ?? (() => null);
 
-      if (hasProps(Component) && props) {
+      if (props) {
         Component = extend(Component, withProps({
-          ...Component.props,
+          ...hasProps(Component) && Component.props,
           ...props,
         }));
       }

@@ -2,6 +2,7 @@ import {
   applySlots,
   type BrickValue,
   extend,
+  handleAddedNodes,
   hasProps,
   type PropsWithStoredValue,
   type RendererStoreValue,
@@ -37,27 +38,16 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
       return onChange?.(undefined);
     }
 
-    if (addedDescendants.length) {
-      let addedItemsCount = 0;
-      const path = [
-        ...stored.pathRef.current(),
-        'children',
-      ];
-      ref.current?.childNodes.forEach((node, index) => {
-        if (addedItemsCount === addedDescendants.length) {
-          return;
-        }
-
-        if (addedDescendants.includes(node)) {
-          const innerHTML = node instanceof HTMLElement ? node.innerHTML : '';
-          add([
-            ...path,
-            `${index - addedItemsCount}`
-          ], innerHTML);
-          addedItemsCount += 1;
-        }
-      });
-    }
+    handleAddedNodes({
+      add: ({ node, index }) => add(
+        [...stored.pathRef.current(), 'children', `${index}`],
+        node instanceof HTMLElement
+          ? node.innerHTML || node.innerText
+          : node.textContent,
+      ),
+      addedNodes: addedDescendants,
+      allNodes: Array.from(ref.current?.childNodes ?? []),
+    });
   });
 
   const cache = usePrimitiveChildrenCache();

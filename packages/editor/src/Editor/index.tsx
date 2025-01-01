@@ -2,10 +2,9 @@ import {
   type BrickValue,
   type Component,
   getName,
-  hasMatcher,
+  handleAddedNodes,
   type PropsWithStoredValue,
   useRenderer,
-  useRendererContext,
   useRendererRegistry,
   withRendererContext,
 } from '@brickifyio/renderer';
@@ -28,7 +27,6 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   style,
 }, refProp) => {
   const editable = true;
-  const { store } = useRendererContext();
   const rootRef = useRendererRegistry(stored);
 
   const ref = useMergedRefs(
@@ -37,35 +35,28 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   );
 
   const { add } = useChanges();
-  const { markToRevert } = useMutation(rootRef, ({ mutations }) => {
+  const { markToRevert } = useMutation(rootRef, ({ mutations, addedDescendants }) => {
     markToRevert(mutations);
 
-    let addedItemsCount = 0;
-    Array.from(rootRef.current?.childNodes ?? []).forEach((node, index) => {
-      if (store.get(node)) {
-        return;
-      }
-
-      const Component = Object.values(components).find((component) => (
-        hasMatcher(component) && component.is(node)
-      ));
-
-      if (Component) {
-        const innerHTML = node instanceof HTMLElement ? node.innerHTML : '';
-        const innerText = node instanceof HTMLElement ? node.innerText.trim() : '';;
-        const brick = getName(Component);
-        add([...stored.pathRef.current(), 'value', `${index - addedItemsCount}`], {
-          brick,
+    handleAddedNodes({
+      add: ({ node, index, component }) => component && add(
+        [...stored.pathRef.current(), 'value', `${index}`],
+        {
+          brick: getName(component),
           id: Math.random().toFixed(5),
-          ...(brick === 'Paragraph' || brick === 'Heading') && {
-            value: innerHTML || innerText || node.textContent || `<br>`,
+          ...(getName(component) === 'Paragraph' || getName(component) === 'Heading') && {
+            value: node instanceof HTMLElement
+              ? node.innerHTML || node.innerText || ''
+              : node.textContent || '',
           },
-          ...brick === 'List' && {
+          ...getName(component) === 'List' && {
             children: Array.from(node.childNodes ?? []).map((child: any) => child.innerHTML) ?? [],
           },
-        });
-        addedItemsCount += 1;
-      }
+        },
+      ),
+      addedNodes: addedDescendants,
+      allNodes: Array.from(rootRef.current?.childNodes ?? []),
+      components,
     });
   });
 
