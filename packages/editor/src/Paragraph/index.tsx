@@ -1,13 +1,13 @@
+import { isText } from '@brickifyio/browser/utils';
 import {
   type BrickValue,
   type Component,
   extend,
   type PropsWithStoredValue,
   useRendererRegistry,
+  withMatcher,
   withName,
 } from '@brickifyio/renderer';
-import { compile } from 'css-select';
-import { Node as DomhandlerNode } from 'domhandler';
 import { pipe } from 'fp-ts/lib/function';
 import { parseDocument } from 'htmlparser2';
 import {
@@ -109,16 +109,8 @@ const Paragraph: React.FC<Props> = ({
 
 export default extend(
   Paragraph,
-  { is: (node: DomhandlerNode | Node) => {
-    if (node instanceof DomhandlerNode) {
-      return compile('*')(node);
-    }
-
-    if (node instanceof HTMLElement) {
-      return node.matches('*');
-    }
-
-    return false;
-  }},
+  withMatcher((node) => node instanceof HTMLElement
+    ? node.matches('*')
+    : isText(node)),
   withName('Paragraph'),
 );

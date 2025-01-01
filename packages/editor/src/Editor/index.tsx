@@ -59,7 +59,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
           brick,
           id: Math.random().toFixed(5),
           ...(brick === 'Paragraph' || brick === 'Heading') && {
-            value: innerText ? innerHTML : `<br>`,
+            value: innerHTML || innerText || node.textContent || `<br>`,
           },
           ...brick === 'List' && {
             children: Array.from(node.childNodes ?? []).map((child: any) => child.innerHTML) ?? [],

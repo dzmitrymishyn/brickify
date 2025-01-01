@@ -1,6 +1,4 @@
-import { extend, withName, withProps } from '@brickifyio/renderer';
-import { compile } from 'css-select';
-import { Node as DomhandlerNode } from 'domhandler';
+import { extend, withMatcher, withName, withProps } from '@brickifyio/renderer';
 
 import { withCommands } from '../commands';
 import Paragraph from '../Paragraph';
@@ -9,19 +7,7 @@ export default extend(
   Paragraph,
   withName('Heading'),
   withCommands([]),
-  {
-    is: (node: DomhandlerNode | Node) => {
-      if (node instanceof DomhandlerNode) {
-        return compile('h1')(node);
-      }
-
-      if (node instanceof HTMLElement) {
-        return node.matches('h1');
-      }
-
-      return false;
-    },
-  },
+  withMatcher((node) => node instanceof HTMLElement && node.matches('h1')),
   withProps({
     component: 'h1',
   }),

@@ -9,10 +9,9 @@ import {
   useRenderer,
   useRendererContext,
   useRendererRegistry,
+  withMatcher,
   withName,
 } from '@brickifyio/renderer';
-import { compile } from 'css-select';
-import { Node as DomhandlerNode } from 'domhandler';
 import { cloneElement } from 'react';
 
 import { type PropsWithChange, useChanges } from '../changes';
@@ -132,17 +131,5 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
 export default extend(
   List,
   withName('List'),
-  {
-    is: (node: DomhandlerNode | Node) => {
-      if (node instanceof DomhandlerNode) {
-        return compile('ul')(node);
-      }
-
-      if (node instanceof HTMLElement) {
-        return node.matches('ul');
-      }
-
-      return false;
-    },
-  },
+  withMatcher((node) => node instanceof HTMLElement && node.matches('ul')),
 );
