@@ -1,3 +1,4 @@
+import { curry } from '@brickifyio/utils/functions';
 import * as A from 'fp-ts/lib/Array';
 import { pipe } from 'fp-ts/lib/function';
 import { type ReactElement } from 'react';
@@ -15,10 +16,10 @@ const getRenderFromPlugins = (
   A.filter(Boolean),
 );
 
-export const renderWithPlugins = (
+export const renderWithPlugins = curry((
   plugins: PluginMap,
   element: ReactElement,
 ) => pipe(
   getRenderFromPlugins(plugins),
   A.reduce(element, (acc, fn) => fn?.(acc) ?? acc),
-);
+));

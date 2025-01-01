@@ -67,19 +67,22 @@ const renderBrickValue = curry(
         stored,
       })),
       O.map(({ props, Component }) => {
-        const oldReact = options.store.get(options.previousValue)?.react;
+        const oldReact = options.store.get(options.previousValue)
+          ?.reactWithoutPlugins;
         const key = value.id ?? stored.pathRef.current().join('/');
 
-        return oldReact && key === oldReact.key
+        const reactWithoutPlugins = oldReact && key === oldReact.key
           ? cloneElement(oldReact, props)
-          : renderWithPlugins(
-              options.plugins,
-              <Component
-                {...props}
-                key={key}
-              />
-            );
+          :  <Component
+              {...props}
+              key={key}
+            />;
+
+        stored.reactWithoutPlugins = reactWithoutPlugins;
+
+        return reactWithoutPlugins;
       }),
+      O.map(renderWithPlugins(options.plugins)),
       O.map(tap((react) => {
         stored.react = react;
       })),

@@ -36,6 +36,12 @@ export type RendererStoreValue<Value = any> = {
    * the rendering phase
    */
   react?: ReactElement;
+
+  /**
+   * An element without plugins that should be used for updating plugins
+   * for an element.
+   */
+  reactWithoutPlugins?: ReactElement;
 };
 
 

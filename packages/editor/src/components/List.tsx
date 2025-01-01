@@ -85,17 +85,11 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
           return oldStored.react;
         }
 
-        const props = {
-          stored: {
-            ...oldStored,
-            value: cache.save(index, value),
-          },
-          value,
-        };
-        props.stored.value = cache.save(index, value);
-        props.stored.react = cloneElement(oldStored.react, props);
+        const props = { value };
+        oldStored.value = cache.save(index, value);
+        oldStored.react = cloneElement(oldStored.react, props);
 
-        return props.stored.react;
+        return oldStored.react;
       }
 
       const childStored: RendererStoreValue<{ value: unknown } | undefined> = {
