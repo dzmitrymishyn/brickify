@@ -1,4 +1,4 @@
-import { reshape } from '@brickifyio/browser/manipulations';
+import { reshape, type ReshapeVariant } from '@brickifyio/browser/manipulations';
 import { type RefObject } from 'react';
 
 import { useCommand } from '../commands';
@@ -15,14 +15,14 @@ export const useReshapeCommand = (
   useCommand(ref, {
     name,
     shortcuts,
-    handle: ({ range, target, results }) => {
-      const previousReshape = results('reshape');
+    handle({ range, target, results }) {
+      const previousReshape = results<ReshapeVariant | undefined>('reshape');
 
       const { type, range: nextRange } = reshape(
         componentHelpers,
         range,
         target as HTMLElement,
-        previousReshape as 'expose' | 'surround',
+        previousReshape,
       );
 
       if (nextRange) {

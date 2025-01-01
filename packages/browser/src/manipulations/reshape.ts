@@ -1,4 +1,5 @@
 import { pipe } from 'fp-ts/lib/function';
+import * as O from 'fp-ts/lib/Option';
 
 import { expose } from './expose';
 import { type Component } from './models';
@@ -6,7 +7,7 @@ import { surround } from './surround';
 import { makeRangeWithinContainer } from './wrapContainerForReshape';
 import { closest } from '../traverse';
 
-type Action = 'surround' | 'expose';
+export type ReshapeVariant = 'surround' | 'expose';
 
 const actions = {
   surround,
@@ -32,11 +33,12 @@ export const reshape = (
   component: Component,
   range: Range,
   container?: HTMLElement | null,
-  forceActionType?: Action,
-) => pipe(
+  forceActionType?: ReshapeVariant,
+): { type?: string; range: Range } => pipe(
   forceActionType ?? getType(component, range, container),
-  (type) => ({
-    type,
-    range: actions[type](component, range, container),
-  }),
+  (type) => pipe(
+    O.fromNullable(actions[type](component, range, container)),
+    O.map((nextRange) => ({ type, range: nextRange })),
+    O.getOrElseW(() => ({ range }))
+  ),
 );

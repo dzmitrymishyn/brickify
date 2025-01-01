@@ -1,5 +1,5 @@
 export type ResultsCallback = {
-  (name: string): unknown;
+  <T = unknown>(name: string): T;
   (results: Record<string, unknown>): void;
 };
 

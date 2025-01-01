@@ -78,22 +78,26 @@ const restoreRange = (
   return createRange(startContainer, endContainer, startOffset, endOffset);
 };
 
-
 type Reshape = (
   range: Range,
   container?: HTMLElement | null,
 ) => Range;
 
-export const wrapContainerReshape = (reshape: Reshape): Reshape =>
-  (range: Range, container?: HTMLElement | null) => {
+export const wrapContainerReshape = (reshape: Reshape) =>
+  (range: Range, container?: HTMLElement | null): Range | null => {
     if (range.collapsed) {
       return range;
     }
 
     const rangeWithinContainer = isRangeWithinContainer(range, container);
     const rangeCopy = toRangeCopy(range);
+    const containerRange = prepareRange(range, container);
 
-    const nextRange = reshape(prepareRange(range, container), container);
+    if (containerRange.collapsed) {
+      return null;
+    }
+
+    const nextRange = reshape(containerRange, container);
 
     return restoreRange(
       rangeCopy,
