@@ -2,7 +2,9 @@ import {
   applySlots,
   type BrickValue,
   extend,
+  getName,
   handleAddedNodes,
+  hasNodeToBrick,
   hasProps,
   type PropsWithStoredValue,
   type RendererStoreValue,
@@ -12,6 +14,7 @@ import {
   useRendererRegistry,
   withMatcher,
   withName,
+  withNodeToBrick,
 } from '@brickifyio/renderer';
 import { cloneElement } from 'react';
 
@@ -31,6 +34,10 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
   const ref = useRendererRegistry<HTMLUListElement>(stored);
   const { add } = useChanges();
 
+  const components = applySlots([
+    ['ListItem', 'Paragraph', Paragraph, { component: 'li', style: { margin: 0 } }],
+  ], stored?.components);
+
   const { markToRevert } = useMutation(ref, ({ mutations, removed, addedDescendants }) => {
     markToRevert(mutations);
 
@@ -38,12 +45,19 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
       return onChange?.(undefined);
     }
 
+    const ListItem = components.ListItem;
+
+    if (!hasNodeToBrick(ListItem)) {
+      return;
+    }
+
     handleAddedNodes({
       add: ({ node, index }) => add(
         [...stored.pathRef.current(), 'children', `${index}`],
-        node instanceof HTMLElement
-          ? node.innerHTML || node.innerText
-          : node.textContent,
+        ListItem.nodeToBrick<{ value: string }>(
+          node,
+          { component: ListItem }
+        ).value,
       ),
       addedNodes: addedDescendants,
       allNodes: Array.from(ref.current?.childNodes ?? []),
@@ -54,9 +68,7 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
   const { store } = useRendererContext();
   const childrenElements = useRenderer({
     value: children,
-    components: applySlots([
-      ['ListItem', 'Paragraph', Paragraph, { component: 'li', style: { margin: 0 } }],
-    ], stored?.components),
+    components,
     pathPrefix: () => [...stored.pathRef.current(), 'children'],
     render(value, options) {
       const index = options.pathRef.current().at(-1);
@@ -122,4 +134,21 @@ export default extend(
   List,
   withName('List'),
   withMatcher((node) => node instanceof HTMLElement && node.matches('ul')),
+  withNodeToBrick((node, { components, component }) => {
+    const ListItem = applySlots([
+      ['ListItem', 'Paragraph', Paragraph, { component: 'li', style: { margin: 0 } }],
+    ], components)?.ListItem;
+
+    if (!(node instanceof HTMLUListElement) || !hasNodeToBrick(ListItem)) {
+      return null;
+    }
+
+    return {
+      id: Math.random().toFixed(5),
+      brick: getName(component),
+      children: Array.from(node.childNodes).map(
+        (childNode) => ListItem.nodeToBrick<{ value: string }>(childNode, { component: ListItem })?.value,
+      ),
+    };
+  }),
 );

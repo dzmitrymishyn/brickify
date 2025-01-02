@@ -17,7 +17,7 @@ export const handleAddedNodes = ({
   allNodes,
   addedNodes,
   components = {},
-}: HandleAddedNodesOptions) => {
+}: HandleAddedNodesOptions): void => {
   if (!addedNodes.length) {
     return;
   }

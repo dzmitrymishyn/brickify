@@ -1,8 +1,8 @@
 import {
   type BrickValue,
   type Component,
-  getName,
   handleAddedNodes,
+  hasNodeToBrick,
   type PropsWithStoredValue,
   useRenderer,
   useRendererRegistry,
@@ -39,20 +39,9 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
     markToRevert(mutations);
 
     handleAddedNodes({
-      add: ({ node, index, component }) => component && add(
+      add: ({ node, index, component }) => hasNodeToBrick(component) && add(
         [...stored.pathRef.current(), 'value', `${index}`],
-        {
-          brick: getName(component),
-          id: Math.random().toFixed(5),
-          ...(getName(component) === 'Paragraph' || getName(component) === 'Heading') && {
-            value: node instanceof HTMLElement
-              ? node.innerHTML || node.innerText || ''
-              : node.textContent || '',
-          },
-          ...getName(component) === 'List' && {
-            children: Array.from(node.childNodes ?? []).map((child: any) => child.innerHTML) ?? [],
-          },
-        },
+        component.nodeToBrick(node, { components, component }),
       ),
       addedNodes: addedDescendants,
       allNodes: Array.from(rootRef.current?.childNodes ?? []),

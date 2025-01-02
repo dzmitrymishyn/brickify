@@ -3,10 +3,12 @@ import {
   type BrickValue,
   type Component,
   extend,
+  getName,
   type PropsWithStoredValue,
   useRendererRegistry,
   withMatcher,
   withName,
+  withNodeToBrick,
 } from '@brickifyio/renderer';
 import { pipe } from 'fp-ts/lib/function';
 import { parseDocument } from 'htmlparser2';
@@ -112,5 +114,21 @@ export default extend(
   withMatcher((node) => node instanceof HTMLElement
     ? node.matches('*')
     : isText(node)),
+  withNodeToBrick((node, { component }) => {
+    let value = '';
+    if (node instanceof HTMLElement) {
+      value = node.innerHTML || node.innerText || '';
+    }
+
+    if (isText(node)) {
+      value = node.textContent || '';
+    }
+
+    return {
+      brick: getName(component),
+      value,
+      id: Math.random().toFixed(5),
+    };
+  }),
   withName('Paragraph'),
 );
