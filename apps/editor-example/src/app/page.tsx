@@ -65,14 +65,21 @@ const Page = () => {
       // ],
     },
     // { brick: 'Test', id: newKey(), value: 'Test text', test: '123' },
-        { brick: 'Paragraph', id: newKey(), value: 'It is a <strong>paragraph</strong>' },
-    // {
-    //   brick: 'Container',
-    //   id: newKey(),
-    //   children: [
-    //     { brick: 'Paragraph', id: newKey(), value: 'It is a <strong>paragraph</strong>' },
-    //   ],
-    // },
+    {
+      brick: 'Container',
+      id: newKey(),
+      children: [
+        { brick: 'Paragraph', id: newKey(), value: 'It is a <strong>paragraph</strong>!!' },
+
+        {
+          id: newKey(),
+          brick: 'Article',
+          title: 'test title',
+          description: 'looong description text is here',
+        },
+      ],
+    },
+    { brick: 'Paragraph', id: newKey(), value: 'It is a <strong>paragraph</strong>' },
     // { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
     // ...Array.from({ length: 2000 }, () => ({
     //   brick: 'Paragraph', id: newKey(), value: `${newKey()} hello world`,
@@ -93,7 +100,7 @@ const Page = () => {
           Article,
           Paragraph: extend(Paragraph, withProps({ style: { margin: '16px 0' }, components: [Em, Strong, Br] })),
           // Table,
-          // Container,
+          Container,
           // Test,
         }}
       />

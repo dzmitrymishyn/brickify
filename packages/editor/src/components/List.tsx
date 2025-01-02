@@ -19,6 +19,7 @@ import {
 import { cloneElement } from 'react';
 
 import { type PropsWithChange, useChanges } from '../changes';
+import { Commander } from '../commands';
 import { useMutation } from '../mutations';
 import Paragraph from '../Paragraph';
 
@@ -125,6 +126,7 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
 
   return (
     <ul ref={ref}>
+      <Commander containerRef={ref} components={components} />
       {childrenElements}
     </ul>
   );

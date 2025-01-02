@@ -1,11 +1,17 @@
 import {
+  getRange,
+  restoreRange,
+  toRangeCopy,
+} from '@brickifyio/browser/selection';
+import {
+  applySlots,
   extend,
+  hasProps,
   type PropsWithStoredValue,
   useRendererRegistry,
   withName,
 } from '@brickifyio/renderer';
 
-import Strong from './Strong';
 import { type PropsWithChange } from '../changes';
 import { useMutation } from '../mutations';
 import Paragraph from '../Paragraph';
@@ -26,15 +32,45 @@ export const Article: React.FC<Props> = ({ stored, title, description, onChange 
     if (removed) {
       onChange?.(undefined);
     }
+
+    const range = toRangeCopy(getRange());
+
+    ref.current?.childNodes.forEach((node, index) => {
+      if (node instanceof HTMLElement && index < 2) {
+        onChange?.({
+          [index === 0 ? 'title' : 'description']: node.innerHTML,
+        });
+      } else if (
+        index === 2
+        && node instanceof HTMLElement
+        && description
+      ) {
+        ref.current?.insertAdjacentElement('afterend', node);
+      } else if (index > 2 && node instanceof HTMLElement) {
+        ref.current?.insertAdjacentElement('afterend', node);
+      }
+    });
+
+    restoreRange(range);
   });
+  const components = applySlots<{
+    Paragraph: typeof Paragraph;
+    Heading: typeof Paragraph;
+  }>([
+    Paragraph,
+    ['Heading', Paragraph, { component: 'h2' }],
+  ], stored?.components ?? {});
+
+  const Heading = components.Heading;
+  const TextElement = components.Paragraph;
 
   return (
     <article
       data-brick="Article"
       ref={ref}
-      style={{ border: '1px solid #ccc' }}
+      style={{ border: '1px solid #ccc', margin: 8 }}
     >
-      <Paragraph
+      <Heading
         style={{ marginTop: 0 }}
         onChange={(value) => onChange?.(
           // Remove the component if we remove the title
@@ -42,15 +78,15 @@ export const Article: React.FC<Props> = ({ stored, title, description, onChange 
             ? undefined
             : { title: `${value?.value ?? ''}` },
         )}
-        component="h2"
+        {...hasProps(Heading) && Heading.props}
         value={title}
       />
-      <Paragraph
-        components={[Strong]}
+      <TextElement
         // If the paragraph is removed just clear the value
         onChange={(value) => onChange?.({
           description: `${value?.value ?? ''}`,
         })}
+        {...hasProps(TextElement) && TextElement.props}
         value={description}
       />
     </article>

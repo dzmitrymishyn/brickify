@@ -1,35 +1,93 @@
+import { getRange, restoreRange, toRangeCopy } from '@brickifyio/browser/selection';
 import {
   extend,
+  handleAddedNodes,
+  hasNodeToBrick,
   type PropsWithStoredValue,
   useRendererRegistry,
   withName,
   withSlots,
 } from '@brickifyio/renderer';
-import { type FC, type PropsWithChildren } from 'react';
+import { useRef, type FC, type PropsWithChildren } from 'react';
 
-import { type PropsWithChange } from '../changes';
+import { type PropsWithChange, useChanges } from '../changes';
+import { Commander } from '../commands';
 import { useMutation } from '../mutations';
 
-type Props = PropsWithStoredValue & PropsWithChange<{visible: boolean}> & PropsWithChildren & {
-  visible: boolean;
-};
+type Props = PropsWithStoredValue & PropsWithChange & PropsWithChildren;
 
-const Container: FC<Props> = ({ children, visible, stored, onChange }) => {
+const Container: FC<Props> = ({ children, stored, onChange }) => {
   const ref = useRendererRegistry<HTMLDivElement>(stored);
-  const { markToRevert } = useMutation(ref, ({ mutations }) => {
+  const labelRef = useRef<HTMLDivElement>(null);
+  const { add } = useChanges();
+  const { markToRevert } = useMutation(ref, ({ removed, mutations, addedDescendants }) => {
     markToRevert(mutations);
+
+    if (removed || ref.current?.firstChild === labelRef.current) {
+      onChange?.(undefined);
+    }
+
+    const range = toRangeCopy(getRange());
+
+    handleAddedNodes({
+      add: ({ node, index, component }) => {
+        if (
+          node === ref.current?.lastChild?.previousSibling
+          && node instanceof HTMLElement
+          && node.previousSibling instanceof HTMLElement
+          && node.previousSibling.textContent === ''
+        ) {
+          node.previousSibling.remove();
+          ref.current.insertAdjacentElement('afterend', node);
+          return;
+        }
+
+        if (hasNodeToBrick(component)) {
+          add(
+            [...stored.pathRef.current(), 'children', `${index}`],
+            component.nodeToBrick(node, {
+              components: stored.components,
+              component,
+            }),
+          );
+        }
+      },
+      addedNodes: addedDescendants,
+      allNodes: Array.from(ref.current?.childNodes ?? []),
+      components: stored.components,
+    });
+
+    restoreRange(range);
   });
 
   return (
     <div
       ref={ref}
       data-brick="container"
-      style={{ width: 500, margin: '0 auto' }}
+      style={{
+        width: 500,
+        margin: '0 auto',
+        position: 'relative',
+        border: '1px solid #ccc',
+      }}
     >
-      <button type="button" onClick={() => {
-        onChange?.({ visible: !visible });
-      }}>test</button>
-      {visible ? children : null}
+      <Commander containerRef={ref} components={stored.components || {}} />
+      {children}
+      <div
+        ref={labelRef}
+        contentEditable="false"
+        suppressContentEditableWarning
+        style={{
+          pointerEvents: 'none',
+          position: 'absolute',
+          height: 20,
+          top: -20,
+          left: 0,
+          background: '#ccc',
+        }}
+      >
+        Container
+      </div>
     </div>
   );
 };

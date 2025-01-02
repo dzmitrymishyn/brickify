@@ -31,12 +31,12 @@ export const withSlots = <S extends Slots>(slots: S) => ({
   }), {}),
 });
 
-export const applySlots = (
+export const applySlots = <Results extends Record<string, ComponentType>>(
   slots: SlotValue,
   parentSlots: Record<string, ComponentType> = {},
-) => {
+): Results => {
   if (slots === 'inherit') {
-    return parentSlots;
+    return parentSlots as Results;
   }
 
   return Object.fromEntries(slots.flatMap((slot) => {
@@ -66,5 +66,5 @@ export const applySlots = (
     }
 
     return [[getName(slot), slot]];
-  }));
+  })) as Results;
 };

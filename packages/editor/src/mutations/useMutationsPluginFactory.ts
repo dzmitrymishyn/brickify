@@ -57,81 +57,89 @@ export const createController = ({
         mutations: [],
       };
 
-      const affectedSubscriptions = new Map<Node, ComponentMutations>();
-      const removedNodesMutations = new Map<Node, ComponentMutations>();
-      const mutationWithoutParent = new Map<Node, MutationRecord[]>();
+      const allMutations: MutationRecord[] = [...mutations];
+      let currentMutations: MutationRecord[] | undefined = mutations;
 
-      mutations.reduceRight<void>((_, mutation) => {
-        mutation.removedNodes.forEach((node) => {
-          const hasSubscription = Boolean(subscriptions.get(node));
+      while (currentMutations?.length) {
+        const affectedSubscriptions = new Map<Node, ComponentMutations>();
+        const removedNodesMutations = new Map<Node, ComponentMutations>();
+        const mutationWithoutParent = new Map<Node, MutationRecord[]>();
 
-          if (hasSubscription) {
-            const options = affectedSubscriptions.get(node)
-              ?? { ...defaultComponentMutation, domNode: node };
+        for (let i = currentMutations.length - 1; i >= 0; i -= 1) {
+          const mutation = currentMutations[i];
+          mutation.removedNodes.forEach((node) => {
+            const hasSubscription = Boolean(subscriptions.get(node));
 
-            options.removed = true;
-            options.mutations.push(mutation);
+            if (hasSubscription) {
+              const options = affectedSubscriptions.get(node)
+                ?? { ...defaultComponentMutation, domNode: node };
 
-            affectedSubscriptions.set(node, options);
+              options.removed = true;
+              options.mutations.push(mutation);
+
+              affectedSubscriptions.set(node, options);
+            }
+          });
+
+          let current: Node | null = mutation.target;
+
+          while (current) {
+            const hasSubscription = Boolean(subscriptions.get(current));
+
+            if (hasSubscription) {
+              const options = affectedSubscriptions.get(current)
+                ?? { ...defaultComponentMutation, domNode: current };
+
+              options.mutations.push(mutation);
+              options.removedDescendants.push(
+                ...Array.from(mutation.removedNodes),
+              );
+              options.addedDescendants.push(...Array.from(mutation.addedNodes));
+
+              mutation.removedNodes.forEach((node) => {
+                removedNodesMutations.set(node, options);
+              });
+
+              affectedSubscriptions.set(current, options);
+              break;
+            }
+
+            if (!current.parentNode) {
+              const storedNodeMutations = mutationWithoutParent.get(current)
+                ?? [];
+              storedNodeMutations.push(mutation);
+              mutationWithoutParent.set(current, storedNodeMutations);
+            }
+
+            current = current.parentNode ?? null;
           }
-        });
-
-        let current: Node | null = mutation.target;
-
-        while (current) {
-          const hasSubscription = Boolean(subscriptions.get(current));
-
-          if (hasSubscription) {
-            const options = affectedSubscriptions.get(current)
-              ?? { ...defaultComponentMutation, domNode: current };
-
-            options.mutations.push(mutation);
-            options.removedDescendants.push(
-              ...Array.from(mutation.removedNodes),
-            );
-            options.addedDescendants.push(...Array.from(mutation.addedNodes));
-
-            mutation.removedNodes.forEach((node) => {
-              removedNodesMutations.set(node, options);
-            });
-
-            affectedSubscriptions.set(current, options);
-            break;
-          }
-
-          if (!current.parentNode) {
-            const storedNodeMutations = mutationWithoutParent.get(current)
-              ?? [];
-            storedNodeMutations.push(mutation);
-            mutationWithoutParent.set(current, storedNodeMutations);
-          }
-
-          current = current.parentNode ?? null;
         }
 
-        return undefined;
-      }, undefined);
+        mutationWithoutParent.forEach((mutation, node) => {
+          removedNodesMutations.get(node)?.mutations.push(...mutation);
+        });
 
-      mutationWithoutParent.forEach((mutation, node) => {
-        removedNodesMutations.get(node)?.mutations.push(...mutation);
-      });
+        affectedSubscriptions.forEach(
+          (options, node) => {
+            try {
+              subscriptions.get(node)?.(options);
+            } catch (error) {
+              // TODO: Add logger
+            }
+          },
+        );
 
-      affectedSubscriptions.forEach(
-        (options, node) => {
-          try {
-            subscriptions.get(node)?.(options);
-          } catch (error) {
-            // TODO: Add logger
-          }
-        },
-      );
+        currentMutations = observerRef.current?.takeRecords();
+
+        allMutations.push(...currentMutations ?? []);
+      }
 
       if (mutationsToRevert.size) {
         const nextRange = toCustomRange(ref.current!)(getRange());
 
         revertDomByMutations(
           // We can optimize this if we move filtering inside the function
-          mutations.filter((mutation) => mutationsToRevert.has(mutation)),
+          allMutations.filter((mutation) => mutationsToRevert.has(mutation)),
         );
 
         selectionController.apply();
