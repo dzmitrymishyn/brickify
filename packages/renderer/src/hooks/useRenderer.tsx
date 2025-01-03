@@ -9,6 +9,7 @@ import {
   cloneElement,
   type ReactElement,
   type ReactNode,
+  useLayoutEffect,
   useMemo,
   useRef,
 } from 'react';
@@ -97,20 +98,23 @@ const renderUnknownValue = curry(
 );
 
 const render = curry((options: Options, value: unknown): ReactNode => pipe(
-  options.store.get(value),
-  O.fromNullable,
-  O.map(tap((oldStored) => {
-    oldStored.pathRef.current = options.pathRef.current;
-  })),
-  O.chain(({ react }) => O.fromNullable(react)),
-  O.altW(() => pipe(
-    value,
-    E.fromPredicate(isBrickValue, I.of),
-    E.foldW(
-      renderUnknownValue(options),
-      renderBrickValue({ ...options, render: undefined }),
+  value,
+  E.fromPredicate(isBrickValue, I.of),
+  E.foldW(
+    renderUnknownValue(options),
+    (brickValue) => pipe(
+      options.store.get(brickValue),
+      O.fromNullable,
+      O.map(tap((oldStored) => {
+        oldStored.pathRef.current = options.pathRef.current;
+      })),
+      O.chain(({ react }) => O.fromNullable(react)),
+      O.altW(() => renderBrickValue(
+        { ...options, render: undefined },
+        brickValue,
+      )),
     ),
-  )),
+  ),
   O.getOrElseW(() => null),
 ));
 
@@ -176,7 +180,7 @@ export const useRenderer = ({
   const { plugins, store } = useRendererContext();
   const valueRef = useRef<unknown>(undefined);
 
-  return useMemo(() => pipe(
+  const res = useMemo(() => pipe(
     value,
     traverseSlotValues({
       store,
@@ -186,8 +190,12 @@ export const useRenderer = ({
       previousValue: valueRef.current,
       render: renderProp,
     }),
-    tap(() => {
-      valueRef.current = value;
-    }),
   ), [value, components, pathPrefix, plugins, store, renderProp]);
+
+  useLayoutEffect(() => {
+    valueRef.current = value;
+  }, [res, value]);
+
+
+  return res;
 };

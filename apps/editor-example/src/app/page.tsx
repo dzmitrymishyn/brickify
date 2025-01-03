@@ -13,7 +13,7 @@ import Em from '@brickifyio/editor/components/Em';
 import Heading from '@brickifyio/editor/components/Heading';
 import List from '@brickifyio/editor/components/List';
 import Strong from '@brickifyio/editor/components/Strong';
-// import Table from '@brickifyio/editor/components/Table';
+import Table from '@brickifyio/editor/components/Table';
 import Editor from '@brickifyio/editor/Editor';
 import Paragraph from '@brickifyio/editor/Paragraph';
 import { extend, withName, withProps } from '@brickifyio/renderer';
@@ -39,17 +39,17 @@ const Page = () => {
       title: 'test title',
       description: 'looong description text is here',
     },
-    // {
-    //   brick: 'Table',
-    //   id: newKey(),
-    //   children: [
-    //     [
-    //       'Click `Tab` to move to the next cell',
-    //       'Click `Shift + Tab` to move to the previous cell',
-    //       'Click `Tab` to move to the next element',
-    //     ],
-    //   ],
-    // },
+    {
+      brick: 'Table',
+      id: newKey(),
+      children: [
+        [
+          'Click `Tab` to move to the next cell',
+          'Click `Shift + Tab` to move to the previous cell',
+          'Click `Tab` to move to the next element',
+        ],
+      ],
+    },
     {
       brick: 'List',
       id: newKey(),
@@ -99,7 +99,7 @@ const Page = () => {
           List,
           Article,
           Paragraph: extend(Paragraph, withProps({ style: { margin: '16px 0' }, components: [Em, Strong, Br] })),
-          // Table,
+          Table,
           Container,
           // Test,
         }}

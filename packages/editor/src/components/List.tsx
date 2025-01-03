@@ -80,10 +80,10 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
 
       const cachedValue = cache.get(index, options.previousValue);
       const oldStored = cachedValue
-        && store.get<{ value: unknown }>(cachedValue.value);
+        && store.get<{ value: unknown }>(cachedValue);
 
       if (oldStored?.react) {
-        if (oldStored.value.value === value) {
+        if (options.previousValue === value) {
           return oldStored.react;
         }
 

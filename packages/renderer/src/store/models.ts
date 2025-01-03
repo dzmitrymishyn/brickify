@@ -45,6 +45,11 @@ export type RendererStoreValue<Value = any> = {
 };
 
 
-export type PropsWithStoredValue<Value extends object = BrickValue> = {
-  stored: RendererStoreValue<Value>;
-};
+export type PropsWithStoredValue<Value extends object = BrickValue> = (
+  Value extends BrickValue
+    ? Omit<Value, 'id' | 'brick'> & {
+      stored: RendererStoreValue<Value>;
+    }
+    : {
+      stored: RendererStoreValue<Value>;
+    });
