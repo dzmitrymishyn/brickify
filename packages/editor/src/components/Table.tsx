@@ -1,8 +1,20 @@
 import { getFirstDeepLeaf, isElement } from '@brickifyio/browser/utils';
-import { applySlots, type BrickValue, extend, hasProps, type PropsWithStoredValue, type RendererStoreValue, usePrimitiveChildrenCache, useRenderer, useRendererContext, useRendererRegistry, withName } from '@brickifyio/renderer';
+import {
+  applySlots,
+  type BrickValue,
+  extend,
+  hasProps,
+  type PropsWithStoredValue,
+  type RendererStoreValue,
+  usePrimitiveChildrenCache,
+  useRenderer,
+  useRendererContext,
+  useRendererRegistry,
+  withName,
+} from '@brickifyio/renderer';
 import { cloneElement, useRef } from 'react';
 
-import { type PropsWithChange, useChanges } from '../changes';
+import { type PropsWithChange } from '../changes';
 import { useCommand } from '../commands';
 import { useMutation } from '../mutations';
 import Paragraph from '../Paragraph';
@@ -138,20 +150,18 @@ const Table: React.FC<Props> = ({ stored, children, onChange }) => {
       return childStored.react;
     },
   });
-  const { add } = useChanges();
 
   useCommand(ref, {
     shortcuts: ['tab'],
     name: 'nextColumn',
     handle: ({ originalEvent, descendants, range }) => {
-      originalEvent.preventDefault();
-
       const target = descendants.at(-1);
       const nearestTd = isElement(target)
         ? target.closest('td')
         : target?.parentElement?.closest('td');
 
       if (nearestTd?.nextSibling) {
+        originalEvent.preventDefault();
         const node = getFirstDeepLeaf(nearestTd.nextSibling)
           ?? nearestTd.nextSibling;
         range.setStart(node, 0);
@@ -165,13 +175,7 @@ const Table: React.FC<Props> = ({ stored, children, onChange }) => {
           ?? nearestTd.parentElement.nextSibling;
         range.setStart(node, 0);
         range.setEnd(node, 0);
-        return;
       }
-
-      const path = stored.pathRef.current();
-      const value = stored.value.children;
-
-      add([...path, 'children', `${value.length}`], Array.from(value[0]).fill(''));
     },
   });
 
