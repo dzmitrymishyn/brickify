@@ -1,21 +1,23 @@
-import { getFirstDeepLeaf, isElement } from '@brickifyio/browser/utils';
+import { isElement } from '@brickifyio/browser/utils';
 import {
   applySlots,
   type BrickValue,
   cloneOrCreateElement,
   extend,
+  getName,
   hasProps,
   type PropsWithStoredValue,
   usePrimitiveChildrenCache,
   useRenderer,
   useRendererContext,
   useRendererRegistry,
+  withMatcher,
   withName,
+  withNodeToBrick,
 } from '@brickifyio/renderer';
 import { useRef } from 'react';
 
 import { type PropsWithChange } from '../changes';
-import { useCommand } from '../commands';
 import { useMutation } from '../mutations';
 import Paragraph from '../Paragraph';
 
@@ -64,7 +66,7 @@ const TableRow: React.FC<TableRowProps> = ({ stored, value, onChange }) => {
           onChange={(event?: { value: string }) => {
             onChange?.(event?.value, pathPrefix);
           }}
-        />
+        />,
       );
     },
   });
@@ -113,66 +115,8 @@ const Table: React.FC<Props> = ({ stored, children, onChange }) => {
           onChange={(event, columnIndex) => {
             onChange?.(event, [...pathPrefix, ...columnIndex ?? []]);
           }}
-        />
+        />,
       );
-    },
-  });
-
-  useCommand(ref, {
-    shortcuts: ['tab'],
-    name: 'nextColumn',
-    handle: ({ originalEvent, descendants, range }) => {
-      const target = descendants.at(-1);
-      const nearestTd = isElement(target)
-        ? target.closest('td')
-        : target?.parentElement?.closest('td');
-
-      if (nearestTd?.nextSibling) {
-        originalEvent.preventDefault();
-        const node = getFirstDeepLeaf(nearestTd.nextSibling)
-          ?? nearestTd.nextSibling;
-        range.setStart(node, 0);
-        range.setEnd(node, 0);
-        return;
-      }
-
-      if (nearestTd?.parentElement?.nextSibling) {
-        originalEvent.preventDefault();
-        const node = getFirstDeepLeaf(nearestTd.parentElement.nextSibling)
-          ?? nearestTd.parentElement.nextSibling;
-        range.setStart(node, 0);
-        range.setEnd(node, 0);
-      }
-    },
-  });
-
-  useCommand(ref, {
-    shortcuts: ['shift + tab'],
-    name: 'previousColumn',
-    handle: ({ originalEvent, descendants, range }) => {
-      const target = descendants.at(-1);
-      const nearestTd = isElement(target)
-        ? target.closest('td')
-        : target?.parentElement?.closest('td');
-
-      if (nearestTd?.previousSibling) {
-        originalEvent.preventDefault();
-        const node = getFirstDeepLeaf(nearestTd.previousSibling)
-          ?? nearestTd.previousSibling;
-
-        range.setStart(node, 0);
-        range.setEnd(node, 0);
-
-        return;
-      }
-
-      if (nearestTd?.parentElement?.previousSibling) {
-        originalEvent.preventDefault();
-        const previousTd = nearestTd?.parentElement?.previousSibling.lastChild;
-        const node = getFirstDeepLeaf(previousTd) ?? previousTd!;
-        range.setStart(node, 0);
-        range.setEnd(node, 0);
-      }
     },
   });
 
@@ -196,4 +140,20 @@ const Table: React.FC<Props> = ({ stored, children, onChange }) => {
 export default extend(
   Table,
   withName('Table'),
+  withMatcher((node) => isElement(node) && node.matches('table')),
+  withNodeToBrick((node, { component }) => {
+    if (!(node instanceof HTMLTableElement)) {
+      return null;
+    }
+
+    return {
+      id: Math.random().toFixed(5),
+      brick: getName(component),
+      children: Array.from(node.querySelector('tbody')?.childNodes ?? []).map(
+        (childNode) => isElement(childNode)
+          ? (childNode.innerHTML || childNode.textContent)
+          : '',
+      ),
+    };
+  }),
 );

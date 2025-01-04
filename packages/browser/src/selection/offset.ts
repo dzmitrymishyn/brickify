@@ -1,4 +1,4 @@
-import { getFirstDeepLeaf } from '../utils';
+import { getFirstDeepLeaf, isElement, isText } from '../utils';
 
 export type ChildOffsetType = 'start' | 'end' | 'center';
 
@@ -65,15 +65,16 @@ const getNodeLength = (node: Node) => {
   return length;
 };
 
-export const getCursorPosition = (parent: Node, node: Node, offset = 0) => {
+export const getCursorPosition = (parent: Node, inputNode: Node, offset = 0) => {
   let length = 0;
+  let node = inputNode;
 
-  if (node.nodeType === Node.TEXT_NODE) {
+  let childOffsetType: ChildOffsetType = offset === 0 ? 'start' : 'center';
+
+  if (isText(node)) {
     length += offset;
   } else {
-    for (let i = 0; i < offset; i += 1) {
-      length += getNodeLength(node.childNodes[i]);
-    }
+    node = node.childNodes[offset];
   }
 
   let current: Node | null = node;
@@ -85,10 +86,16 @@ export const getCursorPosition = (parent: Node, node: Node, offset = 0) => {
     }
   }
 
-  let childOffsetType: ChildOffsetType = offset === 0 ? 'start' : 'center';
-
-  if (node.nodeType === Node.TEXT_NODE && node.textContent?.length === offset && offset) {
+  if (
+    isText(node)
+    && offset
+    && node.textContent?.length === offset
+  ) {
     childOffsetType = 'end';
+  }
+
+  if (isElement(node)) {
+    childOffsetType = 'start';
   }
 
   return { offset: length, childOffset: offset, childOffsetType };
@@ -97,6 +104,7 @@ export const getCursorPosition = (parent: Node, node: Node, offset = 0) => {
 export const getNodeByOffset = (
   { node, offset, childOffsetType }: OffsetPoint,
 ): { offset: number; node: Node } => {
+  // console.log({node, offset, childOffsetType});
   let length = 0;
   let current: Node | null = node;
   while (current && length <= offset) {
@@ -105,16 +113,23 @@ export const getNodeByOffset = (
     const newLength = length + getSimpleNodeLength(current);
 
     if (newLength >= offset) {
-      if (isBr(current)) {
+      if (isBr(current) && offset !== length) {
         return {
-          node: current.parentNode!,
+          node: getFirstDeepLeaf(getNextPossibleSibling(current, node))
+            || current,
+          offset: 0,
+        };
+      } else if (isBr(current)) {
+        return {
+          node: current.parentElement!,
           offset: Array.from(current.parentElement?.childNodes ?? []).indexOf(current) + 1,
         };
-      }
-
-      if (childOffsetType === 'start' && newLength - offset === 0) {
-        current = getFirstDeepLeaf(getNextPossibleSibling(current, node)) || current;
-        length = offset;
+      } else if (childOffsetType === 'start' && newLength - offset === 0) {
+        return {
+          node: getFirstDeepLeaf(getNextPossibleSibling(current, node))
+            || current,
+          offset: 0,
+        };
       }
 
       return { node: current, offset: offset - length };

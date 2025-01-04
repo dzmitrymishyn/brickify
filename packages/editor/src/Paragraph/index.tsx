@@ -52,7 +52,7 @@ const Paragraph: React.FC<Props> = ({
   // const { editable } = useBrickContext();
   const editable = editableProp;
 
-  const ref = useRendererRegistry(brickRecord);
+  const ref = useRendererRegistry<HTMLElement>(brickRecord);
 
   const { markToRevert } = useMutation(ref, (mutation) => {
     markToRevert(mutation.mutations);

@@ -44,9 +44,9 @@ const Page = () => {
       id: newKey(),
       children: [
         [
-          'Click `Tab` to move to the next cell',
-          'Click `Shift + Tab` to move to the previous cell',
-          'Click `Tab` to move to the next element',
+          'test line 0 1',
+          '0 2',
+          '0 3',
         ],
         ['1', '2', '3'],
       ],
