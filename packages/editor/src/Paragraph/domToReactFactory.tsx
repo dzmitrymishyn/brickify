@@ -1,5 +1,5 @@
 import { array } from '@brickifyio/operators';
-import { type NamedComponent } from '@brickifyio/renderer';
+import { type Component } from '@brickifyio/renderer';
 import {
   isDocument,
   isTag,
@@ -13,8 +13,7 @@ import {
   type RefObject,
 } from 'react';
 
-// eslint-disable-next-line -- TODO: check it
-const hasIs = (value: unknown): value is { is: any } => (
+const hasIs = (value: unknown): value is { is: (node: Node) => boolean } => (
   (typeof value === 'function' || typeof value === 'object')
   && value !== null
   && 'is' in value
@@ -22,7 +21,7 @@ const hasIs = (value: unknown): value is { is: any } => (
 );
 
 export const domToReactFactory = (
-  bricks: NamedComponent[],
+  components: Component[],
   oldDocumentRef: RefObject<ReactNode>,
 ) => {
   const domToReact = (
@@ -30,10 +29,8 @@ export const domToReactFactory = (
     index: number,
     oldDocument: ReactNode = oldDocumentRef.current,
   ): ReactNode[] => {
-    // eslint-disable-next-line -- TODO: check it
-    const Component: any = bricks.find(
-      // eslint-disable-next-line -- TODO: check it
-      (brick) => hasIs(brick) && brick.is(node),
+    const Component = components.find(
+      (component) => hasIs(component) && component.is(node),
     );
     // eslint-disable-next-line -- TODO: check it
     const oldChildNodes = isValidElement(oldDocument)
@@ -64,8 +61,12 @@ export const domToReactFactory = (
     ).flat();
 
     if (isValidElement(oldDocument) && oldDocument.type === Component) {
-      // eslint-disable-next-line -- TODO: check it
-      if (children.some((child, i) => child !== oldChildNodes[i])) {
+      if (
+        // eslint-disable-next-line -- TODO: check it
+        children.length !== oldChildNodes?.length
+        // eslint-disable-next-line -- TODO: check it
+        || children.some((child, i) => child !== oldChildNodes[i])
+      ) {
         return [cloneElement(oldDocument, {}, ...children)];
       }
       return [oldDocument];
