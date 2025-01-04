@@ -2,17 +2,18 @@ import { getFirstDeepLeaf, isElement } from '@brickifyio/browser/utils';
 import {
   applySlots,
   type BrickValue,
+  cloneOrCreateElement,
   extend,
+  getName,
   hasProps,
   type PropsWithStoredValue,
-  type RendererStoreValue,
   usePrimitiveChildrenCache,
   useRenderer,
   useRendererContext,
   useRendererRegistry,
   withName,
 } from '@brickifyio/renderer';
-import { cloneElement, useRef } from 'react';
+import { useRef } from 'react';
 
 import { type PropsWithChange } from '../changes';
 import { useCommand } from '../commands';
@@ -30,60 +31,42 @@ const TableRow: React.FC<TableRowProps> = ({ stored, value, onChange }) => {
   ], stored?.components);
   const { store } = useRendererContext();
   const cache = usePrimitiveChildrenCache();
+
   const nodes = useRenderer({
     value,
     components,
     pathPrefix: () => [...stored.pathRef.current()],
     render(columnValue, options) {
-      const index = options.pathRef.current().at(-1);
+      const index = options.pathRef.current().pop();
 
       if (typeof columnValue !== 'string'  || !index) {
         return null;
       }
 
-      const cachedValue = cache.get(index, options.previousValue);
-      const oldStored = cachedValue
-        && store.get<{ value: unknown }>(cachedValue);
-
-      if (oldStored?.react) {
-        if (oldStored.value.value === columnValue) {
-          return oldStored.react;
-        }
-
-        const props = {
-          value: columnValue,
-          stored: { ...oldStored },
-        };
-        props.stored.value = cache.save(index, columnValue);
-        props.stored.react = cloneElement(oldStored.react, props);
-
-        return props.stored.react;
-      }
-
       const Component = options.components.TableColumn;
       const pathPrefix = [index];
-      const childStored: RendererStoreValue<{ value: unknown }> = {
-        name: 'TableRow',
-        components: options.components,
-        pathRef: {
-          current: () => pathPrefix,
-        },
-        value: cache.save(index, columnValue),
-      };
+      const cachedValue = cache.get(index, options.previousValue);
 
-      childStored.react = (
+      return cloneOrCreateElement(
+        store.get<{ value: string }>(cachedValue),
+        () => cachedValue?.value === columnValue,
         <Component
           {...hasProps(Component) ? Component.props : {}}
           value={columnValue}
-          stored={childStored}
+          stored={{
+            name: getName(Component),
+            components: options.components,
+            pathRef: {
+              current: () => pathPrefix,
+            },
+            value: cache.save(index, columnValue),
+          }}
           key={index}
-          onChange={(event: { value: string }) => {
+          onChange={(event?: { value: string }) => {
             onChange?.(event?.value, pathPrefix);
           }}
         />
       );
-
-      return childStored.react;
     },
   });
   return (
@@ -112,42 +95,27 @@ const Table: React.FC<Props> = ({ stored, children, onChange }) => {
         return null;
       }
 
-      const oldStored = store.get<string[]>(options.previousValue);
-      if (options.previousValue === value && oldStored?.react) {
-        oldStored.pathRef.current = () => [
-          ...options.pathRef.current(),
-          index,
-        ];
-        return oldStored.react;
-      } else if (oldStored?.react) {
-        const props = { value };
-        oldStored.value = value as string[];
-        oldStored.react = cloneElement(oldStored.react, props);
-        return oldStored.react;
-      }
-
       const pathPrefix = ['children', index];
-      const childStored: RendererStoreValue<string[]> = {
-        name: 'TableRow',
-        components: options.components,
-        pathRef: {
-          current: () => pathPrefix,
-        },
-        value: value as string[],
-      };
 
-      childStored.react = (
+      return cloneOrCreateElement(
+        store.get<string[]>(options.previousValue),
+        (oldValue) => oldValue === value,
         <TableRow
           key={index}
-          stored={childStored}
-          value={childStored.value}
+          stored={{
+            name: 'TableRow',
+            components: options.components,
+            pathRef: {
+              current: () => pathPrefix,
+            },
+            value: value as string[],
+          }}
+          value={value}
           onChange={(event, columnIndex) => {
             onChange?.(event, [...pathPrefix, ...columnIndex ?? []]);
           }}
         />
       );
-
-      return childStored.react;
     },
   });
 

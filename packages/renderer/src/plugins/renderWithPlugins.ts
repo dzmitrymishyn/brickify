@@ -18,7 +18,7 @@ const getRenderFromPlugins = (
 
 export const renderWithPlugins = curry((
   plugins: PluginMap,
-  element: ReactElement,
+  element: ReactElement<object>,
 ) => pipe(
   getRenderFromPlugins(plugins),
   A.reduce(element, (acc, fn) => fn?.(acc) ?? acc),

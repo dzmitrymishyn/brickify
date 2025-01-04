@@ -13,7 +13,7 @@ export type Plugin<Controller = unknown> = {
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any --
    * Props for the component could be any object.
    */
-  render?: (element: ReactElement<any>) => ReactElement;
+  render?: (element: ReactElement<any>) => ReactElement<object>;
   props?: object | null;
 };
 

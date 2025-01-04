@@ -35,13 +35,13 @@ export type RendererStoreValue<Value = any> = {
    * react element that is used for caching purposes. Could be undefined on
    * the rendering phase
    */
-  react?: ReactElement;
+  react?: ReactElement<object>;
 
   /**
    * An element without plugins that should be used for updating plugins
    * for an element.
    */
-  reactWithoutPlugins?: ReactElement;
+  reactWithoutPlugins?: ReactElement<object>;
 };
 
 

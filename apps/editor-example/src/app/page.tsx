@@ -48,6 +48,7 @@ const Page = () => {
           'Click `Shift + Tab` to move to the previous cell',
           'Click `Tab` to move to the next element',
         ],
+        ['1', '2', '3'],
       ],
     },
     {

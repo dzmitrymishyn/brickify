@@ -1,13 +1,13 @@
 import {
   applySlots,
   type BrickValue,
+  cloneOrCreateElement,
   extend,
   getName,
   handleAddedNodes,
   hasNodeToBrick,
   hasProps,
   type PropsWithStoredValue,
-  type RendererStoreValue,
   usePrimitiveChildrenCache,
   useRenderer,
   useRendererContext,
@@ -16,7 +16,6 @@ import {
   withName,
   withNodeToBrick,
 } from '@brickifyio/renderer';
-import { cloneElement } from 'react';
 
 import { type PropsWithChange, useChanges } from '../changes';
 import { Commander } from '../commands';
@@ -81,46 +80,31 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
       const cachedValue = cache.get(index, options.previousValue);
       const oldStored = cachedValue
         && store.get<{ value: unknown }>(cachedValue);
-
-      if (oldStored?.react) {
-        if (options.previousValue === value) {
-          return oldStored.react;
-        }
-
-        const props = { value };
-        oldStored.value = cache.save(index, value);
-        oldStored.react = cloneElement(oldStored.react, props);
-
-        return oldStored.react;
-      }
-
-      const childStored: RendererStoreValue<{ value: unknown } | undefined> = {
-        name: 'ListItem',
-        components: options.components,
-        pathRef: {
-          current: () => pathPrefix,
-        },
-        value: cache.save(index, value),
-      };
-
       const Component = options.components.ListItem;
       const pathPrefix = ['children', index];
 
-      childStored.react = (
+      return cloneOrCreateElement(
+        oldStored,
+        () => options.previousValue === value,
         <Component
           {...hasProps(Component) ? Component.props : {}}
           value={value}
-          stored={childStored}
+          stored={{
+            name: 'ListItem',
+            components: options.components,
+            pathRef: {
+              current: () => pathPrefix,
+            },
+            value: cache.save(index, value),
+          }}
           key={index}
           component="li"
           style={{ margin: 0 }}
           onChange={(event: { value: string }) => {
             onChange?.(event?.value, pathPrefix);
           }}
-        />
+        />,
       );
-
-      return childStored.react;
     },
   });
 

@@ -13,7 +13,9 @@ export const usePrimitiveChildrenCache = () => {
   );
 
   const save = useCallback((index: string, value: unknown): { value: unknown } => {
-    cacheRef.current[index] = { value };
+    if (cacheRef.current[index]?.value !== value) {
+      cacheRef.current[index] = { value };
+    }
     return cacheRef.current[index];
   }, []);
 
