@@ -39,7 +39,7 @@ const TableRow: React.FC<TableRowProps> = ({ stored, value, onChange }) => {
     render(columnValue, options) {
       const index = options.pathRef.current().pop();
 
-      if (typeof columnValue !== 'string'  || !index) {
+      if (typeof columnValue !== 'string' || !index) {
         return null;
       }
 
