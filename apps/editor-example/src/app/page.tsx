@@ -16,7 +16,7 @@ import Strong from '@brickifyio/editor/components/Strong';
 import Table from '@brickifyio/editor/components/Table';
 import Editor from '@brickifyio/editor/Editor';
 import Paragraph from '@brickifyio/editor/Paragraph';
-import { extend, withName, withProps } from '@brickifyio/renderer';
+import { extend, withProps } from '@brickifyio/renderer';
 import React, { useMemo, useState } from 'react';
 
 const Page = () => {

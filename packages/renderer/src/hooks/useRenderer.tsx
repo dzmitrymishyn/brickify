@@ -41,12 +41,26 @@ type Options = {
 
 const renderBrickValue = curry(
   (options: Options, value: BrickValue): O.Option<ReactElement> => {
-    const stored: RendererStoreValue = {
-      pathRef: options.pathRef,
+    const uid = value.id
+      ?? `${options.pathRef.current().join('/')}-${value.brick}`;
+    const oldStored = options.store.get(options.previousValue);
+    const isClone = oldStored?.react && uid === oldStored.react.key;
+    const stored = isClone ? oldStored : { pathRef: {} } as RendererStoreValue;
+
+    Object.assign(stored, {
       value,
       components: options.components,
       name: value.brick,
-    };
+    });
+
+    stored.pathRef.current = options.pathRef.current;
+
+    // stored.pathRef it's a link to an existing pathRef from previous render
+    // or a new one. This pathRef we reuse for the slots and current brick.
+    // options.pathRef could be a new link that does no affect the previous
+    // slots. To enshure that we update slots' links we need to set to
+    // options.pathRef the stored.pathRef reference
+    options.pathRef = stored.pathRef;
 
     return pipe(
       O.fromNullable(options.components[value.brick]),
@@ -68,15 +82,11 @@ const renderBrickValue = curry(
         stored,
       })),
       O.map(({ props, Component }) => {
-        const oldReact = options.store.get(options.previousValue)
-          ?.reactWithoutPlugins;
-        const key = value.id ?? stored.pathRef.current().join('/');
-
-        const reactWithoutPlugins = oldReact && key === oldReact.key
-          ? cloneElement(oldReact, props)
+        const reactWithoutPlugins = stored.react
+          ? cloneElement(stored.react, props)
           : <Component
               {...props}
-              key={key}
+              key={uid}
             />;
 
         stored.reactWithoutPlugins = reactWithoutPlugins;
@@ -177,7 +187,7 @@ export const useRenderer = ({
   const { plugins, store } = useRendererContext();
   const valueRef = useRef<unknown>(undefined);
 
-  const res = useMemo(() => pipe(
+  const elements = useMemo(() => pipe(
     value,
     traverseSlotValues({
       store,
@@ -191,8 +201,7 @@ export const useRenderer = ({
 
   useLayoutEffect(() => {
     valueRef.current = value;
-  }, [res, value]);
+  }, [elements, value]);
 
-
-  return res;
+  return elements;
 };

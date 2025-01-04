@@ -4,7 +4,6 @@ import {
   type BrickValue,
   cloneOrCreateElement,
   extend,
-  getName,
   hasProps,
   type PropsWithStoredValue,
   usePrimitiveChildrenCache,
@@ -35,7 +34,7 @@ const TableRow: React.FC<TableRowProps> = ({ stored, value, onChange }) => {
   const nodes = useRenderer({
     value,
     components,
-    pathPrefix: () => [...stored.pathRef.current()],
+    pathPrefix: () => [],
     render(columnValue, options) {
       const index = options.pathRef.current().pop();
 
@@ -54,10 +53,10 @@ const TableRow: React.FC<TableRowProps> = ({ stored, value, onChange }) => {
           {...hasProps(Component) ? Component.props : {}}
           value={columnValue}
           stored={{
-            name: getName(Component),
+            name: 'TableColumn',
             components: options.components,
             pathRef: {
-              current: () => pathPrefix,
+              current: () => [...stored.pathRef.current(), ...pathPrefix],
             },
             value: cache.save(index, columnValue),
           }}
@@ -87,7 +86,7 @@ const Table: React.FC<Props> = ({ stored, children, onChange }) => {
   const nodes = useRenderer({
     value: children,
     components: stored.components,
-    pathPrefix: () => [...stored.pathRef.current(), 'children'],
+    pathPrefix: () => ['children'],
     render(value, options) {
       const index = options.pathRef.current().at(-1);
 
@@ -106,7 +105,7 @@ const Table: React.FC<Props> = ({ stored, children, onChange }) => {
             name: 'TableRow',
             components: options.components,
             pathRef: {
-              current: () => pathPrefix,
+              current: () => [...stored.pathRef.current(), ...pathPrefix],
             },
             value: value as string[],
           }}

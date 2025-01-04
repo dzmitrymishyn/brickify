@@ -116,7 +116,9 @@ const prepareNewValue = (
     return [handledValue];
   }
 
+  const oldValueRecord = oldValue as Record<string, unknown>;
   const recordValue = handledValue as Record<string, unknown>;
+  let updatedFields = 0;
 
   Object.keys(recordValue).forEach((key) => {
     const subPath = [...path, key];
@@ -128,9 +130,13 @@ const prepareNewValue = (
     );
 
     recordValue[key] = isArray ? currentResult : array(currentResult)[0];
+
+    if (recordValue[key] !== oldValueRecord[key]) {
+      updatedFields += 1;
+    }
   });
 
-  return [recordValue];
+  return [updatedFields ? recordValue : oldValue];
 }
 
 export const traverseAndApplyChanges = (
@@ -164,7 +170,6 @@ export const traverseAndApplyChanges = (
         ];
       }
 
-      // let result = [value];
       const { value: newValue, previousValues } = changes.reduce(
         handleChangesArray,
         { value: 'unhandled', previousValues: [] },

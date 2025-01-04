@@ -83,10 +83,10 @@ export const Article: React.FC<Props> = ({ stored, title, description, onChange 
       />
       <TextElement
         // If the paragraph is removed just clear the value
+        {...hasProps(TextElement) && TextElement.props}
         onChange={(value) => onChange?.({
           description: `${value?.value ?? ''}`,
         })}
-        {...hasProps(TextElement) && TextElement.props}
         value={description}
       />
     </article>
