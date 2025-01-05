@@ -49,7 +49,7 @@ const Page = () => {
       brick: 'Article',
       title: "It's just more complex component",
       description: `
-        I just called it paragraph. There is no idea under the component. Only
+        I just called it Article. There is no idea under the component. Only
         the idea that you cannot remove description (the second line) and if
         you add one line after the title the description will move to the next
         paragraph. It doesn't support any inline elements, only plain text.
