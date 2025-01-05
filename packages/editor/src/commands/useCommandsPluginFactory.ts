@@ -91,7 +91,7 @@ export const useCommandsPluginFactory: UsePluginFactory<
       O.bind('results', () => {
         const results: Record<string, unknown> = {};
 
-        return O.of<ResultsCallback>((nameOrOptions) => {
+        return O.of<ResultsCallback>((nameOrOptions: unknown) => {
           if (typeof nameOrOptions === 'string') {
             return results[nameOrOptions];
           }
