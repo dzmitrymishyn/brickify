@@ -8,7 +8,7 @@ import {
   withName,
   withSlots,
 } from '@brickifyio/renderer';
-import { useRef, type FC, type PropsWithChildren } from 'react';
+import { type FC, type PropsWithChildren, useRef } from 'react';
 
 import { type PropsWithChange, useChanges } from '../changes';
 import { Commander } from '../commands';
@@ -66,7 +66,7 @@ const Container: FC<Props> = ({ children, stored, onChange }) => {
       data-brick="container"
       style={{
         width: 500,
-        margin: '0 auto',
+        margin: '32px auto 0',
         position: 'relative',
         border: '1px solid #ccc',
       }}

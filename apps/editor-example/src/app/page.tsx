@@ -31,56 +31,88 @@ const Page = () => {
     {
       id: newKey(),
       brick: 'Heading',
-      value: 'Here is simple components that',
+      value: 'Here is a simple heading',
+    },
+    {
+      id: newKey(),
+      brick: 'Paragraph',
+      value: `
+        I do not know how it will go in the future but for now the beauty is
+        that I can select several table columns + list after the table and 
+        maybe the container and pres <em>cmd + b</em> or <em>ctrl + b</em>
+        and <strong>it transforms the text for each specific item</strong> and 
+        <strong>doesn't transform components that don't support it</strong>.
+      `,
     },
     {
       id: newKey(),
       brick: 'Article',
-      title: 'test title',
-      description: 'looong description text is here',
+      title: "It's just more complex component",
+      description: `
+        I just called it paragraph. There is no idea under the component. Only
+        the idea that you cannot remove description (the second line) and if
+        you add one line after the title the description will move to the next
+        paragraph. It doesn't support any inline elements, only plain text.
+      `,
     },
     {
       brick: 'Table',
       id: newKey(),
       children: [
         [
-          'test line 0 1',
-          '0 2',
-          '0 3',
+          'Just',
+          'a',
+          'table',
         ],
-        ['1', '2', '3'],
+        ['with 2 lines of content', '<strong>Dummy</strong> content', ''],
       ],
     },
     {
       brick: 'List',
       id: newKey(),
       children: [
-        '123',
-        { id: newKey(), brick: 'ListItem', value: 'line1' },
-        { id: newKey(), brick: 'ListItem', value: 'line2' },
+        'Bullet list line 1. It represents like a string',
+        {
+          id: newKey(),
+          brick: 'ListItem',
+          value: 'But you can use a component with id. This also works.',
+        },
+        {
+          id: newKey(),
+          brick: 'ListItem',
+          value: `
+            I did not change the native behavior and if you add one empty line 
+            and another one - it will transform it into paragraph. The same 
+            behavior for the first line.
+          `,
+        },
       ]
-      // children: [
-      //   'It is a single level list',
-      //   'Click enter to create a new line',
-      //   'Click enter twice to create a new paragraph',
-      // ],
     },
-    // { brick: 'Test', id: newKey(), value: 'Test text', test: '123' },
     {
       brick: 'Container',
       id: newKey(),
       children: [
-        { brick: 'Paragraph', id: newKey(), value: 'It is a <strong>paragraph</strong>!!' },
-
+        {
+          brick: 'Paragraph',
+          id: newKey(),
+          value: `
+            This is a container component. It can place all the elements its 
+            parent does.
+          `,
+        },
         {
           id: newKey(),
           brick: 'Article',
-          title: 'test title',
-          description: 'looong description text is here',
+          title: 'Article',
+          description: 'For example the article with no meaning',
         },
       ],
     },
-    { brick: 'Paragraph', id: newKey(), value: 'It is a <strong>paragraph</strong>' },
+    {
+      brick: 'Paragraph',
+      id: newKey(),
+      value: 'Empty <strong>paragraph</strong>',
+    },
     // { brick: 'Paragraph', id: newKey(), value: '1Lorem ipsum dolar sit amet' },
     // ...Array.from({ length: 2000 }, () => ({
     //   brick: 'Paragraph', id: newKey(), value: `${newKey()} hello world`,
