@@ -2,20 +2,22 @@ import { match } from '@brickifyio/browser/hotkeys';
 import {
   getRange,
   isElementWithinRange,
-  toCustomRange,
+  restoreRange,
 } from '@brickifyio/browser/selection';
 import { getFirstDeepLeaf } from '@brickifyio/browser/utils';
-import { tap } from '@brickifyio/operators';
 import { createUsePlugin, type UsePluginFactory } from '@brickifyio/renderer';
 import { flow } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
 import { useEffect, useMemo, useRef } from 'react';
 
-import { type ResultsCallback } from ".";
-import { type Command } from './models';
+import {
+  type Command,
+  type PostponedCommand,
+  type PostponedCommandType,
+  type ResultsCallback,
+} from './models';
 import { useDisallowHotkeys } from './useDisallowHotkeys';
 import { useChanges } from '../changes';
-import { useMutationsController } from '../mutations';
 import { useSelectionController } from '../selection';
 import assert from 'assert';
 
@@ -34,6 +36,30 @@ const metaKeyDisallowList = [
 
 const createController = () => {
   const subscriptions = new Map<Node, Command[]>();
+  let commandsQueue: PostponedCommand[] = [];
+
+  const postpone = (command: PostponedCommand) => {
+    commandsQueue.push(command);
+    return () => {
+      commandsQueue = commandsQueue.filter((current) => current !== command);
+    };
+  };
+
+  const processPostponed = (type: PostponedCommandType) => {
+    commandsQueue = commandsQueue.filter(({ condition, context, action }) => {
+      const conditionResult = condition?.(type) ?? true;
+
+      if (conditionResult === 'ignore') {
+        return false;
+      }
+
+      if (conditionResult) {
+        action(context, type);
+      }
+
+      return !conditionResult;
+    });
+  };
 
   const subscribe = (element: Node, commands: Command[]) => {
     subscriptions.set(element, [
@@ -60,6 +86,8 @@ const createController = () => {
   return {
     subscribe,
     subscriptions,
+    postpone,
+    processPostponed,
   };
 };
 
@@ -74,7 +102,6 @@ export const useCommandsPluginFactory: UsePluginFactory<
 
   const changesController = useChanges(deps.plugins);
   const selectionController = useSelectionController(deps.plugins);
-  const mutationsController = useMutationsController(deps.plugins);
 
   useEffect(() => {
     assert(
@@ -101,7 +128,6 @@ export const useCommandsPluginFactory: UsePluginFactory<
           }
         });
       }),
-      O.map(tap(mutationsController.clear)),
       O.map(({ range, originalEvent, results }) => {
         let current: Node | null = getFirstDeepLeaf(
           range?.startContainer ?? null,
@@ -135,6 +161,7 @@ export const useCommandsPluginFactory: UsePluginFactory<
 
               results,
               range,
+              postpone: controller.postpone,
 
               stopBrickPropagation: () => results({
                 stopPropagation: true,
@@ -170,13 +197,9 @@ export const useCommandsPluginFactory: UsePluginFactory<
           }
         }
 
-        return toCustomRange(ref.current!)(range);
+        return range;
       }),
-      O.map(tap(() => mutationsController.handle(
-        mutationsController.clear() ?? [],
-      ))),
-      O.map((range) => selectionController.storeRange(range, 'applyOnRender')),
-      O.map(changesController.apply),
+      O.map(restoreRange),
     );
 
     element.addEventListener('keydown', handle);
@@ -184,8 +207,9 @@ export const useCommandsPluginFactory: UsePluginFactory<
   }, [
     changesController,
     selectionController,
-    mutationsController,
     controller.subscriptions,
+    controller.postpone,
+    controller.processPostponed,
     deps.store,
   ]);
 

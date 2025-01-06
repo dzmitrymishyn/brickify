@@ -18,6 +18,7 @@ import {
 import { revertDomByMutations } from './revertDomByMutations';
 import { useBeforeMutationRangeSaver } from './useBeforeMutationRangeSaver';
 import { useChanges } from '../changes';
+import { type CommandsController, useCommandsController } from '../commands';
 import {
   type SelectionController,
   useSelectionController,
@@ -29,10 +30,12 @@ const token = Symbol('MutationsPlugin');
 export const createController = ({
   ref,
   selectionController,
+  commandsController,
   observerRef,
 }: {
   ref: RefObject<Element | null>;
   selectionController: SelectionController;
+  commandsController: CommandsController;
   observerRef: RefObject<MutationObserver | null>;
 }) => {
   const mutationsToRevert = new Set<MutationRecord>();
@@ -44,12 +47,16 @@ export const createController = ({
 
   const clear = () => {
     mutationsToRevert.clear();
-    return observerRef.current?.takeRecords();
+    return observerRef.current?.takeRecords() ?? [];
   };
 
   const handle = (mutations: MutationRecord[]) => {
     try {
       mutationsToRevert.clear();
+
+      if (mutations.length) {
+        commandsController.processPostponed('mutation');
+      }
 
       const range = getRange();
       const defaultComponentMutation: Omit<ComponentMutations, 'domNode'> = {
@@ -59,9 +66,8 @@ export const createController = ({
         mutations: [],
         range,
       };
-
-      const allMutations: MutationRecord[] = [...mutations];
-      let currentMutations: MutationRecord[] | undefined = mutations;
+      const allMutations: MutationRecord[] = [...mutations, ...clear()];
+      let currentMutations: MutationRecord[] | undefined = allMutations;
 
       while (currentMutations?.length) {
         const affectedSubscriptions = new Map<Node, ComponentMutations>();
@@ -173,6 +179,7 @@ export const useMutationsPluginFactory: UsePluginFactory<
   MutationsController
 > = ({ value }, deps) => {
   const changesController = useChanges(deps.plugins);
+  const commandsController = useCommandsController(deps.plugins);
   const selectionController = useSelectionController(deps.plugins);
   const ref = useRef<Element>(null);
   const observerRef = useRef<MutationObserver>(null);
@@ -180,8 +187,9 @@ export const useMutationsPluginFactory: UsePluginFactory<
   const controller = useMemo(() => createController({
     ref,
     selectionController,
+    commandsController,
     observerRef,
-  }), [selectionController]);
+  }), [selectionController, commandsController]);
 
   const renderingPhase = useRef(false);
 

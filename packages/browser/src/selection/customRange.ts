@@ -6,7 +6,7 @@ import { fromRangeCopy } from './rangeCopy';
 
 type CustomPathSegment = {
   offset: number;
-  case?: OffsetCase;
+  offsetCase?: OffsetCase;
 };
 
 export type CustomRange = {

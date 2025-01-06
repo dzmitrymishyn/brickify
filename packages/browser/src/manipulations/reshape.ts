@@ -14,7 +14,7 @@ const actions = {
   expose,
 } as const;
 
-const getType = (
+export const getReshapeType = (
   component: Component,
   range: Range,
   container?: HTMLElement | null,
@@ -35,7 +35,7 @@ export const reshape = (
   container?: HTMLElement | null,
   forceActionType?: ReshapeVariant,
 ): { type?: string; range: Range } => pipe(
-  forceActionType ?? getType(component, range, container),
+  forceActionType ?? getReshapeType(component, range, container),
   (type) => pipe(
     O.fromNullable(actions[type](component, range, container)),
     O.map((nextRange) => ({ type, range: nextRange })),

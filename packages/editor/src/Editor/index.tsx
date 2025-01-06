@@ -79,8 +79,8 @@ export default withRendererContext(Editor, {
   plugins: [
     useChangesPluginFactory,
     useSelectionPluginFactory,
-    useMutationsPluginFactory,
     useCommandsPluginFactory,
+    useMutationsPluginFactory,
   ],
 });
 
