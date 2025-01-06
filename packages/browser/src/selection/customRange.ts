@@ -1,13 +1,12 @@
 import { flow } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
 
-import { getCursorPosition, getNodeByOffset } from './offset';
+import { getCursorPosition, getNodeByOffset, type OffsetCase } from './offset';
 import { fromRangeCopy } from './rangeCopy';
 
 type CustomPathSegment = {
   offset: number;
-  childOffset: number;
-  childOffsetType: 'start' | 'end' | 'center';
+  case?: OffsetCase;
 };
 
 export type CustomRange = {

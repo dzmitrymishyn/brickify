@@ -1,12 +1,11 @@
-import { getFirstDeepLeaf, isElement, isText } from '../utils';
+import { getFirstDeepLeaf, isText } from '../utils';
 
-export type ChildOffsetType = 'start' | 'end' | 'center';
+export type OffsetCase = 'start' | 'end' | null | undefined;
 
 export type OffsetPoint = {
   offset: number;
   node: Node;
-  childOffsetType?: ChildOffsetType;
-  childOffset?: number;
+  offsetCase?: OffsetCase;
 };
 
 const getNextPossibleSibling = (node: Node, container?: Node): Node | null => {
@@ -32,7 +31,7 @@ const getSimpleNodeLength = (node: Node) => {
     return 1;
   }
 
-  if (node.nodeType === Node.TEXT_NODE) {
+  if (isText(node)) {
     return node.textContent?.length || 0;
   }
 
@@ -65,79 +64,73 @@ const getNodeLength = (node: Node) => {
   return length;
 };
 
-export const getCursorPosition = (parent: Node, inputNode: Node, offset = 0) => {
-  let length = 0;
-  let node = inputNode;
-
-  let childOffsetType: ChildOffsetType = offset === 0 ? 'start' : 'center';
-
+const isNodeEnd = (node: Node, offset: number) => {
   if (isText(node)) {
-    length += offset;
-  } else {
-    node = node.childNodes[offset];
+    return node.textContent?.length === offset;
   }
 
+  return node.childNodes?.length === offset;
+};
+
+export const getCursorPosition = (parent: Node, node: Node, offset = 0) => {
+  let fullOffset = 0;
   let current: Node | null = node;
-  while (current) {
+  let offsetCase: OffsetCase;
+
+  if (offset === 0) {
+    offsetCase = 'start';
+  } else if (isNodeEnd(node, offset)) {
+    offsetCase = 'end';
+  }
+
+  if (isText(current)) {
+    fullOffset += offset;
     current = getPreviousPossibleSibling(current, parent);
-
-    if (current) {
-      length += getNodeLength(current);
-    }
+  } else {
+    current = current.childNodes[offset - 1]
+      || getPreviousPossibleSibling(current, parent);
   }
 
-  if (
-    isText(node)
-    && offset
-    && node.textContent?.length === offset
-  ) {
-    childOffsetType = 'end';
+  while (current) {
+    fullOffset += getNodeLength(current);
+    current = getPreviousPossibleSibling(current, parent);
   }
 
-  if (isElement(node)) {
-    childOffsetType = 'start';
-  }
-
-  return { offset: length, childOffset: offset, childOffsetType };
+  return { offset: fullOffset, offsetCase };
 };
 
 export const getNodeByOffset = (
-  { node, offset, childOffsetType }: OffsetPoint,
+  { node, offset, offsetCase }: OffsetPoint,
 ): { offset: number; node: Node } => {
-  // console.log({node, offset, childOffsetType});
-  let length = 0;
+  let currentOffset = 0;
   let current: Node | null = node;
-  while (current && length <= offset) {
-    current = getFirstDeepLeaf(current)!;
 
-    const newLength = length + getSimpleNodeLength(current);
+  while (current && currentOffset <= offset) {
+    current = getFirstDeepLeaf(current) ?? current;
 
-    if (newLength >= offset) {
-      if (isBr(current) && offset !== length) {
-        return {
-          node: getFirstDeepLeaf(getNextPossibleSibling(current, node))
-            || current,
-          offset: 0,
-        };
-      } else if (isBr(current)) {
-        return {
-          node: current.parentElement!,
-          offset: Array.from(current.parentElement?.childNodes ?? []).indexOf(current) + 1,
-        };
-      } else if (childOffsetType === 'start' && newLength - offset === 0) {
-        return {
-          node: getFirstDeepLeaf(getNextPossibleSibling(current, node))
-            || current,
-          offset: 0,
-        };
+    const newOffset = currentOffset + getNodeLength(current);
+
+    // Only BR node without any content could pass to this block. In this
+    // case we have to set selection to the next node
+    if (newOffset === offset && (offsetCase === 'start' || isBr(current))) {
+      return {
+        offset: 0,
+        node: getFirstDeepLeaf(getNextPossibleSibling(current, node))
+          ?? current,
       }
-
-      return { node: current, offset: offset - length };
     }
 
-    length = newLength;
+    if (newOffset >= offset) {
+      return {
+        offset: offset - currentOffset,
+        node: current,
+      };
+    }
+
+    currentOffset = newOffset;
 
     current = getNextPossibleSibling(current, node);
   }
-  return { node: current!, offset };
+
+  throw new Error(`Passed offset (${offset}) is outside the container`);
 };

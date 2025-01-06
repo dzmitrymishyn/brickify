@@ -1,8 +1,4 @@
-import {
-  getRange,
-  restoreRange,
-  toRangeCopy,
-} from '@brickifyio/browser/selection';
+import { toRangeCopy } from '@brickifyio/browser/selection';
 import {
   applySlots,
   extend,
@@ -26,32 +22,41 @@ type Props = PropsWithStoredValue<Value> & PropsWithChange<Value> & Value;
 export const Article: React.FC<Props> = ({ stored, title, description, onChange }) => {
   const ref = useRendererRegistry<HTMLElement>(stored);
 
-  const { markToRevert } = useMutation(ref, ({ removed, mutations }) => {
+  const { markToRevert } = useMutation(ref, ({ removed, mutations, range }) => {
     markToRevert(mutations);
 
     if (removed) {
       onChange?.(undefined);
     }
 
-    const range = toRangeCopy(getRange());
+    const rangeCopy = toRangeCopy(range);
 
     ref.current?.childNodes.forEach((node, index) => {
       if (node instanceof HTMLElement && index < 2) {
         onChange?.({
           [index === 0 ? 'title' : 'description']: node.innerHTML,
         });
-      } else if (
+        return;
+      }
+
+      if (
         index === 2
         && node instanceof HTMLElement
         && description
       ) {
         ref.current?.insertAdjacentElement('afterend', node);
-      } else if (index > 2 && node instanceof HTMLElement) {
+        return;
+      }
+
+      if (index > 2 && node instanceof HTMLElement) {
         ref.current?.insertAdjacentElement('afterend', node);
       }
     });
 
-    restoreRange(range);
+    if (range && rangeCopy) {
+      range.setStart(rangeCopy.startContainer, rangeCopy.startOffset);
+      range.setEnd(rangeCopy.endContainer, rangeCopy.endOffset);
+    }
   });
   const components = applySlots<{
     Paragraph: typeof Paragraph;

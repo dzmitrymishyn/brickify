@@ -122,7 +122,7 @@ const Page = () => {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
       <Editor
-        style={{ padding: 20 }}
+        style={{ padding: 20, overflow: 'hidden' }}
         // eslint-disable-next-line -- TODO: check it
         value={state as any}
         onChange={setState}

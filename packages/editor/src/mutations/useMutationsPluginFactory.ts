@@ -50,11 +50,14 @@ export const createController = ({
   const handle = (mutations: MutationRecord[]) => {
     try {
       mutationsToRevert.clear();
+
+      const range = getRange();
       const defaultComponentMutation: Omit<ComponentMutations, 'domNode'> = {
         removed: false,
         removedDescendants: [],
         addedDescendants: [],
         mutations: [],
+        range,
       };
 
       const allMutations: MutationRecord[] = [...mutations];
@@ -135,7 +138,7 @@ export const createController = ({
       }
 
       if (mutationsToRevert.size) {
-        const nextRange = toCustomRange(ref.current!)(getRange());
+        const nextRange = toCustomRange(ref.current!)(range);
 
         revertDomByMutations(
           // We can optimize this if we move filtering inside the function

@@ -4,6 +4,7 @@ export type ComponentMutations = {
   addedDescendants: Node[];
   removed: boolean;
   domNode: Node;
+  range?: Range | null;
 };
 
 export type ComponentMutationsHandler = (mutation: ComponentMutations) => void;
