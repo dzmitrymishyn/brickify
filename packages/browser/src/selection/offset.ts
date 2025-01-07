@@ -11,10 +11,9 @@ export type OffsetCase = 'start' | 'end' | null | undefined;
 
 export type OffsetPoint = {
   offset: number;
-  node: Node;
+  container: Node;
   offsetCase?: OffsetCase;
 };
-
 
 const getSimpleNodeLength = (node: Node) => {
   if (isBr(node)) {
@@ -36,7 +35,11 @@ const isNodeEnd = (node: Node, offset: number) => {
   return node.childNodes?.length === offset;
 };
 
-export const getCursorPosition = (parent: Node, node: Node, offset = 0) => {
+export const getCursorPosition = (
+  parent: Node,
+  node: Node,
+  offset = 0,
+): OffsetPoint => {
   const fullOffset = reduceLeaves(
     isElement(node) ? 0 : offset,
     parent,
@@ -53,7 +56,7 @@ export const getCursorPosition = (parent: Node, node: Node, offset = 0) => {
     offsetCase = 'end';
   }
 
-  return { offset: fullOffset, offsetCase, node: parent };
+  return { offset: fullOffset, offsetCase, container: parent };
 };
 
 export const getNodeByOffset = (

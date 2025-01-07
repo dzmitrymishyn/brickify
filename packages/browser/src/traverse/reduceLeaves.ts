@@ -12,11 +12,10 @@ export const reduceLeaves = <T>(
   const range = new Range();
 
   range.setStart(from, 0);
-  range.setEndBefore(to);
   range.setEnd(getLastDeepLeaf(getPreviousPossibleSibling(to))!, 0);
 
   let currentAcc = acc;
-  let current: Node | null = getFirstDeepLeaf(range.startContainer);
+  let current: Node | null = getFirstDeepLeaf(from);
 
   while (current && range.intersectsNode(current)) {
     current = getFirstDeepLeaf(current)!;

@@ -1,6 +1,5 @@
 import { getFirstDeepLeaf } from './getFirstDeepLeaf';
 import { getNextPossibleSibling } from './getNextPossibleSibling';
-import { isElement } from '../utils';
 
 export const findLeaf = (
   container: Node,
@@ -11,11 +10,7 @@ export const findLeaf = (
   range.setStart(container, 0);
   range.setEndAfter(container);
 
-  let current: Node | null = (
-    isElement(range.startContainer) && range.startContainer.childNodes.length
-      ? range.startContainer.childNodes[range.startOffset]
-      : range.startContainer
-  );
+  let current: Node | null = container;
 
   while (current && range.intersectsNode(current)) {
     current = getFirstDeepLeaf(current)!;
