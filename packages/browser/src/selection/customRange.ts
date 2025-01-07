@@ -37,8 +37,8 @@ export const toCustomRange = (container: Node) => flow(
 export const fromCustomRange = flow(
   O.fromNullable<CustomRange | null | undefined>,
   O.map(({ startPath, endPath, container }) => ({
-    start: getNodeByOffset({ ...startPath, node: container }),
-    end: getNodeByOffset({ ...endPath, node: container }),
+    start: getNodeByOffset(container, startPath.offset, startPath.offsetCase),
+    end: getNodeByOffset(container, endPath.offset, endPath.offsetCase),
   })),
   O.map(({ start, end }) => fromRangeCopy({
     startContainer: start.node,

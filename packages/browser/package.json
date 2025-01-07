@@ -5,6 +5,7 @@
     "./hotkeys": "./hotkeys",
     "./manipulations": "./manipulations",
     "./selection": "./selection",
+    "./traverse": "./traverse",
     "./utils": "./utils"
   },
   "scripts": {

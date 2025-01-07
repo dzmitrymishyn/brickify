@@ -4,7 +4,7 @@ import {
   isElementWithinRange,
   restoreRange,
 } from '@brickifyio/browser/selection';
-import { getFirstDeepLeaf } from '@brickifyio/browser/utils';
+import { getFirstDeepLeaf } from '@brickifyio/browser/traverse';
 import { createUsePlugin, type UsePluginFactory } from '@brickifyio/renderer';
 import { flow } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';

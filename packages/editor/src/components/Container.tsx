@@ -1,4 +1,4 @@
-import { getRange, restoreRange, toRangeCopy } from '@brickifyio/browser/selection';
+import { toRangeCopy } from '@brickifyio/browser/selection';
 import {
   extend,
   handleAddedNodes,
@@ -20,45 +20,51 @@ const Container: FC<Props> = ({ children, stored, onChange }) => {
   const ref = useRendererRegistry<HTMLDivElement>(stored);
   const labelRef = useRef<HTMLDivElement>(null);
   const { add } = useChanges();
-  const { markToRevert } = useMutation(ref, ({ removed, mutations, addedDescendants }) => {
-    markToRevert(mutations);
+  const { markToRevert } = useMutation(
+    ref,
+    ({ range, removed, mutations, addedDescendants }) => {
+      markToRevert(mutations);
 
-    if (removed || ref.current?.firstChild === labelRef.current) {
-      onChange?.(undefined);
-    }
+      if (removed || ref.current?.firstChild === labelRef.current) {
+        onChange?.(undefined);
+      }
 
-    const range = toRangeCopy(getRange());
+      const rangeCopy = toRangeCopy(range);
 
-    handleAddedNodes({
-      add: ({ node, index, component }) => {
-        if (
-          node === ref.current?.lastChild?.previousSibling
-          && node instanceof HTMLElement
-          && node.previousSibling instanceof HTMLElement
-          && node.previousSibling.textContent === ''
-        ) {
-          node.previousSibling.remove();
-          ref.current.insertAdjacentElement('afterend', node);
-          return;
-        }
+      handleAddedNodes({
+        add: ({ node, index, component }) => {
+          if (
+            node === ref.current?.lastChild?.previousSibling
+            && node instanceof HTMLElement
+            && node.previousSibling instanceof HTMLElement
+            && node.previousSibling.textContent === ''
+          ) {
+            node.previousSibling.remove();
+            ref.current.insertAdjacentElement('afterend', node);
+            return;
+          }
 
-        if (hasNodeToBrick(component)) {
-          add(
-            [...stored.pathRef.current(), 'children', `${index}`],
-            component.nodeToBrick(node, {
-              components: stored.components,
-              component,
-            }),
-          );
-        }
-      },
-      addedNodes: addedDescendants,
-      allNodes: Array.from(ref.current?.childNodes ?? []),
-      components: stored.components,
-    });
+          if (hasNodeToBrick(component)) {
+            add(
+              [...stored.pathRef.current(), 'children', `${index}`],
+              component.nodeToBrick(node, {
+                components: stored.components,
+                component,
+              }),
+            );
+          }
+        },
+        addedNodes: addedDescendants,
+        allNodes: Array.from(ref.current?.childNodes ?? []),
+        components: stored.components,
+      });
 
-    restoreRange(range);
-  });
+      if (range && rangeCopy) {
+        range.setStart(rangeCopy.startContainer, rangeCopy.startOffset);
+        range.setEnd(rangeCopy.endContainer, rangeCopy?.endOffset);
+      }
+    },
+  );
 
   return (
     <div

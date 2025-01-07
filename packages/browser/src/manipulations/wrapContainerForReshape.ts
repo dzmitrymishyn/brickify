@@ -8,9 +8,8 @@ import {
   type RangeCopy,
   toRangeCopy,
 } from '../selection';
+import { getFirstDeepLeaf, getLastDeepLeaf } from '../traverse';
 import {
-  getFirstDeepLeaf,
-  getLastDeepLeaf,
   isText,
   splitBoundaryText,
 } from '../utils';

@@ -1,4 +1,11 @@
-import { getFirstDeepLeaf, isText } from '../utils';
+import {
+  findLeaf,
+  getFirstDeepLeaf,
+  getNextPossibleSibling,
+  reduceLeaves,
+} from '../traverse';
+import { isBr, isElement, isText } from '../utils';
+import assert from 'assert';
 
 export type OffsetCase = 'start' | 'end' | null | undefined;
 
@@ -8,23 +15,6 @@ export type OffsetPoint = {
   offsetCase?: OffsetCase;
 };
 
-const getNextPossibleSibling = (node: Node, container?: Node): Node | null => {
-  let current: Node | null = node;
-  while (current && container !== current && !current.nextSibling) {
-    current = current.parentNode;
-  }
-  return current === container ? null : (current?.nextSibling ?? null);
-};
-
-const getPreviousPossibleSibling = (node: Node, container?: Node): Node | null => {
-  let current: Node | null = node;
-  while (current && container !== current && !current.previousSibling) {
-    current = current.parentNode;
-  }
-  return current === container ? null : (current?.previousSibling ?? null);
-};
-
-const isBr = (node: Node): node is HTMLBRElement => node.nodeName === 'BR';
 
 const getSimpleNodeLength = (node: Node) => {
   if (isBr(node)) {
@@ -38,32 +28,6 @@ const getSimpleNodeLength = (node: Node) => {
   return 0;
 };
 
-const getNodeLength = (node: Node) => {
-  if (!node.childNodes?.length) {
-    return getSimpleNodeLength(node);
-  }
-
-  const stack: Node[] = [node];
-  let length = 0;
-  let current: Node | null = node.childNodes[0];
-
-  while (current && stack.length) {
-    while (current.childNodes.length) {
-      stack.push(current);
-      current = current.childNodes[0];
-    }
-
-    length += getSimpleNodeLength(current);
-
-    while (current && !current.nextSibling) {
-      current = stack.pop() ?? null;
-    }
-    current = current?.nextSibling ?? null;
-  }
-
-  return length;
-};
-
 const isNodeEnd = (node: Node, offset: number) => {
   if (isText(node)) {
     return node.textContent?.length === offset;
@@ -73,8 +37,14 @@ const isNodeEnd = (node: Node, offset: number) => {
 };
 
 export const getCursorPosition = (parent: Node, node: Node, offset = 0) => {
-  let fullOffset = 0;
-  let current: Node | null = node;
+  const fullOffset = reduceLeaves(
+    isElement(node) ? 0 : offset,
+    parent,
+    isElement(node) ? node.childNodes[offset] : node,
+    (acc, current) => {
+      return acc + getSimpleNodeLength(current);
+    },
+  );
   let offsetCase: OffsetCase;
 
   if (offset === 0) {
@@ -83,54 +53,42 @@ export const getCursorPosition = (parent: Node, node: Node, offset = 0) => {
     offsetCase = 'end';
   }
 
-  if (isText(current)) {
-    fullOffset += offset;
-    current = getPreviousPossibleSibling(current, parent);
-  } else {
-    current = current.childNodes[offset - 1]
-      || getPreviousPossibleSibling(current, parent);
-  }
-
-  while (current) {
-    fullOffset += getNodeLength(current);
-    current = getPreviousPossibleSibling(current, parent);
-  }
-
-  return { offset: fullOffset, offsetCase };
+  return { offset: fullOffset, offsetCase, node: parent };
 };
 
 export const getNodeByOffset = (
-  { node, offset, offsetCase }: OffsetPoint,
-): { offset: number; node: Node } => {
+  container: Node,
+  offset: number,
+  offsetCase?: OffsetCase,
+) => {
   let currentOffset = 0;
-  let current: Node | null = node;
+  let resultOffset = 0;
 
-  while (current && currentOffset <= offset) {
-    current = getFirstDeepLeaf(current) ?? current;
-
-    const newOffset = currentOffset + getNodeLength(current);
-
-    // Only BR node without any content could pass to this block. In this
-    // case we have to set selection to the next node
-    if (newOffset === offset && (offsetCase === 'start' || isBr(current))) {
-      return {
-        offset: 0,
-        node: getFirstDeepLeaf(getNextPossibleSibling(current, node))
-          ?? current,
-      }
-    }
+  const node = findLeaf(container, (current) => {
+    const newOffset = currentOffset + getSimpleNodeLength(current);
 
     if (newOffset >= offset) {
-      return {
-        offset: offset - currentOffset,
-        node: current,
-      };
+      resultOffset = newOffset;
+      return true;
     }
 
     currentOffset = newOffset;
 
-    current = getNextPossibleSibling(current, node);
+    return false;
+  });
+
+  assert(node, `Passed offset (${offset}) is outside the container`);
+
+  if (resultOffset === offset && (offsetCase === 'start' || isBr(node))) {
+    return {
+      offset: 0,
+      node: getFirstDeepLeaf(getNextPossibleSibling(node))
+        ?? node,
+    };
   }
 
-  throw new Error(`Passed offset (${offset}) is outside the container`);
+  return {
+    offset: offset - currentOffset,
+    node,
+  };
 };
