@@ -39,7 +39,7 @@ export const createController = ({
   observerRef: RefObject<MutationObserver | null>;
 }) => {
   const mutationsToRevert = new Set<MutationRecord>();
-  const subscriptions = new Map<Node, ComponentMutationsHandler>();
+  const subscriptions = new Map<Node, ComponentMutationsHandler[]>();
 
   const markToRevert = (mutations: MutationRecord[]) => {
     mutations.forEach((record) => mutationsToRevert.add(record));
@@ -131,7 +131,7 @@ export const createController = ({
         affectedSubscriptions.forEach(
           (options, node) => {
             try {
-              subscriptions.get(node)?.(options);
+              subscriptions.get(node)?.forEach((fn) => fn(options));
             } catch (error) {
               // TODO: Add logger
             }
@@ -162,10 +162,21 @@ export const createController = ({
   };
 
   const subscribe = (element: Node, mutate: ComponentMutationsHandler) => {
-    subscriptions.set(element, mutate);
+    subscriptions.set(element, [
+      ...subscriptions.get(element) ?? [],
+      mutate,
+    ]);
 
     return () => {
-      subscriptions.delete(element);
+      const allMutations = subscriptions.get(element)?.filter(
+        (currentMutate) => currentMutate !== mutate,
+      ) ?? [];
+
+      if (allMutations.length) {
+        subscriptions.set(element, allMutations);
+      } else {
+        subscriptions.delete(element);
+      }
     };
   };
 
