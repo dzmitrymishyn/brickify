@@ -3,7 +3,8 @@ import { extend } from '@brickifyio/renderer';
 import { compile } from 'css-select';
 import React, { type RefObject } from 'react';
 
-import { useCommand, withCommands } from '../commands';
+import { useCommand } from '../commands';
+import { withHooks } from '../ContainerHooks';
 
 const Br: React.FC = () => <br />;
 
@@ -47,5 +48,5 @@ export default extend(
 export const EnterBr = extend(
   Br,
   { is: compile('br') },
-  withCommands(useBr)
+  withHooks(useBr)
 );

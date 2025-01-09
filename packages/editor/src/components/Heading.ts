@@ -1,12 +1,12 @@
 import { extend, withMatcher, withName, withProps } from '@brickifyio/renderer';
 
-import { withCommands } from '../commands';
+import { withHooks } from '../ContainerHooks';
 import Paragraph from '../Paragraph';
 
 export default extend(
   Paragraph,
   withName('Heading'),
-  withCommands([]),
+  withHooks([]),
   withMatcher((node) => node instanceof HTMLElement && node.matches('h1')),
   withProps({
     component: 'h1',

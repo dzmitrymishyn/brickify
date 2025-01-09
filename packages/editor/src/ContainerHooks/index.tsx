@@ -2,19 +2,19 @@ import { array } from '@brickifyio/operators';
 import { type Component, getName } from '@brickifyio/renderer';
 import { type RefObject, useMemo } from 'react';
 
-import { hasCommands, type WithCommands } from './withCommands';
+import { hasHooks, type WithHooks, withHooks } from './withHooks';
 
 type CommandProps = {
-  component: Component & WithCommands;
+  component: Component & WithHooks;
   containerRef: RefObject<HTMLElement | null>;
 };
 
-const Command: React.FC<CommandProps> = ({
+const HookExecutor: React.FC<CommandProps> = ({
   component,
   containerRef,
 }) => {
-  array(component.commands).forEach(
-    (command) => typeof command === 'function' && command(containerRef),
+  array(component.hooks).forEach(
+    (hook) => typeof hook === 'function' && hook(containerRef),
   );
 
   return null;
@@ -30,13 +30,13 @@ export type CommanderProps = {
  * components with a hook and it render them in its own components. It secure
  * components modification (you can remove or add components) without errors.
  */
-export const Commander: React.FC<CommanderProps> = ({
+export const ContainerHooks: React.FC<CommanderProps> = ({
   components,
   containerRef,
 }) => {
   const nodes = useMemo(() => Object.values(components || {}).map((component) => (
-    hasCommands(component)
-      ? <Command
+    hasHooks(component)
+      ? <HookExecutor
           key={getName(component)}
           containerRef={containerRef}
           component={component}
@@ -50,3 +50,5 @@ export const Commander: React.FC<CommanderProps> = ({
     </>
   );
 };
+
+export { hasHooks, type WithHooks, withHooks };

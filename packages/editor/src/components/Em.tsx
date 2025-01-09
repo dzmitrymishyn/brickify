@@ -2,9 +2,9 @@ import { extend, withName } from '@brickifyio/renderer';
 import { compile } from 'css-select';
 import React, { type PropsWithChildren, type RefObject } from 'react';
 
-import { withCommands } from '../commands';
 import { useReshapeCommand } from '../hooks/useReshapeCommand';
 import { createReshapePatternHook } from '../inline';
+import { withHooks } from '../ContainerHooks';
 
 const Em: React.FC<PropsWithChildren> = ({ children }) => (
   <em>{children}</em>
@@ -28,7 +28,7 @@ export default extend(
   Em,
   withName('Em'),
   { is: compile('em') },
-  withCommands([
+  withHooks([
     useEmCommand,
     createReshapePatternHook(
       component,

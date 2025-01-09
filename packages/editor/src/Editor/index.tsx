@@ -12,9 +12,10 @@ import { useMergedRefs } from '@brickifyio/utils/hooks';
 import { forwardRef, useMemo } from 'react';
 
 import { type PropsWithChange, useChanges, useChangesPluginFactory } from '../changes';
-import { Commander, useCommandsPluginFactory } from '../commands';
+import { useCommandsPluginFactory } from '../commands';
 import { useMutation, useMutationsPluginFactory } from '../mutations';
 import { useSelectionPluginFactory } from '../selection';
+import { ContainerHooks } from '../ContainerHooks';
 
 type Props = PropsWithStoredValue<BrickValue[]> & PropsWithChange & {
   components?: Record<string, Component>;
@@ -57,7 +58,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
 
   return (
     <>
-      <Commander containerRef={rootRef} components={components} />
+      <ContainerHooks containerRef={rootRef} components={components} />
       <div
         ref={ref}
         data-brick="Editor"

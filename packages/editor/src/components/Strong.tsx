@@ -2,7 +2,7 @@ import { extend, withName } from '@brickifyio/renderer';
 import { compile } from 'css-select';
 import React, { type PropsWithChildren , type RefObject } from 'react';
 
-import { withCommands } from '../commands';
+import { withHooks } from '../ContainerHooks';
 import { useReshapeCommand } from '../hooks/useReshapeCommand';
 import { createReshapePatternHook } from '../inline';
 
@@ -28,7 +28,7 @@ export default extend(
   Strong,
   withName('Strong'),
   { is: compile('strong') },
-  withCommands([
+  withHooks([
     useStrongCommand,
     createReshapePatternHook(
       component,

@@ -18,7 +18,7 @@ import {
 } from '@brickifyio/renderer';
 
 import { type PropsWithChange, useChanges } from '../changes';
-import { Commander } from '../commands';
+import { ContainerHooks } from '../ContainerHooks';
 import { useMutation } from '../mutations';
 import Paragraph from '../Paragraph';
 
@@ -110,7 +110,7 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
 
   return (
     <ul ref={ref}>
-      <Commander containerRef={ref} components={components} />
+      <ContainerHooks containerRef={ref} components={components} />
       {childrenElements}
     </ul>
   );

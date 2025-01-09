@@ -11,7 +11,7 @@ import {
 import { type FC, type PropsWithChildren, useRef } from 'react';
 
 import { type PropsWithChange, useChanges } from '../changes';
-import { Commander } from '../commands';
+import { ContainerHooks } from '../ContainerHooks';
 import { useMutation } from '../mutations';
 
 type Props = PropsWithStoredValue & PropsWithChange & PropsWithChildren;
@@ -77,7 +77,7 @@ const Container: FC<Props> = ({ children, stored, onChange }) => {
         border: '1px solid #ccc',
       }}
     >
-      <Commander containerRef={ref} components={stored.components || {}} />
+      <ContainerHooks containerRef={ref} components={stored.components || {}} />
       {children}
       <div
         ref={labelRef}

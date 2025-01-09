@@ -22,8 +22,8 @@ import {
 
 import { domToReactFactory } from './domToReactFactory';
 import { type PropsWithChange } from '../changes';
-import { Commander } from '../commands';
 import { useMutation } from '../mutations';
+import { ContainerHooks } from '../ContainerHooks';
 
 export type ParagraphResults = {
   paragraph: {
@@ -134,7 +134,7 @@ const Paragraph: React.FC<Props> = ({
         suppressContentEditableWarning: true,
       }}
     >
-      <Commander containerRef={ref} components={components} />
+      <ContainerHooks containerRef={ref} components={components} />
       {/* <span> */}
       {nodes.length ? nodes : <br />}
       {/* </span>
