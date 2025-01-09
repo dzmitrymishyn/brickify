@@ -1,4 +1,4 @@
-import { flow } from 'fp-ts/lib/function';
+import { flow, pipe } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
 
 import { getCursorPosition, getNodeByOffset, type OffsetCase } from './offset';
@@ -18,14 +18,24 @@ export type CustomRange = {
 export const toCustomRange = (container: Node) => flow(
   O.fromNullable<Range | null | undefined>,
   O.bindTo('range'),
-  O.map(({ range }) => ({
-    start: getCursorPosition(
+  O.map(({ range }) => pipe(
+    getCursorPosition(
       container,
       range.startContainer,
       range.startOffset,
     ),
-    end: getCursorPosition(container, range.endContainer, range.endOffset),
-  })),
+    (start) => ({
+      start,
+      end: (
+        range.startContainer === range.endContainer
+        && range.startOffset === range.endOffset
+      ) ? start : getCursorPosition(
+        container,
+        range.endContainer,
+        range.endOffset,
+      )
+    }),
+  )),
   O.map(({ start, end }): CustomRange => ({
     startPath: start,
     endPath: end,

@@ -5,9 +5,9 @@ import { type ComponentMutationsHandler } from './mutations';
 import { useMutationsController } from './useMutationsPluginFactory';
 import assert from 'assert';
 
-export const useMutation = (
+export const useMutation = <Results extends object = object>(
   ref: RefObject<Node | null>,
-  mutate: ComponentMutationsHandler,
+  mutate: ComponentMutationsHandler<Results>,
 ) => {
   const { markToRevert, subscribe } = useMutationsController();
   const mutateRef = useSyncedRef(mutate);

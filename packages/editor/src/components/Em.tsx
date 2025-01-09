@@ -4,20 +4,23 @@ import React, { type PropsWithChildren, type RefObject } from 'react';
 
 import { withCommands } from '../commands';
 import { useReshapeCommand } from '../hooks/useReshapeCommand';
+import { createReshapePatternHook } from '../inline';
 
 const Em: React.FC<PropsWithChildren> = ({ children }) => (
   <em>{children}</em>
 );
 
-const useEmCommand = (ref: RefObject<Node | null>) => {
+const component = {
+  selector: 'em',
+  create: () => document.createElement('em'),
+};
+
+const useEmCommand = (ref: RefObject<HTMLElement | null>) => {
   useReshapeCommand(
     ref,
-    'reshape',
+    'formatEm',
     ['ctrl + i', 'cmd + i'],
-    {
-      selector: 'em',
-      create: () => document.createElement('em'),
-    },
+    component,
   );
 };
 
@@ -25,5 +28,17 @@ export default extend(
   Em,
   withName('Em'),
   { is: compile('em') },
-  withCommands(useEmCommand),
+  withCommands([
+    useEmCommand,
+    createReshapePatternHook(
+      component,
+      // eslint-disable-next-line prefer-named-capture-group -- ok for now
+      /(?:^|\s)(_(?!\s)([^_]*[^\s_])_)\s?$/g,
+    ),
+    createReshapePatternHook(
+      component,
+      // eslint-disable-next-line prefer-named-capture-group -- ok for now
+      /(?:^|\s)(\*(?!\s)([^*]*[^\s*])\*)\s?$/g,
+    ),
+  ]),
 );

@@ -23,6 +23,7 @@ import {
   type SelectionController,
   useSelectionController,
 } from '../selection';
+import { makeResults } from '../utils';
 import assert from 'assert';
 
 const token = Symbol('MutationsPlugin');
@@ -65,6 +66,7 @@ export const createController = ({
         addedDescendants: [],
         mutations: [],
         range,
+        results: makeResults(),
       };
       const allMutations: MutationRecord[] = [...mutations, ...clear()];
       let currentMutations: MutationRecord[] | undefined = allMutations;
@@ -163,8 +165,8 @@ export const createController = ({
 
   const subscribe = (element: Node, mutate: ComponentMutationsHandler) => {
     subscriptions.set(element, [
-      ...subscriptions.get(element) ?? [],
       mutate,
+      ...subscriptions.get(element) ?? [],
     ]);
 
     return () => {

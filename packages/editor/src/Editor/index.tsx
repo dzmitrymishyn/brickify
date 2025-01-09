@@ -27,7 +27,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   style,
 }, refProp) => {
   const editable = true;
-  const rootRef = useRendererRegistry(stored);
+  const rootRef = useRendererRegistry<HTMLElement>(stored);
 
   const ref = useMergedRefs(
     refProp,

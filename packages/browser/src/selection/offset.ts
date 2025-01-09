@@ -1,8 +1,10 @@
+import { fromRangeCopy } from './rangeCopy';
 import {
   findLeaf,
   getFirstDeepLeaf,
   getNextPossibleSibling,
-  reduceLeaves,
+  getPreviousPossibleSibling,
+  reduceLeavesRight,
 } from '../traverse';
 import { isBr, isElement, isText } from '../utils';
 import assert from 'assert';
@@ -27,6 +29,23 @@ const getSimpleNodeLength = (node: Node) => {
   return 0;
 };
 
+const getNodeLength = (node: Node, offset?: number) => {
+  if (isBr(node) || isText(node)) {
+    return offset ?? getSimpleNodeLength(node);
+  }
+
+  if (isElement(node)) {
+    let length = 0;
+    const childrenLength = offset ?? node.childNodes.length;
+    for (let index = 0; index < (offset ?? childrenLength); index += 1) {
+      length += getNodeLength(node.childNodes[index]);
+    }
+    return length;
+  }
+
+  return 0;
+};
+
 const isNodeEnd = (node: Node, offset: number) => {
   if (isText(node)) {
     return node.textContent?.length === offset;
@@ -36,18 +55,10 @@ const isNodeEnd = (node: Node, offset: number) => {
 };
 
 export const getCursorPosition = (
-  parent: Node,
+  container: Node,
   node: Node,
   offset = 0,
 ): OffsetPoint => {
-  const fullOffset = reduceLeaves(
-    isElement(node) ? 0 : offset,
-    parent,
-    isElement(node) ? node.childNodes[offset] : node,
-    (acc, current) => {
-      return acc + getSimpleNodeLength(current);
-    },
-  );
   let offsetCase: OffsetCase;
 
   if (offset === 0) {
@@ -56,18 +67,39 @@ export const getCursorPosition = (
     offsetCase = 'end';
   }
 
-  return { offset: fullOffset, offsetCase, container: parent };
+  const fullOffset = reduceLeavesRight(
+    getNodeLength(node, offset),
+    container,
+    getPreviousPossibleSibling(node, container),
+    (acc, current) => acc + getNodeLength(current),
+  );
+
+  return { offset: fullOffset, offsetCase, container };
 };
 
 export const getNodeByOffset = (
-  container: Node,
+  startNode: Node,
   offset: number,
   offsetCase?: OffsetCase,
+  container?: Node,
 ) => {
+  const range = container ? fromRangeCopy({
+    startContainer: container,
+    startOffset: 0,
+    endContainer: container,
+    endOffset: container.childNodes?.length
+      ?? container.textContent?.length
+      ?? 0,
+  }) : null;
+
   let currentOffset = 0;
   let resultOffset = 0;
 
-  const node = findLeaf(container, (current) => {
+  const node = findLeaf(startNode, (current) => {
+    if (!(range?.intersectsNode(current) ?? true)) {
+      return 'break';
+    }
+
     const newOffset = currentOffset + getSimpleNodeLength(current);
 
     if (newOffset >= offset) {
@@ -85,7 +117,7 @@ export const getNodeByOffset = (
   if (resultOffset === offset && (offsetCase === 'start' || isBr(node))) {
     return {
       offset: 0,
-      node: getFirstDeepLeaf(getNextPossibleSibling(node))
+      node: getFirstDeepLeaf(getNextPossibleSibling(node, container))
         ?? node,
     };
   }

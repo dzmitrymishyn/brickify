@@ -1,6 +1,8 @@
 import { type RefObject } from 'react';
 
-export type CommandHook = (containerRef: RefObject<Node | null>) => void;
+export type CommandHook<E extends Node = HTMLElement> = (
+  containerRef: RefObject<E | null>,
+) => void;
 
 export type WithCommands = {
   commands: CommandHook | CommandHook[];

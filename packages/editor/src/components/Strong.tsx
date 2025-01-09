@@ -4,20 +4,23 @@ import React, { type PropsWithChildren , type RefObject } from 'react';
 
 import { withCommands } from '../commands';
 import { useReshapeCommand } from '../hooks/useReshapeCommand';
+import { createReshapePatternHook } from '../inline';
 
 const Strong: React.FC<PropsWithChildren> = ({ children }) => (
   <strong>{children}</strong>
 );
 
+const component = {
+  selector: 'strong',
+  create: () => document.createElement('strong'),
+};
+
 const useStrongCommand = (ref: RefObject<Node | null>) => {
   useReshapeCommand(
     ref,
-    'reshape',
+    'formatStrong',
     ['ctrl + b', 'cmd + b'],
-    {
-      selector: 'strong',
-      create: () => document.createElement('strong'),
-    },
+    component,
   );
 };
 
@@ -25,5 +28,17 @@ export default extend(
   Strong,
   withName('Strong'),
   { is: compile('strong') },
-  withCommands(useStrongCommand),
+  withCommands([
+    useStrongCommand,
+    createReshapePatternHook(
+      component,
+      // eslint-disable-next-line prefer-named-capture-group -- ok for now
+      /(?:^|\s)(__(?!\s)([^_]*[^\s*])__)\s?$/g,
+    ),
+    createReshapePatternHook(
+      component,
+      // eslint-disable-next-line prefer-named-capture-group -- ok for now
+      /(?:^|\s)(\*\*(?!\s)([^*]*[^\s*])\*\*)\s?$/g,
+    ),
+  ]),
 );

@@ -1,4 +1,5 @@
-import { isText } from '@brickifyio/browser/utils';
+import { reduceLeavesRight } from '@brickifyio/browser/traverse';
+import { isBr, isText } from '@brickifyio/browser/utils';
 import {
   type BrickValue,
   type Component,
@@ -23,6 +24,13 @@ import { domToReactFactory } from './domToReactFactory';
 import { type PropsWithChange } from '../changes';
 import { Commander } from '../commands';
 import { useMutation } from '../mutations';
+
+export type ParagraphResults = {
+  paragraph: {
+    leftCornerNode: Node;
+    text: string;
+  };
+};
 
 type Value = BrickValue & {
   value: string | number;
@@ -54,20 +62,57 @@ const Paragraph: React.FC<Props> = ({
 
   const ref = useRendererRegistry<HTMLElement>(brickRecord);
 
-  const { markToRevert } = useMutation(ref, (mutation) => {
-    markToRevert(mutation.mutations);
+  const { markToRevert } = useMutation<ParagraphResults>(
+    ref,
+    ({ domNode, mutations, removed, range, results }) => {
+      markToRevert(mutations);
 
-    if (mutation.removed) {
-      return onChange?.(undefined);
-    }
+      if (removed) {
+        return onChange?.(undefined);
+      }
 
-    return pipe(
-      mutation.domNode as HTMLElement,
-      (element?: HTMLElement | null) => element?.innerHTML ?? '',
-      (html) => html === '<br>' ? '' : html,
-      (newValue) => onChange?.({ value: newValue }),
-    );
-  });
+      if (range?.collapsed) {
+        const lastNodeText = isText(range.startContainer)
+          ? range.startContainer.textContent?.slice(0, range.startOffset + 1) ?? ''
+          : '';
+        const paragraph = reduceLeavesRight<{ text: string; leftCornerNode: Node }>(
+          { text: lastNodeText, leftCornerNode: range.startContainer },
+          domNode,
+          range.startContainer,
+          (acc, current) => {
+            if (acc.text.length > 256 || range.startContainer === current) {
+              return acc;
+            }
+
+            if (isText(current)) {
+              return {
+                leftCornerNode: current,
+                text: `${current.textContent ?? ''}${acc.text}`,
+              };
+            }
+
+            if (isBr(current)) {
+              return {
+                leftCornerNode: current,
+                text: `\n${acc.text}`,
+              };
+            }
+
+            return acc;
+          }
+        );
+
+        results({ paragraph });
+      }
+
+      return pipe(
+        domNode as HTMLElement,
+        (element?: HTMLElement | null) => element?.innerHTML ?? '',
+        (html) => html === '<br>' ? '' : html,
+        (newValue) => onChange?.({ value: newValue }),
+      );
+    },
+  );
 
   const domToReact = useMemo(() => domToReactFactory(
     components,

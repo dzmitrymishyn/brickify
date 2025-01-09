@@ -1,7 +1,4 @@
-export type ResultsCallback = {
-  <T = unknown>(name: string): T;
-  (results: Record<string, unknown>): void;
-};
+import { type ResultsFn } from '../utils';
 
 export type RangeCallback = (range?: Range) => Range | null;
 
@@ -11,7 +8,7 @@ export type HandleCommandOptions = {
   descendants: Node[];
 
   postpone: <Context>(command: PostponedCommand<Context>) => () => void;
-  results: ResultsCallback;
+  results: ResultsFn;
   range: Range;
 
   stopBrickPropagation: () => void;

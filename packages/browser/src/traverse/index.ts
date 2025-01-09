@@ -6,4 +6,4 @@ export * from './getLastDeepLeaf';
 export * from './getNextPossibleSibling';
 export * from './getPreviousPossibleSibling';
 export * from './getSibling';
-export * from './reduceLeaves';
+export * from './reduceLeavesRight';

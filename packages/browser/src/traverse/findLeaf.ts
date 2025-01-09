@@ -2,24 +2,21 @@ import { getFirstDeepLeaf } from './getFirstDeepLeaf';
 import { getNextPossibleSibling } from './getNextPossibleSibling';
 
 export const findLeaf = (
-  container: Node,
-  fn: (node: Node) => boolean,
+  startNode: Node,
+  fn: (node: Node) => boolean | 'break',
 ): Node | null => {
-  const range = new Range();
+  let current: Node | null = startNode;
 
-  range.setStart(container, 0);
-  range.setEndAfter(container);
-
-  let current: Node | null = container;
-
-  while (current && range.intersectsNode(current)) {
+  while (current) {
     current = getFirstDeepLeaf(current)!;
 
-    while (current.childNodes.length) {
-      current = current.childNodes[0];
+    const result = fn(current);
+
+    if (result === 'break') {
+      return null;
     }
 
-    if (fn(current)) {
+    if (result) {
       return current;
     }
 

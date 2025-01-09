@@ -14,11 +14,11 @@ import {
   type Command,
   type PostponedCommand,
   type PostponedCommandType,
-  type ResultsCallback,
 } from './models';
 import { useDisallowHotkeys } from './useDisallowHotkeys';
 import { useChanges } from '../changes';
 import { useSelectionController } from '../selection';
+import { makeResults } from '../utils';
 import assert from 'assert';
 
 const token = Symbol('CommandsPlugin');
@@ -115,19 +115,10 @@ export const useCommandsPluginFactory: UsePluginFactory<
       O.of<KeyboardEvent>,
       O.bindTo('originalEvent'),
       O.bind('range', flow(getRange, O.fromNullable)),
-      O.bind('results', () => {
-        const results: Record<string, unknown> = {};
-
-        return O.of<ResultsCallback>((nameOrOptions: unknown) => {
-          if (typeof nameOrOptions === 'string') {
-            return results[nameOrOptions];
-          }
-
-          if (typeof nameOrOptions === 'object') {
-            Object.assign(results, nameOrOptions || {});
-          }
-        });
-      }),
+      O.bind('results', () => O.some(makeResults({
+        stopImmediatePropagation: false,
+        stopPropagation: false,
+      }))),
       O.map(({ range, originalEvent, results }) => {
         let current: Node | null = getFirstDeepLeaf(
           range?.startContainer ?? null,

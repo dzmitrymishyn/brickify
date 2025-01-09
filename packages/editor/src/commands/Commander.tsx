@@ -6,7 +6,7 @@ import { hasCommands, type WithCommands } from './withCommands';
 
 type CommandProps = {
   component: Component & WithCommands;
-  containerRef: RefObject<Node | null>;
+  containerRef: RefObject<HTMLElement | null>;
 };
 
 const Command: React.FC<CommandProps> = ({
@@ -22,7 +22,7 @@ const Command: React.FC<CommandProps> = ({
 
 export type CommanderProps = {
   components: Component[] | Record<string, Component>;
-  containerRef: RefObject<Node | null>;
+  containerRef: RefObject<HTMLElement | null>;
 };
 
 /**
