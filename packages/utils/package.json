@@ -14,13 +14,13 @@
     "@brickifyio/operators": "*",
     "assert": "^2.1.0",
     "fp-ts": "^2.16.9",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.3"
   },
   "devDependencies": {
     "@brickifyio/eslint-config": "*",
     "@brickifyio/tsconfig": "*",
     "@types/jest": "^29.5.14",
-    "@types/react": "^19.0.3",
+    "@types/react": "^19.0.4",
     "ts-jest": "^29.2.5"
   },
   "peerDependencies": {

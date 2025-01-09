@@ -15,7 +15,7 @@
   "dependencies": {
     "@brickifyio/operators": "*",
     "fp-ts": "^2.16.9",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.3"
   },
   "devDependencies": {
     "@brickifyio/eslint-config": "*",
