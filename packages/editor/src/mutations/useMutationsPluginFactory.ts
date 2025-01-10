@@ -60,13 +60,12 @@ export const createController = ({
       }
 
       const range = getRange();
-      const defaultComponentMutation: Omit<ComponentMutations, 'domNode'> = {
+      const defaultComponentMutation: Omit<ComponentMutations, 'domNode' | 'results'> = {
         removed: false,
         removedDescendants: [],
         addedDescendants: [],
         mutations: [],
         range,
-        results: makeResults(),
       };
       const allMutations: MutationRecord[] = [...mutations, ...clear()];
       let currentMutations: MutationRecord[] | undefined = allMutations;
@@ -83,7 +82,11 @@ export const createController = ({
 
             if (hasSubscription) {
               const options = affectedSubscriptions.get(node)
-                ?? { ...defaultComponentMutation, domNode: node };
+                ?? {
+                  ...defaultComponentMutation,
+                  domNode: node,
+                  results: makeResults(),
+                };
 
               options.removed = true;
               options.mutations.push(mutation);
@@ -99,7 +102,11 @@ export const createController = ({
 
             if (hasSubscription) {
               const options = affectedSubscriptions.get(current)
-                ?? { ...defaultComponentMutation, domNode: current };
+                ?? {
+                  ...defaultComponentMutation,
+                  domNode: current,
+                  results: makeResults(),
+                };
 
               options.mutations.push(mutation);
               options.removedDescendants.push(

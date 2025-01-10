@@ -21,7 +21,7 @@ const HookExecutor: React.FC<CommandProps> = ({
 };
 
 export type CommanderProps = {
-  components: Component[] | Record<string, Component>;
+  components?: Component[] | Record<string, Component>;
   containerRef: RefObject<HTMLElement | null>;
 };
 

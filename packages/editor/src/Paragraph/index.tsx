@@ -22,8 +22,8 @@ import {
 
 import { domToReactFactory } from './domToReactFactory';
 import { type PropsWithChange } from '../changes';
-import { useMutation } from '../mutations';
 import { ContainerHooks } from '../ContainerHooks';
+import { useMutation } from '../mutations';
 
 export type ParagraphResults = {
   paragraph: {
@@ -37,7 +37,7 @@ type Value = BrickValue & {
 };
 
 type Props =
-  & Partial<PropsWithStoredValue<Value>>
+  & PropsWithStoredValue<Value>
   & PropsWithChange<Value>
   & {
     components?: Component[];
@@ -52,7 +52,7 @@ const Paragraph: React.FC<Props> = ({
   components = [],
   component: Component = 'div',
   onChange,
-  stored: brickRecord = { value: { value: '' } },
+  stored: brickRecord,
   style,
   editable: editableProp = true,
 }) => {
@@ -60,7 +60,7 @@ const Paragraph: React.FC<Props> = ({
   // const { editable } = useBrickContext();
   const editable = editableProp;
 
-  const ref = useRendererRegistry<HTMLElement>(brickRecord);
+  const ref = useRendererRegistry<HTMLElement>(brickRecord ?? {});
 
   const { markToRevert } = useMutation<ParagraphResults>(
     ref,
@@ -135,6 +135,10 @@ const Paragraph: React.FC<Props> = ({
       }}
     >
       <ContainerHooks containerRef={ref} components={components} />
+      <ContainerHooks
+        containerRef={ref}
+        components={brickRecord?.components}
+      />
       {/* <span> */}
       {nodes.length ? nodes : <br />}
       {/* </span>

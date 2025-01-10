@@ -38,8 +38,8 @@ export const createReshapePatternHook = (
       flow(
         ({ range, results }) => ({
           range: O.fromNullable(range),
-          text: O.fromNullable(results('paragraph').text),
-          startNode: O.fromNullable(results('paragraph').leftCornerNode),
+          text: O.fromNullable(results('paragraph')?.text),
+          startNode: O.fromNullable(results('paragraph')?.leftCornerNode),
           container: O.fromNullable(ref.current),
         }),
         sequenceS(O.Applicative),

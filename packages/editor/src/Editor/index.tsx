@@ -11,11 +11,15 @@ import {
 import { useMergedRefs } from '@brickifyio/utils/hooks';
 import { forwardRef, useMemo } from 'react';
 
-import { type PropsWithChange, useChanges, useChangesPluginFactory } from '../changes';
+import {
+  type PropsWithChange,
+  useChanges,
+  useChangesPluginFactory,
+} from '../changes';
 import { useCommandsPluginFactory } from '../commands';
+import { ContainerHooks } from '../ContainerHooks';
 import { useMutation, useMutationsPluginFactory } from '../mutations';
 import { useSelectionPluginFactory } from '../selection';
-import { ContainerHooks } from '../ContainerHooks';
 
 type Props = PropsWithStoredValue<BrickValue[]> & PropsWithChange & {
   components?: Record<string, Component>;
@@ -36,19 +40,22 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   );
 
   const { add } = useChanges();
-  const { markToRevert } = useMutation(rootRef, ({ mutations, addedDescendants }) => {
-    markToRevert(mutations);
+  const { markToRevert } = useMutation(
+    rootRef,
+    ({ mutations, addedDescendants }) => {
+      markToRevert(mutations);
 
-    handleAddedNodes({
-      add: ({ node, index, component }) => hasNodeToBrick(component) && add(
-        [...stored.pathRef.current(), 'value', `${index}`],
-        component.nodeToBrick(node, { components, component }),
-      ),
-      addedNodes: addedDescendants,
-      allNodes: Array.from(rootRef.current?.childNodes ?? []),
-      components,
-    });
-  });
+      handleAddedNodes({
+        add: ({ node, index, component }) => hasNodeToBrick(component) && add(
+          [...stored.pathRef.current(), 'value', `${index}`],
+          component.nodeToBrick(node, { components, component }),
+        ),
+        addedNodes: addedDescendants,
+        allNodes: Array.from(rootRef.current?.childNodes ?? []),
+        components,
+      });
+    },
+  );
 
   const value = useRenderer(useMemo(() => ({
     value: stored.value,
