@@ -37,7 +37,7 @@ type Value = BrickValue & {
 };
 
 type Props =
-  & PropsWithStoredValue<Value>
+  & Partial<PropsWithStoredValue<Value>>
   & PropsWithChange<Value>
   & {
     components?: Component[];
@@ -60,7 +60,7 @@ const Paragraph: React.FC<Props> = ({
   // const { editable } = useBrickContext();
   const editable = editableProp;
 
-  const ref = useRendererRegistry<HTMLElement>(brickRecord ?? {});
+  const ref = useRendererRegistry<HTMLElement>(brickRecord ?? { value: {} });
 
   const { markToRevert } = useMutation<ParagraphResults>(
     ref,
