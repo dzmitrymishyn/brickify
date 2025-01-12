@@ -1,3 +1,4 @@
+import { createWith } from './createWith';
 import { extend } from './extend';
 import { hasProps, withProps } from './withProps';
 import {
@@ -24,12 +25,7 @@ export const hasSlots = (Component: unknown): Component is WithSlots => (
   && Component.slots !== null
 );
 
-export const withSlots = <S extends Slots>(slots: S) => ({
-  slots: Object.entries(slots).reduce((acc, [key, components]) => ({
-    ...acc,
-    [key]: components,
-  }), {}),
-});
+export const withSlots = createWith('slots')<Slots>;
 
 export const applySlots = <Results extends Record<string, ComponentType>>(
   slots: SlotValue,

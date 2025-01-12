@@ -48,5 +48,5 @@ export default extend(
 export const EnterBr = extend(
   Br,
   { is: compile('br') },
-  withHooks(useBr)
+  withHooks([useBr]),
 );

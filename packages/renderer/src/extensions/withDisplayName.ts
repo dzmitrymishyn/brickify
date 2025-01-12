@@ -1,3 +1,4 @@
-export const withDisplayName = (name: string) => ({
-  displayName: name,
-});
+import { createWith } from './createWith';
+
+export const withDisplayName = createWith('displayName')<string>;
+

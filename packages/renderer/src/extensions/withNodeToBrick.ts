@@ -1,3 +1,4 @@
+import { createWithCallback } from './createWith';
 import { type Component } from '../components';
 
 export type NodeToBrickOptions = {
@@ -5,9 +6,9 @@ export type NodeToBrickOptions = {
   component: Component;
 };
 
-export const withNodeToBrick = (
-  format: (node: Node, options: NodeToBrickOptions) => unknown
-) => ({ nodeToBrick: format });
+export const withNodeToBrick = createWithCallback(
+  'nodeToBrick',
+)<[Node, NodeToBrickOptions], unknown>;
 
 export const hasNodeToBrick = (
   component: unknown,

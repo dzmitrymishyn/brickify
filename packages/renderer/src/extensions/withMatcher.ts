@@ -1,8 +1,7 @@
-export const withMatcher = <T extends Node>(
-  is: (node: T) => boolean,
-) => ({ is });
+import { createWith, createWithCallback } from './createWith';
 
-export const withoutMatcher = () => ({ is: undefined });
+export const withMatcher = createWithCallback('is')<[Node], boolean>;
+export const withoutMatcher = createWith('is')(null);
 
 export const hasMatcher = (
   component: unknown,

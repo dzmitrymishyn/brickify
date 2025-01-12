@@ -1,6 +1,6 @@
-export const withProps = (props: object) => ({
-  props,
-});
+import { createWith } from './createWith';
+
+export const withProps = createWith('props')<object>;
 
 export const hasProps = <T extends object>(
   component: unknown

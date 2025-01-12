@@ -6,11 +6,23 @@ export const extend = <C extends Component, Enhancer extends object[]>(
   component: C,
   ...enhancers: Enhancer
 ): C & Enhancer[number] => {
-  // eslint-disable-next-line -- component should have name
-  const config: { render?: Function } = Object.assign(
-    {},
-    ...enhancers,
-  );
+  const config = enhancers.reduce<{ render?: () => void }>((acc, current) => {
+    if (typeof current === 'function') {
+      return {
+        ...acc,
+        ...current(component) as object,
+      };
+    }
+
+    if (typeof current === 'object' && current !== null) {
+      return {
+        ...acc,
+        ...current,
+      };
+    }
+
+    return acc;
+  }, {});
 
   const newBrick = typeof component === 'function'
     ? component.bind(null)
