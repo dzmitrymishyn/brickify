@@ -1,8 +1,8 @@
-import { array } from '@brickifyio/operators';
 import * as E from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/function';
 import * as I from 'fp-ts/lib/Identity';
 
+import { curry } from '../functions';
 import assert from 'assert';
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any -- could be any
@@ -13,6 +13,8 @@ export type Change<Value = any> = {
   value?: Value;
   path?: string[];
 };
+
+const removed = Symbol('removed');
 
 const makeChangesMap = (changes: Change[]) => {
   const changesMap: Record<string, Change[]> = {};
@@ -33,7 +35,8 @@ const makeChangesMap = (changes: Change[]) => {
       return currentPath;
     }, '');
 
-    if (key) {
+    if (key !== null && key !== undefined) {
+      changesMap[key] = changesMap[key] ?? [];
       changesMap[key].push(change);
     }
   }
@@ -45,62 +48,18 @@ const makeChangesMap = (changes: Change[]) => {
   return changesMap;
 };
 
-export const handleChangesArray = (
-  acc: {
-    value: unknown;
-    previousValues: unknown[];
-  },
-  change: Change,
-) => {
-  switch (change.type) {
-    case 'update': {
-      if (acc.value === 'removed') {
-        break;
-      }
-
-      if (acc.value === 'unhandled') {
-        acc.value = change.value;
-        break;
-      }
-
-      if (typeof change.value === 'object') {
-        acc.value = {
-          ...typeof acc.value === 'object' ? acc.value : {},
-          ...change.value,
-        };
-        break;
-      }
-
-      acc.value = change.value;
-      break;
-    }
-    case 'add': {
-      acc.previousValues.push(change.value);
-      break;
-    }
-    case 'remove': {
-      acc.value = 'removed';
-      break;
-    }
-    default: {
-      throw new Error(`Unknown mutation type: ${change.type}`);
-    }
-  }
-  return acc;
-};
-
 const prepareNewValue = (
   oldValue: unknown,
   newValue: unknown,
   changesMap: Record<string, Change[]>,
   path: string[] = [],
 ) => {
-  if (newValue === 'removed') {
-    return [];
+  if (newValue === removed) {
+    return removed;
   }
 
   if (!oldValue || typeof oldValue !== 'object') {
-    return [newValue === 'unhandled' ? oldValue : newValue];
+    return newValue === 'unhandled' ? oldValue : newValue;
   }
 
   const handledValue = (
@@ -110,39 +69,87 @@ const prepareNewValue = (
       : typeof newValue === 'object'
         ? { ...oldValue, ...newValue }
         : newValue
-  );
+  ) as Record<string, unknown>;
 
   if (typeof handledValue !== 'object' || !handledValue) {
-    return [handledValue];
+    return handledValue;
   }
 
   const oldValueRecord = oldValue as Record<string, unknown>;
-  const recordValue = handledValue as Record<string, unknown>;
   let updatedFields = 0;
 
-  Object.keys(recordValue).forEach((key) => {
-    const subPath = [...path, key];
-    const isArray = Array.isArray(recordValue[key]);
+  Object.keys(handledValue).forEach((key) => {
     const currentResult = traverseAndApplyChanges(
-      recordValue[key],
+      [...path, key],
+      handledValue[key],
       changesMap,
-      subPath,
     );
 
-    recordValue[key] = isArray ? currentResult : array(currentResult)[0];
+    handledValue[key] = currentResult === removed ? null : currentResult;
 
-    if (recordValue[key] !== oldValueRecord[key]) {
+    if (handledValue[key] !== oldValueRecord[key]) {
       updatedFields += 1;
     }
   });
 
-  return [updatedFields ? recordValue : oldValue];
-}
+  return updatedFields ? handledValue : oldValue;
+};
 
-export const traverseAndApplyChanges = (
+const handleArrayUpdate = (
+  path: string[],
   value: unknown,
   changesMap: Record<string, Change[]>,
-  path: string[] = [],
+) => {
+  const stringPath = path.join('/');
+  const results = changesMap[stringPath]
+    ?.reduce<unknown[]>((acc, change) => {
+      if (change.type === 'add') {
+        acc.push(change.value);
+      }
+      return acc;
+    }, []) ?? [];
+
+  const newValue = traverseAndApplyChanges(path, value, changesMap);
+
+  if (newValue !== removed) {
+    results.push(newValue);
+  }
+
+  return results;
+};
+
+const handleNonArrayUpdate = (
+  acc: unknown,
+  change: Change,
+) => {
+  if (acc === removed) {
+    return removed;
+  }
+
+  switch (change.type) {
+    case 'update': {
+      if (typeof change.value === 'object' && change.value) {
+        return {
+          ...typeof acc === 'object' ? acc : {},
+          ...change.value,
+        } as unknown;
+      }
+
+      return change.value as unknown;
+    }
+    case 'remove': {
+      return removed;
+    }
+    default: {
+      return acc;
+    }
+  }
+};
+
+const traverseAndApplyChanges = curry((
+  path: string[],
+  value: unknown,
+  changesMap: Record<string, Change[]>,
 ): unknown => {
   return pipe(
     path.join('/'),
@@ -150,53 +157,34 @@ export const traverseAndApplyChanges = (
     E.map((currentPath) => changesMap[currentPath]),
     E.map((changes) => {
       if (Array.isArray(value)) {
-        const pathToLastElement = [...path, value.length].join('/');
         return [
-          ...value.flatMap((currentValue: unknown, index) => {
-            const newValue = traverseAndApplyChanges(
-              currentValue,
-              changesMap,
-              [...path, `${index}`],
-            );
-            return Array.isArray(currentValue) ? [newValue] : newValue;
-          }),
-          ...changesMap[pathToLastElement]
-            ?.reduce<unknown[]>((acc, change) => {
-              if (change.type === 'add') {
-                acc.push(change.value);
-              }
-              return acc;
-            }, []) ?? [],
+          ...value.flatMap((currentValue: unknown, index) => handleArrayUpdate(
+            [...path, `${index}`],
+            currentValue,
+            changesMap,
+          )),
+          ...handleArrayUpdate(
+            [...path, `${value.length}`],
+            removed,
+            changesMap,
+          ),
         ];
       }
 
-      const { value: newValue, previousValues } = changes.reduce(
-        handleChangesArray,
-        { value: 'unhandled', previousValues: [] },
-      );
+      const newValue = changes.reduce(handleNonArrayUpdate, 'unhandled');
       const result = prepareNewValue(value, newValue, changesMap, path);
 
-      return [...previousValues, ...result];
+      return result;
     }),
     E.getOrElseW(I.of),
   );
-};
+});
 
 export const patch = <T = unknown>(
   value: T,
   changes: Change[],
-) => pipe(
+): T | null => pipe(
   makeChangesMap(changes),
-  (changesMap) => traverseAndApplyChanges(
-    value,
-    changesMap,
-  ),
-  (newValue) => {
-    // TODO: do I really want to assert it? Maybe it's ok to return null?
-    assert(newValue !== undefined, 'Unexpected removal of root element');
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any --
-     * we need to make an array
-     */
-    return newValue as T extends any[] ? T : T[];
-  },
+  traverseAndApplyChanges([], value),
+  (newValue) => newValue === removed ? null : newValue as T,
 );
