@@ -31,13 +31,13 @@ const createController = (
   };
 
   const apply = () => pipe(
-    patch(valueRef.current, changes),
-    O.fromNullable,
-    O.map(({ value }) => value),
+    changes.length
+      ? O.some(patch(valueRef.current, changes))
+      : O.none,
+    O.map((value) => value?.value ?? []),
     // eslint-disable-next-line no-console -- TODO: Replace it with logger
-    O.map(tap(console.log.bind(null, 'new value'))),
-    O.getOrElse<BrickValue[]>(() => []),
-    (value) => onChangeRef.current?.(value),
+    O.map(tap<BrickValue[]>(console.log.bind(null, 'new value'))),
+    O.map((value) => onChangeRef.current?.(value)),
     tap(clear),
   );
 
