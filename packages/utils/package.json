@@ -20,7 +20,7 @@
     "@brickifyio/eslint-config": "*",
     "@brickifyio/tsconfig": "*",
     "@types/jest": "^29.5.14",
-    "@types/react": "^19.0.7",
+    "@types/react": "^19.0.8",
     "ts-jest": "^29.2.5"
   },
   "peerDependencies": {
