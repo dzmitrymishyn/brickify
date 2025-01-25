@@ -53,13 +53,19 @@ const prepareNewValue = (
   newValue: unknown,
   changesMap: Record<string, Change[]>,
   path: string[] = [],
-) => {
+  shadowPath: string[] = [],
+): [unknown, Change[]] => {
   if (newValue === removed) {
-    return removed;
+    return [removed, [{ type: 'add', path: shadowPath, value: oldValue }]];
   }
 
   if (!oldValue || typeof oldValue !== 'object') {
-    return newValue === 'unhandled' ? oldValue : newValue;
+    return [
+      newValue === 'unhandled' ? oldValue : newValue,
+      newValue === 'unhandled'
+        ? []
+        : [{ type: 'update', value: oldValue, path: shadowPath }],
+    ];
   }
 
   const handledValue = (
@@ -72,19 +78,24 @@ const prepareNewValue = (
   ) as Record<string, unknown>;
 
   if (typeof handledValue !== 'object' || !handledValue) {
-    return handledValue;
+    return [handledValue, [{ type: 'update', path: shadowPath, value: oldValue }]];
   }
 
   const oldValueRecord = oldValue as Record<string, unknown>;
   let updatedFields = 0;
+  const changesToRevert: Change[] = newValue === 'unhandled' ? [] : [
+    { type: 'update', value: oldValue, path: shadowPath },
+  ];
 
   Object.keys(handledValue).forEach((key) => {
-    const currentResult = traverseAndApplyChanges(
+    const [currentResult, changesToRevertChildren] = traverseAndApplyChanges(
       [...path, key],
+      [...shadowPath, key],
       handledValue[key],
       changesMap,
     );
 
+    changesToRevert.push(...changesToRevertChildren);
     handledValue[key] = currentResult === removed ? null : currentResult;
 
     if (handledValue[key] !== oldValueRecord[key]) {
@@ -92,30 +103,48 @@ const prepareNewValue = (
     }
   });
 
-  return updatedFields ? handledValue : oldValue;
+  return [
+    updatedFields ? handledValue : oldValue,
+    changesToRevert,
+  ];
 };
 
 const handleArrayUpdate = (
   path: string[],
+  shadowPath: string[],
   value: unknown,
   changesMap: Record<string, Change[]>,
-) => {
+): [unknown[], Change[]] => {
+  let newIndex = Number(shadowPath.at(-1));
+  const changesToRevert: Change[] = [];
   const stringPath = path.join('/');
   const results = changesMap[stringPath]
     ?.reduce<unknown[]>((acc, change) => {
       if (change.type === 'add') {
         acc.push(change.value);
+        changesToRevert.push({
+          path: [...shadowPath.slice(0, -1) ?? [], `${newIndex}`],
+          type: 'remove',
+        });
+        newIndex += 1;
       }
       return acc;
     }, []) ?? [];
 
-  const newValue = traverseAndApplyChanges(path, value, changesMap);
+  const [newValue, c] = traverseAndApplyChanges(
+    path,
+    [...shadowPath.slice(0, -1), `${newIndex}`],
+    value,
+    changesMap,
+  );
+
+  changesToRevert.push(...c);
 
   if (newValue !== removed) {
     results.push(newValue);
   }
 
-  return results;
+  return [results, changesToRevert];
 };
 
 const handleNonArrayUpdate = (
@@ -148,43 +177,63 @@ const handleNonArrayUpdate = (
 
 const traverseAndApplyChanges = curry((
   path: string[],
+  shadowPath: string[],
   value: unknown,
   changesMap: Record<string, Change[]>,
-): unknown => {
+): [unknown, Change[]] => {
   return pipe(
     path.join('/'),
-    E.fromPredicate((currentPath) => currentPath in changesMap, () => value),
+    E.fromPredicate(
+      (currentPath) => currentPath in changesMap,
+      (): [unknown, Change[]] => [value, []],
+    ),
     E.map((currentPath) => changesMap[currentPath]),
-    E.map((changes) => {
+    E.map((changes): [unknown, Change[]] => {
+      const revertChanges: Change[] = [];
+
       if (Array.isArray(value)) {
-        return [
-          ...value.flatMap((currentValue: unknown, index) => handleArrayUpdate(
-            [...path, `${index}`],
-            currentValue,
-            changesMap,
-          )),
+        let newIndex = 0;
+
+        return [[
+          ...value.flatMap((currentValue: unknown, index) => {
+            const [results, childChanges] = handleArrayUpdate(
+              [...path, `${index}`],
+              [...shadowPath, `${newIndex}`],
+              currentValue,
+              changesMap,
+            );
+            revertChanges.push(...childChanges);
+            newIndex += results.length;
+            return results;
+          }),
           ...handleArrayUpdate(
             [...path, `${value.length}`],
+            [...shadowPath, `${newIndex}`],
             removed,
             changesMap,
-          ),
-        ];
+          )[0],
+        ], revertChanges];
       }
 
       const newValue = changes.reduce(handleNonArrayUpdate, 'unhandled');
-      const result = prepareNewValue(value, newValue, changesMap, path);
+      const [result, c] = prepareNewValue(value, newValue, changesMap, path, shadowPath);
 
-      return result;
+      revertChanges.push(...c);
+
+      return [result, revertChanges];
     }),
-    E.getOrElseW(I.of),
+    E.getOrElse(I.of),
   );
 });
 
 export const patch = <T = unknown>(
   value: T,
   changes: Change[],
-): T | null => pipe(
+): [T | null, Change[]] => pipe(
   makeChangesMap(changes),
-  traverseAndApplyChanges([], value),
-  (newValue) => newValue === removed ? null : newValue as T,
+  traverseAndApplyChanges([], [], value),
+  ([newValue, revertChanges]) => [
+    newValue === removed ? null : newValue as T,
+    revertChanges,
+  ],
 );

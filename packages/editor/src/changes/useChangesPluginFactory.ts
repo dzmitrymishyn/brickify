@@ -7,7 +7,7 @@ import {
 } from '@brickifyio/renderer';
 import { useSyncedRef } from '@brickifyio/utils/hooks';
 import { type Change, patch } from '@brickifyio/utils/object';
-import { pipe } from 'fp-ts/lib/function';
+import { flow, pipe } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
 import {
   cloneElement,
@@ -30,14 +30,29 @@ const createController = (
     changes = [];
   };
 
-  const apply = () => pipe(
-    changes.length
-      ? O.some(patch(valueRef.current, changes))
+  const emitChanges = (newChanges: Change[]) => pipe(
+    newChanges.length
+      ? O.some(patch(valueRef.current, newChanges))
       : O.none,
-    O.map((value) => value?.value ?? []),
-    // eslint-disable-next-line no-console -- TODO: Replace it with logger
-    O.map(tap<BrickValue[]>(console.log.bind(null, 'new value'))),
-    O.map((value) => onChangeRef.current?.(value)),
+    O.map(tap(flow(
+      ([value]) => value?.value ?? [],
+      // eslint-disable-next-line no-console -- use logger
+      tap<BrickValue[]>(console.log.bind(null, 'next value')),
+      (value) => onChangeRef.current?.(value),
+    ))),
+  );
+
+  const apply = () => pipe(
+    emitChanges(changes),
+    // O.map(tap(([, b]) => console.log(...[
+    //   ...changes.map((c) => ({...c, path: c.path?.join('/')})),
+    // ]))),
+    // O.map(tap(([, b]) => console.log(...[
+    //   ...b.map((c) => ({...c, path: c.path?.join('/')})),
+    // ]))),
+    // O.map(tap(([, b]) => {
+    //   window.asd = { forward: changes, backward: b };
+    // })),
     tap(clear),
   );
 
