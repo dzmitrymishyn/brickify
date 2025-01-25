@@ -63,7 +63,7 @@ export function withRendererContext<P extends object>(
     const ref = useMergedRefs(
       refProp,
       ...getPlugins(pluginsRef.current)
-        .map((plugin) => plugin.ref)
+        .map((plugin) => plugin?.root?.ref)
         .filter(Boolean) as RefObject<Node>[],
     );
 

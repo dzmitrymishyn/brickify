@@ -2,14 +2,14 @@ import { useSyncedRef } from '@brickifyio/utils/hooks';
 import { type RefObject, useEffect } from 'react';
 
 import { type ComponentMutationsHandler } from './mutations';
-import { useMutationsController } from './useMutationsPluginFactory';
+import { useMutationsPlugin } from './useMutationsPluginFactory';
 import assert from 'assert';
 
 export const useMutation = <Results extends object = object>(
   ref: RefObject<Node | null>,
   mutate: ComponentMutationsHandler<Results>,
 ) => {
-  const { markToRevert, subscribe } = useMutationsController();
+  const { markToRevert, subscribe } = useMutationsPlugin();
   const mutateRef = useSyncedRef(mutate);
 
   useEffect(() => {

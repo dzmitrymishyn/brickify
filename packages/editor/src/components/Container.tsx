@@ -10,7 +10,7 @@ import {
 } from '@brickifyio/renderer';
 import { type FC, type PropsWithChildren, useRef } from 'react';
 
-import { type PropsWithChange, useChanges } from '../changes';
+import { type PropsWithChange, useChangesPlugin } from '../changes';
 import { ContainerHooks } from '../ContainerHooks';
 import { useMutation } from '../mutations';
 
@@ -19,7 +19,7 @@ type Props = PropsWithStoredValue & PropsWithChange & PropsWithChildren;
 const Container: FC<Props> = ({ children, stored, onChange }) => {
   const ref = useRendererRegistry<HTMLDivElement>(stored);
   const labelRef = useRef<HTMLDivElement>(null);
-  const { add } = useChanges();
+  const { add } = useChangesPlugin();
   const { markToRevert } = useMutation(
     ref,
     ({ range, removed, mutations, addedDescendants }) => {
@@ -77,7 +77,10 @@ const Container: FC<Props> = ({ children, stored, onChange }) => {
         border: '1px solid #ccc',
       }}
     >
-      <ContainerHooks containerRef={ref} components={stored.components || {}} />
+      <ContainerHooks
+        containerRef={ref}
+        components={stored.components || {}}
+      />
       {children}
       <div
         ref={labelRef}

@@ -4,17 +4,15 @@ import { type RendererStore, type RendererStoreValue } from '../store';
 
 export type PluginToken = string | symbol;
 
-export type PluginMap = Record<PluginToken, Plugin>;
+export type PluginMap = Record<PluginToken, PluginContext>;
 
-export type Plugin<Controller = unknown> = {
+export type PluginContext = {
   token: symbol;
-  controller: Controller;
-  ref?: RefObject<Node | null>;
+  root?: { ref?: RefObject<Node | null>; props?: object };
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any --
    * Props for the component could be any object.
    */
   render?: (element: ReactElement<any>) => ReactElement<object>;
-  props?: object | null;
 };
 
 export type PluginDependencies = {
@@ -26,5 +24,11 @@ export type PluginDependencies = {
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any -- disable
  * lint for any object type.
  */
-export type UsePluginFactory<P extends object = any, R extends object = any> =
-  (props: P, deps: PluginDependencies) => Plugin<R>;
+export type UsePluginFactory<P = any, R extends PluginContext = PluginContext> =
+  (props: P, deps: PluginDependencies) => R;
+
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- disable
+ * lint for any object arguments.
+ */
+export type Plugin<Factory extends (...args: any[]) => object> =
+  Omit<ReturnType<Factory>, 'token' | 'root'>;

@@ -5,10 +5,14 @@ import {
   restoreRange,
 } from '@brickifyio/browser/selection';
 import { getFirstDeepLeaf } from '@brickifyio/browser/traverse';
-import { createUsePlugin, type UsePluginFactory } from '@brickifyio/renderer';
+import {
+  createUsePlugin,
+  type Plugin,
+  type PluginDependencies,
+} from '@brickifyio/renderer';
 import { flow } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/lib/Option';
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import {
   type Command,
@@ -16,8 +20,7 @@ import {
   type PostponedCommandType,
 } from './models';
 import { useDisallowHotkeys } from './useDisallowHotkeys';
-import { useChanges } from '../changes';
-import { useSelectionController } from '../selection';
+import { useChangesPlugin } from '../changes';
 import { makeResults } from '../utils';
 import assert from 'assert';
 
@@ -33,41 +36,85 @@ const metaKeyDisallowList = [
   ].map((key) => [`ctrl+${key}`, `cmd+${key}`]),
 ].flat(2);
 
-const createController = () => {
-  const subscriptions = new Map<Node, Command[]>();
-  let commandsQueue: PostponedCommand[] = [];
+export const useCommandsPluginFactory = (
+  _: unknown,
+  deps: PluginDependencies,
+) => {
+  const ref = useRef<HTMLElement>(null);
+  const subscriptionsRef = useRef(new Map<Node, Command[]>());
+  const commandsQueueRef = useRef<PostponedCommand[]>([]);
 
-  const postpone = (command: PostponedCommand) => {
-    commandsQueue.push(command);
-    return () => {
-      commandsQueue = commandsQueue.filter((current) => current !== command);
-    };
-  };
+  const changes = useChangesPlugin(deps.plugins);
 
-  const processPostponed = (type: PostponedCommandType) => {
-    commandsQueue = commandsQueue.filter(({ condition, context, action }) => {
-      const conditionResult = condition?.(type) ?? true;
-
-      if (conditionResult === 'ignore') {
+  useEffect(() => {
+    const element = ref.current!;
+    const handleKeydown = (event: Event) => {
+      ['cmd + z', 'ctrl + z'].find((shortcut) => {
+        if (match(event, shortcut)) {
+          changes.undo();
+          event.preventDefault();
+          return true;
+        }
         return false;
-      }
+      });
+    };
 
-      if (conditionResult) {
-        action(context, type);
-      }
+    element.addEventListener('keydown', handleKeydown);
+    return () => element.removeEventListener('keydown', handleKeydown);
+  }, [ref, changes]);
 
-      return !conditionResult;
-    });
-  };
+  useEffect(() => {
+    const element = ref.current!;
+    const handleKeydown = (event: Event) => {
+      ['cmd + shift + z', 'ctrl + shift + z'].find((shortcut) => {
+        if (match(event, shortcut)) {
+          changes.redo();
+          event.preventDefault();
+          return true;
+        }
+        return false;
+      });
+    };
 
-  const subscribe = (element: Node, commands: Command[]) => {
-    subscriptions.set(element, [
-      ...subscriptions.get(element) ?? [],
+    element.addEventListener('keydown', handleKeydown);
+    return () => element.removeEventListener('keydown', handleKeydown);
+  }, [ref, changes]);
+
+  useDisallowHotkeys(ref, metaKeyDisallowList);
+
+  const postpone = useCallback((command: PostponedCommand) => {
+    commandsQueueRef.current.push(command);
+    return () => {
+      commandsQueueRef.current = commandsQueueRef.current
+        .filter((current) => current !== command);
+    };
+  }, []);;
+
+  const processPostponed = useCallback((type: PostponedCommandType) => {
+    commandsQueueRef.current = commandsQueueRef.current
+      .filter(({ condition, context, action }) => {
+        const conditionResult = condition?.(type) ?? true;
+
+        if (conditionResult === 'ignore') {
+          return false;
+        }
+
+        if (conditionResult) {
+          action(context, type);
+        }
+
+        return !conditionResult;
+      });
+  }, []);
+
+  const subscribe = useCallback((element: Node, commands: Command[]) => {
+    subscriptionsRef.current.set(element, [
+      ...subscriptionsRef.current.get(element) ?? [],
       ...commands,
     ]);
 
     return () => {
-      const allCommands = subscriptions.get(element) ?? [];
+      const allCommands = subscriptionsRef.current.get(element) ?? [];
       const restCommands = allCommands.filter(
         (command) => !commands.includes(command),
       );
@@ -75,32 +122,12 @@ const createController = () => {
       // if there are no more commands for a node then we need to remove it
       // otherwise we should save other commands
       if (!restCommands.length) {
-        subscriptions.delete(element);
+        subscriptionsRef.current.delete(element);
       } else {
-        subscriptions.set(element, restCommands);
+        subscriptionsRef.current.set(element, restCommands);
       }
     };
-  };
-
-  return {
-    subscribe,
-    subscriptions,
-    postpone,
-    processPostponed,
-  };
-};
-
-export type CommandsController = ReturnType<typeof createController>;
-
-export const useCommandsPluginFactory: UsePluginFactory<
-  object,
-  CommandsController
-> = (_, deps) => {
-  const ref = useRef<HTMLElement>(null);
-  const controller = useMemo(() => createController(), []);
-
-  const changesController = useChanges(deps.plugins);
-  const selectionController = useSelectionController(deps.plugins);
+  }, []);
 
   useEffect(() => {
     assert(
@@ -141,7 +168,7 @@ export const useCommandsPluginFactory: UsePluginFactory<
             break;
           }
 
-          const commands = controller.subscriptions.get(current);
+          const commands = subscriptionsRef.current.get(current);
 
           if (commands?.length) {
             const options = {
@@ -151,7 +178,7 @@ export const useCommandsPluginFactory: UsePluginFactory<
 
               results,
               range,
-              postpone: controller.postpone,
+              postpone,
 
               stopBrickPropagation: () => results({
                 stopPropagation: true,
@@ -195,57 +222,21 @@ export const useCommandsPluginFactory: UsePluginFactory<
     element.addEventListener('keydown', handle);
     return () => element.removeEventListener('keydown', handle);
   }, [
-    changesController,
-    selectionController,
-    controller.subscriptions,
-    controller.postpone,
-    controller.processPostponed,
+    changes,
+    postpone,
+    processPostponed,
     deps.store,
   ]);
 
-  useEffect(() => {
-    const element = ref.current!;
-    const handleKeydown = (event: Event) => {
-      ['cmd + z', 'ctrl + z'].find((shortcut) => {
-        if (match(event, shortcut)) {
-          changesController.undo();
-          event.preventDefault();
-          return true;
-        }
-        return false;
-      });
-    };
-
-    element.addEventListener('keydown', handleKeydown);
-    return () => element.removeEventListener('keydown', handleKeydown);
-  }, [ref, changesController]);
-
-  useEffect(() => {
-    const element = ref.current!;
-    const handleKeydown = (event: Event) => {
-      ['cmd + shift + z', 'ctrl + shift + z'].find((shortcut) => {
-        if (match(event, shortcut)) {
-          changesController.redo();
-          event.preventDefault();
-          return true;
-        }
-        return false;
-      });
-    };
-
-    element.addEventListener('keydown', handleKeydown);
-    return () => element.removeEventListener('keydown', handleKeydown);
-  }, [ref, changesController]);
-
-  useDisallowHotkeys(ref, metaKeyDisallowList);
-
   return {
-    ref,
+    root: { ref },
     token,
-    controller,
+    postpone,
+    processPostponed,
+    subscribe,
   };
 };
 
-export const useCommandsController = createUsePlugin<CommandsController>(
-  token,
-);
+export type CommandsPlugin = Plugin<typeof useCommandsPluginFactory>;
+
+export const useCommandsPlugin = createUsePlugin<CommandsPlugin>(token);

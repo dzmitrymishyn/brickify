@@ -2,14 +2,14 @@ import { useSyncedRef } from '@brickifyio/utils/hooks';
 import { type RefObject, useEffect } from 'react';
 
 import { type Command } from './models';
-import { useCommandsController } from './useCommandsPluginFactory';
+import { useCommandsPlugin } from './useCommandsPluginFactory';
 import assert from 'assert';
 
 export const useCommand = (
   ref: RefObject<Node | null>,
   handler: Command,
 ) => {
-  const { subscribe } = useCommandsController();
+  const { subscribe } = useCommandsPlugin();
   const commandRef = useSyncedRef(handler);
 
   useEffect(() => {

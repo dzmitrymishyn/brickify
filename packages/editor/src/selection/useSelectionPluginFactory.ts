@@ -1,6 +1,6 @@
 import { type AnyRange, restoreRange } from '@brickifyio/browser/selection';
-import { createUsePlugin, type UsePluginFactory } from '@brickifyio/renderer';
-import { useMemo } from 'react';
+import { createUsePlugin, type Plugin } from '@brickifyio/renderer';
+import { useCallback, useRef } from 'react';
 
 import { useAfterRenderRangeRestore } from './useAfterRenderRangeRestore';
 
@@ -8,47 +8,42 @@ const token = Symbol('SelectionPlugin');
 
 type SelectionRangeApplier = 'applyOnRender' | null;
 
-const createController = () => {
-  let range: AnyRange | null = null;
-  let applier: SelectionRangeApplier = null;
+export const useSelectionPluginFactory = ({ value }: { value: unknown }) => {
+  const rangeRef = useRef<AnyRange | null>(null);
+  const applierRef = useRef<SelectionRangeApplier>(null);
 
-  return {
-    apply: () => {
-      restoreRange(range);
-    },
-    storeRange: (
-      newRange: AnyRange | null = null,
-      newApplier: SelectionRangeApplier = null,
-    ) => {
-      range = newRange;
-      applier = newApplier;
-    },
-    getRange: () => range,
-    applyRangeIfActive: (neededApplier: NonNullable<SelectionRangeApplier>) => {
-      if (neededApplier === applier) {
-        restoreRange(range);
-        applier = null;
+  const apply = useCallback(() => {
+    restoreRange(rangeRef.current);
+  }, []);
+  const storeRange = useCallback((
+    newRange: AnyRange | null = null,
+    newApplier: SelectionRangeApplier = null,
+  ) => {
+    rangeRef.current = newRange;
+    applierRef.current = newApplier;
+  }, []);
+  const getRange = useCallback(() => rangeRef.current, []);
+  const applyRangeIfActive = useCallback(
+    (neededApplier: NonNullable<SelectionRangeApplier>) => {
+      if (neededApplier === applierRef.current) {
+        restoreRange(rangeRef.current);
+        applierRef.current = null;
       }
     },
-  };
-};
+    [],
+  );
 
-export type SelectionController = ReturnType<typeof createController>;
-
-export const useSelectionPluginFactory: UsePluginFactory<
-  { value: unknown },
-  SelectionController
-> = ({ value }) => {
-  const controller = useMemo(createController, []);
-
-  useAfterRenderRangeRestore(controller.applyRangeIfActive, value);
+  useAfterRenderRangeRestore(applyRangeIfActive, value);
 
   return {
-    controller,
     token,
+    apply,
+    storeRange,
+    getRange,
+    applyRangeIfActive,
   };
 };
 
-export const useSelectionController = createUsePlugin<SelectionController>(
-  token,
-);
+export type SelectionPlugin = Plugin<typeof useSelectionPluginFactory>;
+
+export const useSelectionPlugin = createUsePlugin<SelectionPlugin>(token);

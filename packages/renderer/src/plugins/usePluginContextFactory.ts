@@ -21,10 +21,10 @@ export const usePluginContextFactory = (
 
     pluginsRef.current[plugin.token] = plugin;
 
-    if (plugin.props) {
+    if (plugin.root?.props) {
       return {
         ...currentProps,
-        ...plugin.props,
+        ...plugin.root?.props,
       };
     }
 

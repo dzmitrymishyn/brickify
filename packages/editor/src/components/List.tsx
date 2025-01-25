@@ -17,7 +17,7 @@ import {
   withNodeToBrick,
 } from '@brickifyio/renderer';
 
-import { type PropsWithChange, useChanges } from '../changes';
+import { type PropsWithChange, useChangesPlugin } from '../changes';
 import { ContainerHooks } from '../ContainerHooks';
 import { useMutation } from '../mutations';
 import Paragraph from '../Paragraph';
@@ -32,37 +32,40 @@ type Props = PropsWithStoredValue<Value> & PropsWithChange & {
 
 const List: React.FC<Props> = ({ stored, children, onChange }) => {
   const ref = useRendererRegistry<HTMLUListElement>(stored);
-  const { add } = useChanges();
+  const { add } = useChangesPlugin();
 
   const components = applySlots([
     ['ListItem', 'Paragraph', Paragraph, { component: 'li', style: { margin: 0 } }],
   ], stored?.components);
 
-  const { markToRevert } = useMutation(ref, ({ mutations, removed, addedDescendants }) => {
-    markToRevert(mutations);
+  const { markToRevert } = useMutation(
+    ref,
+    ({ mutations, removed, addedDescendants }) => {
+      markToRevert(mutations);
 
-    if (removed) {
-      return onChange?.(undefined);
-    }
+      if (removed) {
+        return onChange?.(undefined);
+      }
 
-    const ListItem = components.ListItem;
+      const ListItem = components.ListItem;
 
-    if (!hasNodeToBrick(ListItem)) {
-      return;
-    }
+      if (!hasNodeToBrick(ListItem)) {
+        return;
+      }
 
-    handleAddedNodes({
-      add: ({ node, index }) => add(
-        [...stored.pathRef.current(), 'children', `${index}`],
-        ListItem.nodeToBrick<{ value: string }>(
-          node,
-          { component: ListItem }
-        ).value,
-      ),
-      addedNodes: addedDescendants,
-      allNodes: Array.from(ref.current?.childNodes ?? []),
-    });
-  });
+      handleAddedNodes({
+        add: ({ node, index }) => add(
+          [...stored.pathRef.current(), 'children', `${index}`],
+          ListItem.nodeToBrick<{ value: string }>(
+            node,
+            { component: ListItem }
+          ).value,
+        ),
+        addedNodes: addedDescendants,
+        allNodes: Array.from(ref.current?.childNodes ?? []),
+      });
+    },
+  );
 
   const cache = usePrimitiveChildrenCache();
   const { store } = useRendererContext();
@@ -116,13 +119,15 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
   );
 };
 
+const props = { component: 'li', style: { margin: 0 } };
+
 export default extend(
   List,
   withName('List'),
   withMatcher((node) => node instanceof HTMLElement && node.matches('ul')),
   withNodeToBrick((node, { components, component }) => {
     const ListItem = applySlots([
-      ['ListItem', 'Paragraph', Paragraph, { component: 'li', style: { margin: 0 } }],
+      ['ListItem', 'Paragraph', Paragraph, props],
     ], components)?.ListItem;
 
     if (!(node instanceof HTMLUListElement) || !hasNodeToBrick(ListItem)) {
@@ -133,7 +138,10 @@ export default extend(
       id: Math.random().toFixed(5),
       brick: getName(component),
       children: Array.from(node.childNodes).map(
-        (childNode) => ListItem.nodeToBrick<{ value: string }>(childNode, { component: ListItem })?.value,
+        (childNode) => ListItem.nodeToBrick<{ value: string }>(
+          childNode,
+          { component: ListItem },
+        )?.value,
       ),
     };
   }),

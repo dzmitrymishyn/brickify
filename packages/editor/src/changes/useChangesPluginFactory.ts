@@ -2,8 +2,8 @@ import { tap } from '@brickifyio/operators';
 import {
   type BrickValue,
   createUsePlugin,
+  type Plugin,
   type PropsWithStoredValue,
-  type UsePluginFactory,
 } from '@brickifyio/renderer';
 import { useSyncedRef } from '@brickifyio/utils/hooks';
 import { type Change, patch } from '@brickifyio/utils/object';
@@ -12,7 +12,7 @@ import * as O from 'fp-ts/lib/Option';
 import {
   cloneElement,
   type ReactElement,
-  type RefObject,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -22,21 +22,26 @@ import { type PropsWithChange } from './models';
 
 export const changesToken = Symbol('ChangesPlugin');
 
-const createController = (
-  valueRef: RefObject<{ value: BrickValue[] }>,
-  onChangeRef: RefObject<undefined | ((value: object) => void)>,
-) => {
-  let changes: Change[] = [];
+type Props = {
+  onChange?: (value: object) => void;
+  value: BrickValue[];
+};
 
+export const useChangesPluginFactory = (props: Props) => {
+  const ref = useRef<HTMLElement>(null);
+  const onChangeRef = useSyncedRef(props.onChange);
+  const valueRef = useSyncedRef({ value: props.value });
+
+  const changesRef = useRef<Change[]>([]);
   // TODO: move it to history plugin
-  let activeIndex = -1;
-  let history: { forward: Change[]; backward: Change[] }[] = [];
+  const activeIndexRef = useRef(-1);
+  const historyRef = useRef<{ forward: Change[]; backward: Change[]}[]>([]);
 
-  const clear = () => {
-    changes = [];
-  };
+  const clear = useCallback(() => {
+    changesRef.current = [];
+  }, []);
 
-  const emitChanges = (newChanges: Change[]) => pipe(
+  const emitChanges = useCallback((newChanges: Change[]) => pipe(
     newChanges.length
       ? O.some(patch(valueRef.current, newChanges))
       : O.none,
@@ -46,19 +51,25 @@ const createController = (
       tap<BrickValue[]>(console.log.bind(null, 'next value')),
       (value) => onChangeRef.current?.(value),
     ))),
-  );
+  ), [onChangeRef, valueRef]);
 
-  const apply = () => pipe(
-    emitChanges(changes),
+  const apply = useCallback(() => pipe(
+    emitChanges(changesRef.current),
     O.map(tap(([_, changesToRevert]) => {
-      history = history.slice(0, activeIndex + 1);
-      activeIndex += 1;
-      history.push({ backward: changesToRevert, forward: changes });
+      historyRef.current = historyRef.current.slice(
+        0,
+        activeIndexRef.current + 1,
+      );
+      activeIndexRef.current += 1;
+      historyRef.current.push({
+        backward: changesToRevert,
+        forward: changesRef.current,
+      });
     })),
     tap(clear),
-  );
+  ), [clear, emitChanges]);
 
-  const onChange = <Value = unknown>(event: Change<Value>) => {
+  const onChange = useCallback(<Value>(event: Change<Value>) => {
     if (!event.path) {
       return;
     }
@@ -67,66 +78,39 @@ const createController = (
      * If it's a single onChange not in mutations or commands we just call
      * the apply function on the next render.
      */
-    if (!changes.length) {
+    if (!changesRef.current.length) {
       requestAnimationFrame(apply);
     }
 
-    changes.push(event);
-  };
+    changesRef.current.push(event);
+  }, [apply]);
 
-  return {
-    changes: () => changes,
 
-    undo: () => {
-      if (activeIndex < 0) {
-        return;
-      }
+  const undo = useCallback(() => {
+    if (activeIndexRef.current < 0) {
+      return;
+    }
 
-      emitChanges(history[activeIndex].backward);
-      activeIndex -= 1;
-    },
+    emitChanges(historyRef.current[activeIndexRef.current].backward);
+    activeIndexRef.current -= 1;
+  }, [emitChanges]);;
 
-    redo: () => {
-      if (activeIndex >= history.length - 1) {
-        return;
-      }
+  const redo = useCallback(() => {
+    if (activeIndexRef.current >= historyRef.current.length - 1) {
+      return;
+    }
 
-      emitChanges(history[activeIndex + 1].forward);
-      activeIndex += 1;
-    },
+    emitChanges(historyRef.current[activeIndexRef.current + 1].forward);
+    activeIndexRef.current += 1;
+  }, [emitChanges]);
 
-    add: <Value = unknown>(path: string[], value: Value) => {
-      onChange({ type: 'add', path, value });
-    },
+  const add = useCallback(<Value = unknown>(path: string[], value: Value) => {
+    onChange({ type: 'add', path, value });
+  }, [onChange]);
 
-    remove: (path: string[]) => onChange({ type: 'remove', path }),
-
-    apply,
-
-    onChange,
-  };
-};
-
-export type ChangesController = ReturnType<
-  typeof createController
->;
-
-type Props = {
-  onChange?: (value: object) => void;
-  value: BrickValue[];
-};
-
-export const useChangesPluginFactory: UsePluginFactory<
-  Props,
-  ChangesController
-> = (props) => {
-  const ref = useRef<HTMLElement>(null);
-  const onChangeRef = useSyncedRef(props.onChange);
-  const valueRef = useSyncedRef({ value: props.value });
-
-  const controller = useMemo(
-    () => createController(valueRef, onChangeRef),
-    [valueRef, onChangeRef],
+  const remove = useCallback(
+    (path: string[]) => onChange({ type: 'remove', path }),
+    [onChange],
   );
 
   useEffect(() => {
@@ -134,34 +118,31 @@ export const useChangesPluginFactory: UsePluginFactory<
     ref.current?.addEventListener('beforeinput', (event) => {
       if (event.inputType === 'historyUndo') {
         event.preventDefault();
-        controller.undo();
+        undo();
       }
 
       if (event.inputType === 'historyRedo') {
         event.preventDefault();
-        controller.redo();
+        redo();
       }
     }, { signal: abort.signal });
 
     return () => abort.abort();
-  }, [controller]);
+  }, [undo, redo]);
 
   return useMemo(() => ({
-    ref,
     token: changesToken,
-    props: {
-      /**
-       * We mutate current root props with new onChange method that can
-       * interract with the whole object. Children components must implement
-       * plugin interface for change function
-       */
-      onChange: controller.onChange,
+    root: {
+      ref,
+      props: { onChange },
     },
     /**
      * Each element will have onChange function.
      * If an element already has this function we don't need to override it.
      */
-    render: (element: ReactElement<PropsWithChange & PropsWithStoredValue>) => {
+    render: (
+      element: ReactElement<PropsWithChange & PropsWithStoredValue>,
+    ) => {
       if (element.props.onChange) {
         return element;
       }
@@ -170,15 +151,22 @@ export const useChangesPluginFactory: UsePluginFactory<
         onChange: (
           value: unknown,
           pathSuffix: string[] = [],
-        ) => controller.onChange({
+        ) => onChange({
           path: [...element.props.stored.pathRef.current(), ...pathSuffix],
           type: value === undefined ? 'remove' : 'update',
           value,
         }),
       });
     },
-    controller,
-  }), [controller]);
+    undo,
+    redo,
+    onChange,
+    apply,
+    add,
+    remove,
+  }), [add, apply, onChange, redo, remove, undo]);
 };
 
-export const useChanges = createUsePlugin<ChangesController>(changesToken);
+export type ChangesPlugin = Plugin<typeof useChangesPluginFactory>;
+
+export const useChangesPlugin = createUsePlugin<ChangesPlugin>(changesToken);

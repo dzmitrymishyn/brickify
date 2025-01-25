@@ -4,9 +4,9 @@ import { pipe } from 'fp-ts/lib/function';
 import { type ReactElement } from 'react';
 
 import { getPlugins } from './getPlugins';
-import { type Plugin, type PluginMap } from './plugins';
+import { type PluginContext, type PluginMap } from './plugins';
 
-const getRender = ({ render }: Plugin) => render;
+const getRender = ({ render }: PluginContext) => render;
 
 const getRenderFromPlugins = (
   plugins: PluginMap = {},

@@ -13,7 +13,7 @@ import { forwardRef, useMemo } from 'react';
 
 import {
   type PropsWithChange,
-  useChanges,
+  useChangesPlugin,
   useChangesPluginFactory,
 } from '../changes';
 import { useCommandsPluginFactory } from '../commands';
@@ -39,7 +39,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
     rootRef,
   );
 
-  const { add } = useChanges();
+  const { add } = useChangesPlugin();
   const { markToRevert } = useMutation(
     rootRef,
     ({ mutations, addedDescendants }) => {
@@ -85,10 +85,10 @@ Editor.displayName = 'Editor';
 
 export default withRendererContext(Editor, {
   plugins: [
-    useChangesPluginFactory,
     useSelectionPluginFactory,
     useCommandsPluginFactory,
     useMutationsPluginFactory,
+    useChangesPluginFactory,
   ],
 });
 
