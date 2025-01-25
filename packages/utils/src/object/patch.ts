@@ -193,26 +193,28 @@ const traverseAndApplyChanges = curry((
 
       if (Array.isArray(value)) {
         let newIndex = 0;
-
-        return [[
-          ...value.flatMap((currentValue: unknown, index) => {
-            const [results, childChanges] = handleArrayUpdate(
-              [...path, `${index}`],
-              [...shadowPath, `${newIndex}`],
-              currentValue,
-              changesMap,
-            );
-            revertChanges.push(...childChanges);
-            newIndex += results.length;
-            return results;
-          }),
-          ...handleArrayUpdate(
-            [...path, `${value.length}`],
+        const existedItems = value.flatMap((currentValue: unknown, index) => {
+          const [results, childChanges] = handleArrayUpdate(
+            [...path, `${index}`],
             [...shadowPath, `${newIndex}`],
-            removed,
+            currentValue,
             changesMap,
-          )[0],
-        ], revertChanges];
+          );
+          revertChanges.push(...childChanges);
+          newIndex += results.length;
+          return results;
+        });
+
+        const [addedItems, addedItemsChangesToRevert] = handleArrayUpdate(
+          [...path, `${value.length}`],
+          [...shadowPath, `${newIndex}`],
+          removed,
+          changesMap,
+        );
+
+        revertChanges.push(...addedItemsChangesToRevert);
+
+        return [[...existedItems, ...addedItems], revertChanges];
       }
 
       const newValue = changes.reduce(handleNonArrayUpdate, 'unhandled');

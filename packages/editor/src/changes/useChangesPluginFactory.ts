@@ -13,7 +13,9 @@ import {
   cloneElement,
   type ReactElement,
   type RefObject,
+  useEffect,
   useMemo,
+  useRef,
 } from 'react';
 
 import { type PropsWithChange } from './models';
@@ -25,6 +27,10 @@ const createController = (
   onChangeRef: RefObject<undefined | ((value: object) => void)>,
 ) => {
   let changes: Change[] = [];
+
+  // TODO: move it to history plugin
+  let activeIndex = -1;
+  let history: { forward: Change[]; backward: Change[] }[] = [];
 
   const clear = () => {
     changes = [];
@@ -44,15 +50,11 @@ const createController = (
 
   const apply = () => pipe(
     emitChanges(changes),
-    // O.map(tap(([, b]) => console.log(...[
-    //   ...changes.map((c) => ({...c, path: c.path?.join('/')})),
-    // ]))),
-    // O.map(tap(([, b]) => console.log(...[
-    //   ...b.map((c) => ({...c, path: c.path?.join('/')})),
-    // ]))),
-    // O.map(tap(([, b]) => {
-    //   window.asd = { forward: changes, backward: b };
-    // })),
+    O.map(tap(([_, changesToRevert]) => {
+      history = history.slice(0, activeIndex + 1);
+      activeIndex += 1;
+      history.push({ backward: changesToRevert, forward: changes });
+    })),
     tap(clear),
   );
 
@@ -74,6 +76,24 @@ const createController = (
 
   return {
     changes: () => changes,
+
+    undo: () => {
+      if (activeIndex < 0) {
+        return;
+      }
+
+      emitChanges(history[activeIndex].backward);
+      activeIndex -= 1;
+    },
+
+    redo: () => {
+      if (activeIndex >= history.length - 1) {
+        return;
+      }
+
+      emitChanges(history[activeIndex + 1].forward);
+      activeIndex += 1;
+    },
 
     add: <Value = unknown>(path: string[], value: Value) => {
       onChange({ type: 'add', path, value });
@@ -100,6 +120,7 @@ export const useChangesPluginFactory: UsePluginFactory<
   Props,
   ChangesController
 > = (props) => {
+  const ref = useRef<HTMLElement>(null);
   const onChangeRef = useSyncedRef(props.onChange);
   const valueRef = useSyncedRef({ value: props.value });
 
@@ -108,7 +129,25 @@ export const useChangesPluginFactory: UsePluginFactory<
     [valueRef, onChangeRef],
   );
 
+  useEffect(() => {
+    const abort = new AbortController();
+    ref.current?.addEventListener('beforeinput', (event) => {
+      if (event.inputType === 'historyUndo') {
+        event.preventDefault();
+        controller.undo();
+      }
+
+      if (event.inputType === 'historyRedo') {
+        event.preventDefault();
+        controller.redo();
+      }
+    }, { signal: abort.signal });
+
+    return () => abort.abort();
+  }, [controller]);
+
   return useMemo(() => ({
+    ref,
     token: changesToken,
     props: {
       /**

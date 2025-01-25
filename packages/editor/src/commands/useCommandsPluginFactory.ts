@@ -27,7 +27,6 @@ const metaKeyDisallowList = [
   // 'enter',
   // 'shift+enter',
   [
-    'z', // undo
     'b', // bold
     'i', // italic
     'u', // underline
@@ -203,6 +202,40 @@ export const useCommandsPluginFactory: UsePluginFactory<
     controller.processPostponed,
     deps.store,
   ]);
+
+  useEffect(() => {
+    const element = ref.current!;
+    const handleKeydown = (event: Event) => {
+      ['cmd + z', 'ctrl + z'].find((shortcut) => {
+        if (match(event, shortcut)) {
+          changesController.undo();
+          event.preventDefault();
+          return true;
+        }
+        return false;
+      });
+    };
+
+    element.addEventListener('keydown', handleKeydown);
+    return () => element.removeEventListener('keydown', handleKeydown);
+  }, [ref, changesController]);
+
+  useEffect(() => {
+    const element = ref.current!;
+    const handleKeydown = (event: Event) => {
+      ['cmd + shift + z', 'ctrl + shift + z'].find((shortcut) => {
+        if (match(event, shortcut)) {
+          changesController.redo();
+          event.preventDefault();
+          return true;
+        }
+        return false;
+      });
+    };
+
+    element.addEventListener('keydown', handleKeydown);
+    return () => element.removeEventListener('keydown', handleKeydown);
+  }, [ref, changesController]);
 
   useDisallowHotkeys(ref, metaKeyDisallowList);
 
