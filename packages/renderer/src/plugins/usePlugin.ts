@@ -22,6 +22,11 @@ const createLazyErrorProxy = (
           return plugin[name];
         }
 
+        // It's probably bad fix. Need to investigate better way of doing this
+        if (name === Symbol.for('react.memo_cache_sentinel')) {
+          return undefined;
+        }
+
         throw new Error(errorMessage);
       },
     },
