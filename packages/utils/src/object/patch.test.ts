@@ -2,7 +2,7 @@ import { patch } from './patch';
 
 describe('primitives', () => {
   it('should return primitive on update', () => {
-    const [result] = patch(
+    const result = patch(
       'test',
       [{ type: 'update', value: 'expected', path: [] }],
     );
@@ -11,7 +11,7 @@ describe('primitives', () => {
   });
 
   it('should not do anything for add type', () => {
-    const [result] = patch(
+    const result = patch(
       'expected',
       [{ type: 'add', value: 'unexpected', path: [] }],
     );
@@ -20,7 +20,7 @@ describe('primitives', () => {
   });
 
   it('should return null for remove event', () => {
-    const [result] = patch(
+    const result = patch(
       'unexpected',
       [{ type: 'remove', value: '', path: [] }],
     );
@@ -29,7 +29,7 @@ describe('primitives', () => {
   });
 
   it('should return null for first remove change', () => {
-    const [result] = patch(
+    const result = patch(
       'unexpected',
       [
         { type: 'remove', value: '', path: [] },
@@ -41,7 +41,7 @@ describe('primitives', () => {
   });
 
   it('should return null for last remove change', () => {
-    const [result] = patch(
+    const result = patch(
       'unexpected',
       [
         { type: 'update', value: 'unexpected2', path: [] },
@@ -53,7 +53,7 @@ describe('primitives', () => {
   });
 
   it('should change type to another type', () => {
-    const [result] = patch(
+    const result = patch(
       'unexpected',
       [{ type: 'update', value: 123, path: [] }],
     );
@@ -62,7 +62,7 @@ describe('primitives', () => {
   });
 
   it('should do nothing for unknown path', () => {
-    const [result] = patch(
+    const result = patch(
       'expected',
       [{ type: 'update', value: 'unexpected', path: ['test', 'path', '1'] }],
     );
@@ -74,7 +74,7 @@ describe('primitives', () => {
 describe('objects', () => {
   it('should do nothing for unknown path', () => {
     const expected = { test: 1 };
-    const [result] = patch(
+    const result = patch(
       expected,
       [{ type: 'update', value: 'unexpected', path: ['test', 'unknown'] }],
     );
@@ -84,7 +84,7 @@ describe('objects', () => {
 
   it('should not update unknown field in object', () => {
     const expected = { test: 1 };
-    const [result] = patch(
+    const result = patch(
       expected,
       [{ type: 'update', value: 'unexpected', path: ['unknown'] }],
     );
@@ -93,7 +93,7 @@ describe('objects', () => {
   });
 
   it('should update known path', () => {
-    const [result] = patch(
+    const result = patch(
       { test: 1 },
       [{ type: 'update', value: 'expected', path: ['test'] }],
     );
@@ -102,7 +102,7 @@ describe('objects', () => {
   });
 
   it('should update deep object', () => {
-    const [result] = patch(
+    const result = patch(
       { firstLayer: { secondLayer: 2 } },
       [{
         type: 'update',
@@ -119,7 +119,7 @@ describe('objects', () => {
   });
 
   it('should update deep object with multiple changes', () => {
-    const [result] = patch(
+    const result = patch(
       {
         firstLayer: {
           secondLayer: { title: 'title', description: 'description' },
@@ -147,7 +147,7 @@ describe('objects', () => {
   });
 
   it('should set null for removed path', () => {
-    const [result] = patch(
+    const result = patch(
       {
         firstLayer: {
           secondLayer: { test: 1 },
@@ -168,7 +168,7 @@ describe('objects', () => {
   });
 
   it('should set null for removed top level', () => {
-    const [result] = patch(
+    const result = patch(
       {
         firstLayer: {
           secondLayer: { test: 1 },
@@ -183,7 +183,7 @@ describe('objects', () => {
 
 describe('arrays', () => {
   it('should add element before first item', () => {
-    const [result] = patch(
+    const result = patch(
       [1],
       [{ type: 'add', path: ['0'], value: 0 }],
     );
@@ -192,7 +192,7 @@ describe('arrays', () => {
   });
 
   it('should add element after last item', () => {
-    const [result] = patch(
+    const result = patch(
       [1],
       [{ type: 'add', path: ['1'], value: 2 }],
     );
@@ -201,7 +201,7 @@ describe('arrays', () => {
   });
 
   it('should add element between items', () => {
-    const [result] = patch(
+    const result = patch(
       [1, 3],
       [{ type: 'add', path: ['1'], value: 2 }],
     );
@@ -210,7 +210,7 @@ describe('arrays', () => {
   });
 
   it('should remove multiple items', () => {
-    const [result] = patch(
+    const result = patch(
       [1, 3],
       [{ type: 'remove', path: ['0'] }, { type: 'remove', path: ['1'] }],
     );
@@ -219,7 +219,7 @@ describe('arrays', () => {
   });
 
   it('should remove single item', () => {
-    const [result] = patch(
+    const result = patch(
       [1, 2, 3],
       [{ type: 'remove', path: ['1'] }],
     );
@@ -228,7 +228,7 @@ describe('arrays', () => {
   });
 
   it('should remove first item', () => {
-    const [result] = patch(
+    const result = patch(
       [1, 2, 3],
       [{ type: 'remove', path: ['0'] }],
     );
@@ -237,7 +237,7 @@ describe('arrays', () => {
   });
 
   it('should remove last item', () => {
-    const [result] = patch(
+    const result = patch(
       [1, 2, 3],
       [{ type: 'remove', path: ['2'] }],
     );
@@ -246,7 +246,7 @@ describe('arrays', () => {
   });
 
   it('should perform multiple actions', () => {
-    const [result] = patch(
+    const result = patch(
       [1, 2, 3, 100],
       [
         { type: 'remove', path: ['3'] },
@@ -264,7 +264,7 @@ describe('arrays', () => {
 
 describe('arrays & objects', () => {
   it('should mutate a property inside an object', () => {
-    const [result] = patch(
+    const result = patch(
       { value: [{ test: 'initial' }] },
       [
         { type: 'update', path: ['value', '0', 'test'], value: 'expected' },
@@ -275,7 +275,7 @@ describe('arrays & objects', () => {
   });
 
   it('should add to object new keys', () => {
-    const [result] = patch(
+    const result = patch(
       { value: [{ test: 'initial' }] },
       [
         { type: 'update', path: ['value', '0'], value: { key1: 1, key2: 2 } },
@@ -286,7 +286,7 @@ describe('arrays & objects', () => {
   });
 
   it('should leave empty array when last element is removed', () => {
-    const [result] = patch(
+    const result = patch(
       { value: [{ test: 'initial' }] },
       [{ type: 'remove', path: ['value', '0'] }],
     );
@@ -295,7 +295,7 @@ describe('arrays & objects', () => {
   });
 
   it('should make deep mutation for an object', () => {
-    const [result] = patch(
+    const result = patch(
       { value: [{ test: 'initial', subObject: [{ subTest: 1 }] }] },
       [
         { type: 'update', path: ['value', '0', 'test'], value: 'expected' },

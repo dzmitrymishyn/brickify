@@ -13,7 +13,6 @@ import {
   cloneElement,
   type ReactElement,
   useCallback,
-  useEffect,
   useMemo,
   useRef,
 } from 'react';
@@ -33,9 +32,6 @@ export const useChangesPluginFactory = (props: Props) => {
   const valueRef = useSyncedRef({ value: props.value });
 
   const changesRef = useRef<Change[]>([]);
-  // TODO: move it to history plugin
-  const activeIndexRef = useRef(-1);
-  const historyRef = useRef<{ forward: Change[]; backward: Change[]}[]>([]);
 
   const clear = useCallback(() => {
     changesRef.current = [];
@@ -46,7 +42,7 @@ export const useChangesPluginFactory = (props: Props) => {
       ? O.some(patch(valueRef.current, newChanges))
       : O.none,
     O.map(tap(flow(
-      ([value]) => value?.value ?? [],
+      (value) => value?.value ?? [],
       // eslint-disable-next-line no-console -- use logger
       tap<BrickValue[]>(console.log.bind(null, 'next value')),
       (value) => onChangeRef.current?.(value),
@@ -55,17 +51,6 @@ export const useChangesPluginFactory = (props: Props) => {
 
   const apply = useCallback(() => pipe(
     emitChanges(changesRef.current),
-    O.map(tap(([_, changesToRevert]) => {
-      historyRef.current = historyRef.current.slice(
-        0,
-        activeIndexRef.current + 1,
-      );
-      activeIndexRef.current += 1;
-      historyRef.current.push({
-        backward: changesToRevert,
-        forward: changesRef.current,
-      });
-    })),
     tap(clear),
   ), [clear, emitChanges]);
 
@@ -85,25 +70,6 @@ export const useChangesPluginFactory = (props: Props) => {
     changesRef.current.push(event);
   }, [apply]);
 
-
-  const undo = useCallback(() => {
-    if (activeIndexRef.current < 0) {
-      return;
-    }
-
-    emitChanges(historyRef.current[activeIndexRef.current].backward);
-    activeIndexRef.current -= 1;
-  }, [emitChanges]);;
-
-  const redo = useCallback(() => {
-    if (activeIndexRef.current >= historyRef.current.length - 1) {
-      return;
-    }
-
-    emitChanges(historyRef.current[activeIndexRef.current + 1].forward);
-    activeIndexRef.current += 1;
-  }, [emitChanges]);
-
   const add = useCallback(<Value = unknown>(path: string[], value: Value) => {
     onChange({ type: 'add', path, value });
   }, [onChange]);
@@ -112,23 +78,6 @@ export const useChangesPluginFactory = (props: Props) => {
     (path: string[]) => onChange({ type: 'remove', path }),
     [onChange],
   );
-
-  useEffect(() => {
-    const abort = new AbortController();
-    ref.current?.addEventListener('beforeinput', (event) => {
-      if (event.inputType === 'historyUndo') {
-        event.preventDefault();
-        undo();
-      }
-
-      if (event.inputType === 'historyRedo') {
-        event.preventDefault();
-        redo();
-      }
-    }, { signal: abort.signal });
-
-    return () => abort.abort();
-  }, [undo, redo]);
 
   return useMemo(() => ({
     token: changesToken,
@@ -158,13 +107,11 @@ export const useChangesPluginFactory = (props: Props) => {
         }),
       });
     },
-    undo,
-    redo,
     onChange,
     apply,
     add,
     remove,
-  }), [add, apply, onChange, redo, remove, undo]);
+  }), [add, apply, onChange, remove]);
 };
 
 export type ChangesPlugin = Plugin<typeof useChangesPluginFactory>;

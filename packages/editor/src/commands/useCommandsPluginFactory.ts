@@ -20,7 +20,6 @@ import {
   type PostponedCommandType,
 } from './models';
 import { useDisallowHotkeys } from './useDisallowHotkeys';
-import { useChangesPlugin } from '../changes';
 import { makeResults } from '../utils';
 import assert from 'assert';
 
@@ -30,6 +29,7 @@ const metaKeyDisallowList = [
   // 'enter',
   // 'shift+enter',
   [
+    'z',
     'b', // bold
     'i', // italic
     'u', // underline
@@ -43,42 +43,6 @@ export const useCommandsPluginFactory = (
   const ref = useRef<HTMLElement>(null);
   const subscriptionsRef = useRef(new Map<Node, Command[]>());
   const commandsQueueRef = useRef<PostponedCommand[]>([]);
-
-  const changes = useChangesPlugin(deps.plugins);
-
-  useEffect(() => {
-    const element = ref.current!;
-    const handleKeydown = (event: Event) => {
-      ['cmd + z', 'ctrl + z'].find((shortcut) => {
-        if (match(event, shortcut)) {
-          changes.undo();
-          event.preventDefault();
-          return true;
-        }
-        return false;
-      });
-    };
-
-    element.addEventListener('keydown', handleKeydown);
-    return () => element.removeEventListener('keydown', handleKeydown);
-  }, [ref, changes]);
-
-  useEffect(() => {
-    const element = ref.current!;
-    const handleKeydown = (event: Event) => {
-      ['cmd + shift + z', 'ctrl + shift + z'].find((shortcut) => {
-        if (match(event, shortcut)) {
-          changes.redo();
-          event.preventDefault();
-          return true;
-        }
-        return false;
-      });
-    };
-
-    element.addEventListener('keydown', handleKeydown);
-    return () => element.removeEventListener('keydown', handleKeydown);
-  }, [ref, changes]);
 
   useDisallowHotkeys(ref, metaKeyDisallowList);
 
@@ -222,7 +186,6 @@ export const useCommandsPluginFactory = (
     element.addEventListener('keydown', handle);
     return () => element.removeEventListener('keydown', handle);
   }, [
-    changes,
     postpone,
     processPostponed,
     deps.store,
