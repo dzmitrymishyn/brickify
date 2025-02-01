@@ -31,17 +31,19 @@ export type RendererStoreValue<Value = any> = {
 
   components?: Record<string, Component>;
 
+  slots?: Record<string, RendererStoreValue | null | (RendererStoreValue | null)[]>;
+
   /**
    * react element that is used for caching purposes. Could be undefined on
    * the rendering phase
    */
-  react?: ReactElement<object>;
+  react?: ReactElement;
 
   /**
    * An element without plugins that should be used for updating plugins
    * for an element.
    */
-  reactWithoutPlugins?: ReactElement<object>;
+  reactWithoutPlugins?: ReactElement;
 };
 
 

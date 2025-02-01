@@ -2,14 +2,10 @@ import { isElement } from '@brickifyio/browser/utils';
 import {
   applySlots,
   type BrickValue,
-  cloneOrCreateElement,
   extend,
   getName,
   hasProps,
   type PropsWithStoredValue,
-  usePrimitiveChildrenCache,
-  useRenderer,
-  useRendererContext,
   useRendererRegistry,
   withMatcher,
   withName,
@@ -18,6 +14,7 @@ import {
 import { useRef } from 'react';
 
 import { type PropsWithChange } from '../changes';
+import { useEditorRenderer } from '../hooks/useEditorRenderer';
 import { useMutation } from '../mutations';
 import Paragraph from '../Paragraph';
 
@@ -30,10 +27,8 @@ const TableRow: React.FC<TableRowProps> = ({ stored, value, onChange }) => {
   const components = applySlots([
     ['TableColumn', 'Paragraph', Paragraph, { component: 'td', style: { padding: 8, width: '33.3333%', border: '1px solid #ccc' } }],
   ], stored?.components);
-  const { store } = useRendererContext();
-  const cache = usePrimitiveChildrenCache();
 
-  const nodes = useRenderer({
+  const nodes = useEditorRenderer({
     value,
     components,
     pathPrefix: () => [],
@@ -46,11 +41,8 @@ const TableRow: React.FC<TableRowProps> = ({ stored, value, onChange }) => {
 
       const Component = options.components.TableColumn;
       const pathPrefix = [index];
-      const cachedValue = cache.get(index, options.previousValue);
 
-      return cloneOrCreateElement(
-        store.get<{ value: string }>(cachedValue),
-        () => cachedValue?.value === columnValue,
+      return (
         <Component
           {...hasProps(Component) ? Component.props : {}}
           value={columnValue}
@@ -60,13 +52,13 @@ const TableRow: React.FC<TableRowProps> = ({ stored, value, onChange }) => {
             pathRef: {
               current: () => [...stored.pathRef.current(), ...pathPrefix],
             },
-            value: cache.save(index, columnValue),
+            value: { value: columnValue },
           }}
           key={index}
           onChange={(event?: { value: string }) => {
             onChange?.(event?.value, pathPrefix);
           }}
-        />,
+        />
       );
     },
   });
@@ -84,8 +76,7 @@ const Table: React.FC<Props> = ({ stored, children, onChange }) => {
   const ref = useRendererRegistry<HTMLTableElement>(stored);
   const tbodyRef = useRef(null);
 
-  const { store } = useRendererContext();
-  const nodes = useRenderer({
+  const nodes = useEditorRenderer({
     value: children,
     components: stored.components,
     pathPrefix: () => ['children'],
@@ -98,9 +89,7 @@ const Table: React.FC<Props> = ({ stored, children, onChange }) => {
 
       const pathPrefix = ['children', index];
 
-      return cloneOrCreateElement(
-        store.get<string[]>(options.previousValue),
-        (oldValue) => oldValue === value,
+      return (
         <TableRow
           key={index}
           stored={{
@@ -115,7 +104,7 @@ const Table: React.FC<Props> = ({ stored, children, onChange }) => {
           onChange={(event, columnIndex) => {
             onChange?.(event, [...pathPrefix, ...columnIndex ?? []]);
           }}
-        />,
+        />
       );
     },
   });

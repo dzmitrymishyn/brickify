@@ -4,7 +4,6 @@ import {
   handleAddedNodes,
   hasNodeToBrick,
   type PropsWithStoredValue,
-  useRenderer,
   useRendererRegistry,
   withRendererContext,
 } from '@brickifyio/renderer';
@@ -18,6 +17,7 @@ import {
 } from '../changes';
 import { useCommandsPluginFactory } from '../commands';
 import { ContainerHooks } from '../ContainerHooks';
+import { useEditorRenderer } from '../hooks/useEditorRenderer';
 import { useMutation, useMutationsPluginFactory } from '../mutations';
 import { useSelectionPluginFactory } from '../selection';
 
@@ -57,7 +57,7 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
     },
   );
 
-  const value = useRenderer(useMemo(() => ({
+  const value = useEditorRenderer(useMemo(() => ({
     value: stored.value,
     components,
     pathPrefix: () => ['value'],

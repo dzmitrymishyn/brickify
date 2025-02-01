@@ -17,6 +17,9 @@ export const useRendererStoreFactory = (valueProp: unknown) => {
 
   const set = useCallback(
     (key: unknown, value: RendererStoreValue) => {
+      if (!key || typeof key !== 'object') {
+        return;
+      }
       store.current.set(key, value);
     },
     [],
@@ -44,9 +47,10 @@ export const useRendererStoreFactory = (valueProp: unknown) => {
       const initialValue = store.current.get(key);
 
       if (initialValue) {
-        const result = appliers.reduce((acc, apply) => {
-          return apply(acc);
-        }, initialValue);
+        const result = appliers.reduce(
+          (acc, apply) => apply(acc),
+          initialValue,
+        );
 
         store.current.set(key, result);
       }

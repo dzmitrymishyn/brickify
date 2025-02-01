@@ -19,6 +19,17 @@ import Paragraph from '@brickifyio/editor/Paragraph';
 import { extend, withProps } from '@brickifyio/renderer';
 import React, { useMemo, useState } from 'react';
 
+const components = {
+  Heading,
+  List,
+  Article,
+  Table,
+  Container,
+  Paragraph: extend(Paragraph, withProps({
+    style: { margin: '16px 0' }, components: [Em, Strong, Br]
+  })),
+};
+
 const Page = () => {
   const newKey = useMemo(() => {
     let i = 1000;
@@ -38,9 +49,9 @@ const Page = () => {
       brick: 'Paragraph',
       value: `
         I do not know how it will go in the future but for now the beauty is
-        that I can select several table columns + list after the table and 
+        that I can select several table columns + list after the table and
         maybe the container and pres <em>cmd + b</em> or <em>ctrl + b</em>
-        and <strong>it transforms the text for each specific item</strong> and 
+        and <strong>it transforms the text for each specific item</strong> and
         <strong>doesn't transform components that don't support it</strong>.
       `,
     },
@@ -96,7 +107,7 @@ const Page = () => {
           brick: 'Paragraph',
           id: newKey(),
           value: `
-            This is a container component. It can place all the elements its 
+            This is a container component. It can place all the elements its
             parent does.
           `,
         },
@@ -126,16 +137,7 @@ const Page = () => {
         // eslint-disable-next-line -- TODO: check it
         value={state as any}
         onChange={setState}
-        components={{
-          // List,
-          Heading,
-          List,
-          Article,
-          Paragraph: extend(Paragraph, withProps({ style: { margin: '16px 0' }, components: [Em, Strong, Br] })),
-          Table,
-          Container,
-          // Test,
-        }}
+        components={components}
       />
       <pre style={{ overflow: 'scroll' }}>
         {JSON.stringify(state, null, 2)}

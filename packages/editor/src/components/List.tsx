@@ -1,16 +1,12 @@
 import {
   applySlots,
   type BrickValue,
-  cloneOrCreateElement,
   extend,
   getName,
   handleAddedNodes,
   hasNodeToBrick,
   hasProps,
   type PropsWithStoredValue,
-  usePrimitiveChildrenCache,
-  useRenderer,
-  useRendererContext,
   useRendererRegistry,
   withMatcher,
   withName,
@@ -19,6 +15,7 @@ import {
 
 import { type PropsWithChange, useChangesPlugin } from '../changes';
 import { ContainerHooks } from '../ContainerHooks';
+import { useEditorRenderer } from '../hooks/useEditorRenderer';
 import { useMutation } from '../mutations';
 import Paragraph from '../Paragraph';
 
@@ -67,9 +64,7 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
     },
   );
 
-  const cache = usePrimitiveChildrenCache();
-  const { store } = useRendererContext();
-  const childrenElements = useRenderer({
+  const childrenElements = useEditorRenderer({
     value: children,
     components,
     pathPrefix: () => [...stored.pathRef.current(), 'children'],
@@ -80,15 +75,10 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
         return null;
       }
 
-      const cachedValue = cache.get(index, options.previousValue);
-      const oldStored = cachedValue
-        && store.get<{ value: unknown }>(cachedValue);
       const Component = options.components.ListItem;
       const pathPrefix = ['children', index];
 
-      return cloneOrCreateElement(
-        oldStored,
-        () => options.previousValue === value,
+      return (
         <Component
           {...hasProps(Component) ? Component.props : {}}
           value={value}
@@ -98,7 +88,7 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
             pathRef: {
               current: () => pathPrefix,
             },
-            value: cache.save(index, value),
+            value: { value },
           }}
           key={index}
           component="li"
@@ -106,7 +96,7 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
           onChange={(event: { value: string }) => {
             onChange?.(event?.value, pathPrefix);
           }}
-        />,
+        />
       );
     },
   });
