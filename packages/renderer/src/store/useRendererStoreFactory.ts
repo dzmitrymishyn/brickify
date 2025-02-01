@@ -1,27 +1,65 @@
-import { useMemo } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { type RendererStoreValue } from './models';
 
-const createStore = () => {
-  const store = new Map<unknown, RendererStoreValue>();
+export const useRendererStoreFactory = (valueProp: unknown) => {
+  const store = useRef(new Map<unknown, RendererStoreValue>());
+  const afterRenderAppliers = useRef(
+    new Map<unknown, ((stored: RendererStoreValue) => RendererStoreValue)[]>(),
+  );
 
-  return {
-    get: <Value = unknown>(
-      key: unknown,
-    ): RendererStoreValue<Value> | undefined => store.get(key),
-    set: store.set.bind(store),
-    update: (key: unknown, value: object) => {
-      const stored = store.get(key);
-
-      if (stored) {
-        Object.assign(stored, value);
-      }
+  const get = useCallback(
+    <Value = unknown>(key: unknown): RendererStoreValue<Value> | undefined => {
+      return store.current.get(key);
     },
-    delete: store.delete.bind(store),
-  };
+    [],
+  );
+
+  const set = useCallback(
+    (key: unknown, value: RendererStoreValue) => {
+      store.current.set(key, value);
+    },
+    [],
+  );
+
+  const remove = useCallback(
+    (key: unknown) => {
+      store.current.delete(key);
+    },
+    [],
+  );
+
+  const mutateAfterRender = useCallback((
+    key: unknown,
+    apply: (stored: RendererStoreValue) => RendererStoreValue,
+  ) => {
+    afterRenderAppliers.current.set(
+      key,
+      [...afterRenderAppliers.current.get(key) ?? [], apply],
+    );
+  }, []);
+
+  useLayoutEffect(() => {
+    for (const [key, appliers] of afterRenderAppliers.current) {
+      const initialValue = store.current.get(key);
+
+      if (initialValue) {
+        const result = appliers.reduce((acc, apply) => {
+          return apply(acc);
+        }, initialValue);
+
+        store.current.set(key, result);
+      }
+    }
+    afterRenderAppliers.current.clear();
+  }, [valueProp]);
+
+  return useMemo(() => ({
+    get,
+    set,
+    delete: remove,
+    mutateAfterRender,
+  }), [remove, get, set, mutateAfterRender]);
 };
 
-export type RendererStore = ReturnType<typeof createStore>;
-
-export const useRendererStoreFactory = () => useMemo(createStore, []);
-
+export type RendererStore = ReturnType<typeof useRendererStoreFactory>;

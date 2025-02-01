@@ -48,7 +48,7 @@ export function withRendererContext<P extends object>(
       );
     }
 
-    const store = useRendererStoreFactory();
+    const store = useRendererStoreFactory(props.value);
     const stored: RendererStoreValue = {
       value: props.value,
       pathRef: makeRef(() => []),
