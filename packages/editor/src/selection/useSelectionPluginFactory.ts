@@ -1,46 +1,51 @@
 import { type AnyRange, restoreRange } from '@brickifyio/browser/selection';
 import { createUsePlugin, type Plugin } from '@brickifyio/renderer';
+import { pipe } from 'fp-ts/lib/function';
 import { useCallback, useRef } from 'react';
 
 import { useAfterRenderRangeRestore } from './useAfterRenderRangeRestore';
 
 const token = Symbol('SelectionPlugin');
 
-type SelectionRangeApplier = 'applyOnRender' | null;
+type SelectionRangeApplier =
+  | 'afterMutation'
+  | 'beforeMutation';
+
+type SelectionRangesMap = Partial<
+  Record<SelectionRangeApplier | symbol, AnyRange | null>
+>;
+
+const defaultApplier = Symbol('default selection applier');
 
 export const useSelectionPluginFactory = ({ value }: { value: unknown }) => {
-  const rangeRef = useRef<AnyRange | null>(null);
-  const applierRef = useRef<SelectionRangeApplier>(null);
+  const appliersRangeRef = useRef<SelectionRangesMap>({});
 
-  const apply = useCallback(() => {
-    restoreRange(rangeRef.current);
-  }, []);
   const storeRange = useCallback((
-    newRange: AnyRange | null = null,
-    newApplier: SelectionRangeApplier = null,
+    range: AnyRange | null = null,
+    applier?: SelectionRangeApplier,
   ) => {
-    rangeRef.current = newRange;
-    applierRef.current = newApplier;
+    appliersRangeRef.current[applier ?? defaultApplier] = range;
   }, []);
-  const getRange = useCallback(() => rangeRef.current, []);
-  const applyRangeIfActive = useCallback(
-    (neededApplier: NonNullable<SelectionRangeApplier>) => {
-      if (neededApplier === applierRef.current) {
-        restoreRange(rangeRef.current);
-        applierRef.current = null;
-      }
-    },
+  const getRange = useCallback(
+    (applier?: SelectionRangeApplier) =>
+      appliersRangeRef.current[applier ?? defaultApplier],
     [],
   );
+  const apply = useCallback((applier?: SelectionRangeApplier) => pipe(
+    getRange(applier),
+    restoreRange,
+    () => {
+      appliersRangeRef.current[applier ?? defaultApplier] = undefined;
+    },
+  ), [getRange]);
 
-  useAfterRenderRangeRestore(applyRangeIfActive, value);
+  useAfterRenderRangeRestore(apply, value);
 
   return {
     token,
     apply,
     storeRange,
     getRange,
-    applyRangeIfActive,
   };
 };
 

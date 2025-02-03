@@ -1,3 +1,4 @@
+import { type PluginMap } from '@brickifyio/renderer';
 import { useSyncedRef } from '@brickifyio/utils/hooks';
 import { type RefObject, useEffect } from 'react';
 
@@ -8,8 +9,9 @@ import assert from 'assert';
 export const useCommand = (
   ref: RefObject<Node | null>,
   handler: Command,
+  pluginMap?: PluginMap,
 ) => {
-  const { subscribe } = useCommandsPlugin();
+  const { subscribe } = useCommandsPlugin(pluginMap);
   const commandRef = useSyncedRef(handler);
 
   useEffect(() => {

@@ -174,7 +174,8 @@ const buildSlots = (
 const renderBrickValue = (
   options: Options,
   nextStored: RendererStoreValue<BrickValue>,
-): O.Option<[ReactElement, Diff?]> => pipe(
+  previousValue?: BrickValue,
+): O.Option<[ReactElement, Diff?, RenderChangeType?]> => pipe(
   O.fromNullable(options.components[nextStored.value.brick]),
   O.bindTo('Component'),
   O.bind('slots', ({ Component }) => pipe(
@@ -217,7 +218,7 @@ const renderUnknownValue = (
 
 const render = (
   options: Options & { previousStored?: RendererStoreValue | null },
-  value: unknown
+  value: unknown,
 ): [RenderChangeType, RendererStoreValue?, Diff?] => pipe(
   value === options.previousStored?.value
     ? options.previousStored
@@ -331,7 +332,7 @@ const traverseArray = (
     const previousStored = options.previousStored[index];
     const previousValue: unknown = previousStored?.value;
     const nextPath = [...options.pathRef.current(), `${index}`];
-    const p = 0;
+    const p = previousIndex;
     const previousPath = () =>
       [...options.pathRef.current(), `${p}`];
 

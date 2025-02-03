@@ -108,10 +108,11 @@ export const useChangesPluginFactory = (props: Props) => {
       });
     },
     onChange,
+    emitChanges,
     apply,
     add,
     remove,
-  }), [add, apply, onChange, remove]);
+  }), [add, apply, onChange, remove, emitChanges]);
 };
 
 export type ChangesPlugin = Plugin<typeof useChangesPluginFactory>;

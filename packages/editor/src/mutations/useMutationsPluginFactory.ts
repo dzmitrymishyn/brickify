@@ -165,8 +165,8 @@ export const useMutationsPluginFactory = (
           )),
         );
 
-        selection.apply();
-        selection.storeRange(nextRange, 'applyOnRender');
+        selection.apply('beforeMutation');
+        selection.storeRange(nextRange, 'afterMutation');
       }
     } catch (error) {
       // TODO: Add logger

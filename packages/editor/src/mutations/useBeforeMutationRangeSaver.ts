@@ -23,7 +23,7 @@ export const useBeforeMutationRangeSaver = (
     ];
 
     const saveSelection = () => {
-      selection.storeRange(getRangeCopy());
+      selection.storeRange(getRangeCopy(), 'beforeMutation');
     };
 
     // Add event listeners to save the selection range before any mutation

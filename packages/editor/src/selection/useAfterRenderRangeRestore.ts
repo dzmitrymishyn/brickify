@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 
 export const useAfterRenderRangeRestore = (
-  restore: (applier: 'applyOnRender') => void,
+  restore: (applier: 'afterMutation') => void,
   value: unknown,
 ) => {
   useEffect(function restoreRangeAfterValueChange() {
-    restore('applyOnRender');
+    restore('afterMutation');
   }, [restore, value]);
 };

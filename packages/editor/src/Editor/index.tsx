@@ -17,6 +17,7 @@ import {
 } from '../changes';
 import { useCommandsPluginFactory } from '../commands';
 import { ContainerHooks } from '../ContainerHooks';
+import { useHistoryPluginFactory } from '../history';
 import { useEditorRenderer } from '../hooks/useEditorRenderer';
 import { useMutation, useMutationsPluginFactory } from '../mutations';
 import { useSelectionPluginFactory } from '../selection';
@@ -89,6 +90,7 @@ export default withRendererContext(Editor, {
     useCommandsPluginFactory,
     useMutationsPluginFactory,
     useChangesPluginFactory,
+    useHistoryPluginFactory,
   ],
 });
 

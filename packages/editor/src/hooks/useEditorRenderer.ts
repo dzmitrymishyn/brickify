@@ -1,17 +1,25 @@
+import { array } from '@brickifyio/operators';
 import {
   useRenderer,
   type UseRendererOptions,
 } from '@brickifyio/renderer';
 import { useLayoutEffect } from 'react';
 
+import { useHistoryPlugin } from '../history';
+
 export const useEditorRenderer = (options: UseRendererOptions) => {
   const [elements, diff] = useRenderer(options);
 
+  const { commit } = useHistoryPlugin();
+
   useLayoutEffect(() => {
     if (diff) {
-      // TODO: commit history changes
+      commit({
+        undo: array(diff.undo),
+        redo: array(diff.redo),
+      });
     }
-  }, [diff]);
+  }, [diff, commit]);
 
   return elements;
 };
