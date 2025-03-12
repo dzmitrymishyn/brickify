@@ -174,7 +174,6 @@ const buildSlots = (
 const renderBrickValue = (
   options: Options,
   nextStored: RendererStoreValue<BrickValue>,
-  previousValue?: BrickValue,
 ): O.Option<[ReactElement, Diff?, RenderChangeType?]> => pipe(
   O.fromNullable(options.components[nextStored.value.brick]),
   O.bindTo('Component'),

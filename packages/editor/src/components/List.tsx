@@ -35,11 +35,9 @@ const List: React.FC<Props> = ({ stored, children, onChange }) => {
     ['ListItem', 'Paragraph', Paragraph, { component: 'li', style: { margin: 0 } }],
   ], stored?.components);
 
-  const { markToRevert } = useMutation(
+  useMutation(
     ref,
-    ({ mutations, removed, addedDescendants }) => {
-      markToRevert(mutations);
-
+    ({ removed, addedDescendants }) => {
       if (removed) {
         return onChange?.(undefined);
       }

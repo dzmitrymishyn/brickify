@@ -7,10 +7,10 @@ import {
   type Plugin,
   type PluginDependencies,
 } from '@brickifyio/renderer';
+import { useBeforeRender } from '@brickifyio/utils/hooks';
 import {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useRef,
 } from 'react';
 
@@ -28,6 +28,13 @@ import assert from 'assert';
 
 const token = Symbol('MutationsPlugin');
 
+export type MutationPhase = 'capture' | 'bubble';
+
+type SubscriptionsMap = Record<
+  MutationPhase,
+  Map<Node, ComponentMutationsHandler[]>
+>;
+
 export const useMutationsPluginFactory = (
   { value }: { value: object },
   deps: PluginDependencies,
@@ -38,159 +45,154 @@ export const useMutationsPluginFactory = (
   const ref = useRef<Element>(null);
   const observerRef = useRef<MutationObserver>(null);
   const renderingPhase = useRef(false);
-  const mutationsToRevertRef = useRef(new Set<MutationRecord>());
-  const subscriptionsRef = useRef(
-    new Map<Node, ComponentMutationsHandler[]>(),
-  );
+  const preventedMutationsRef = useRef(new Set<MutationRecord>());
+  const subscriptionsRef = useRef<SubscriptionsMap>({
+    capture: new Map(),
+    bubble: new Map(),
+  });
 
-  const markToRevert = (mutations: MutationRecord[]) => {
-    mutations.forEach((record) => mutationsToRevertRef.current.add(record));
+  const preventMutationRevert = (mutations: MutationRecord[]) => {
+    mutations.forEach((record) => preventedMutationsRef.current.add(record));
   };
 
   const clear = useCallback(() => {
-    mutationsToRevertRef.current.clear();
+    preventedMutationsRef.current.clear();
     return observerRef.current?.takeRecords() ?? [];
   }, []);
 
   const handle = useCallback((mutations: MutationRecord[]) => {
-    try {
-      mutationsToRevertRef.current.clear();
+    clear();
 
-      if (mutations.length) {
-        commands.processPostponed('mutation');
-      }
+    if (mutations.length) {
+      commands.processPostponed('mutation');
+    }
 
-      const range = getRange();
-      const defaultComponentMutation: Omit<ComponentMutations, 'domNode' | 'results'> = {
-        removed: false,
-        removedDescendants: [],
-        addedDescendants: [],
-        mutations: [],
-        range,
-      };
-      const allMutations: MutationRecord[] = [...mutations, ...clear()];
-      let currentMutations: MutationRecord[] | undefined = allMutations;
+    const range = getRange();
 
-      while (currentMutations?.length) {
-        const affectedSubscriptions = new Map<Node, ComponentMutations>();
-        const removedNodesMutations = new Map<Node, ComponentMutations>();
-        const mutationWithoutParent = new Map<Node, MutationRecord[]>();
+    const affectedSubscriptions = new Map<Node, ComponentMutations>();
+    const newMutations: MutationRecord[] = [];
 
-        for (let i = currentMutations.length - 1; i >= 0; i -= 1) {
-          const mutation = currentMutations[i];
-          mutation.removedNodes.forEach((node) => {
-            const hasSubscription = subscriptionsRef.current.has(node);
+    const makeDefaultOptions = (node: Node): ComponentMutations => ({
+      removed: false,
+      removedDescendants: [],
+      addedDescendants: [],
+      mutations: [],
+      range,
+      domNode: node,
+      results: makeResults(),
+    });
+    const trackAffectedSubscriptions = (mutation: MutationRecord) => {
+      mutation.removedNodes.forEach((node) => {
+        const hasSubscription = subscriptionsRef.current.capture.has(node)
+          || subscriptionsRef.current.bubble.has(node);
 
-            if (hasSubscription) {
-              const options = affectedSubscriptions.get(node)
-                ?? {
-                  ...defaultComponentMutation,
-                  domNode: node,
-                  results: makeResults(),
-                };
+        if (hasSubscription) {
+          const options = affectedSubscriptions.get(node)
+            ?? makeDefaultOptions(node);
 
-              options.removed = true;
-              options.mutations.push(mutation);
+          options.removed = true;
+          options.mutations.push(mutation);
 
-              affectedSubscriptions.set(node, options);
-            }
-          });
+          affectedSubscriptions.set(node, options);
+        }
+      });
 
-          let current: Node | null = mutation.target;
+      let current: Node | null = mutation.target;
 
-          while (current) {
-            const hasSubscription = subscriptionsRef.current.has(current);
+      while (current) {
+        const hasSubscription = subscriptionsRef.current.capture.has(current)
+          || subscriptionsRef.current.bubble.has(current);
 
-            if (hasSubscription) {
-              const options = affectedSubscriptions.get(current)
-                ?? {
-                  ...defaultComponentMutation,
-                  domNode: current,
-                  results: makeResults(),
-                };
+        if (hasSubscription) {
+          const options = affectedSubscriptions.get(current)
+            ?? makeDefaultOptions(current);
 
-              options.mutations.push(mutation);
-              options.removedDescendants.push(
-                ...Array.from(mutation.removedNodes),
-              );
-              options.addedDescendants.push(
-                ...Array.from(mutation.addedNodes),
-              );
+          options.mutations.push(mutation);
+          options.removedDescendants.push(
+            ...Array.from(mutation.removedNodes),
+          );
+          options.addedDescendants.push(
+            ...Array.from(mutation.addedNodes),
+          );
 
-              mutation.removedNodes.forEach((node) => {
-                removedNodesMutations.set(node, options);
-              });
-
-              affectedSubscriptions.set(current, options);
-              break;
-            }
-
-            if (!current.parentNode) {
-              const storedNodeMutations = mutationWithoutParent.get(current)
-                ?? [];
-              storedNodeMutations.push(mutation);
-              mutationWithoutParent.set(current, storedNodeMutations);
-            }
-
-            current = current.parentNode ?? null;
-          }
+          affectedSubscriptions.set(current, options);
+          break;
         }
 
-        mutationWithoutParent.forEach((mutation, node) => {
-          removedNodesMutations.get(node)?.mutations.push(...mutation);
-        });
-
-        affectedSubscriptions.forEach(
-          (options, node) => {
+        current = current.parentNode ?? null;
+      }
+    };
+    const traverseAffectedSubscriptions = (
+      map: Map<Node, ComponentMutationsHandler[]>,
+      inverse = false,
+    ) => {
+      affectedSubscriptions.forEach(
+        (options, node) => {
+          const operation = inverse ? 'reduceRight' : 'reduce';
+          map.get(node)?.[operation]((_, fn) => {
             try {
-              subscriptionsRef.current.get(node)?.forEach((fn) => fn(options));
+              fn(options);
             } catch (error) {
               // TODO: Add logger
             }
-          },
-        );
 
-        currentMutations = observerRef.current?.takeRecords();
+            const currentMutations = observerRef.current?.takeRecords() ?? [];
+            newMutations.push(...currentMutations);
+            currentMutations.forEach(trackAffectedSubscriptions);
 
-        allMutations.push(...currentMutations ?? []);
-      }
+            return null;
+          }, null);
+        },
+      );
 
-      if (mutationsToRevertRef.current.size) {
-        const nextRange = toCustomRange(ref.current!)(range);
+    };
 
-        revertDomByMutations(
-          // We can optimize this if we move filtering inside the function
-          allMutations.filter((mutation) => mutationsToRevertRef.current.has(
-            mutation,
-          )),
-        );
-
-        selection.apply('beforeMutation');
-        selection.storeRange(nextRange, 'afterMutation');
-      }
-    } catch (error) {
-      // TODO: Add logger
-    } finally {
-      clear();
+    for (let i = mutations.length - 1; i >= 0; i -= 1) {
+      trackAffectedSubscriptions(mutations[i]);
     }
+
+    traverseAffectedSubscriptions(subscriptionsRef.current.capture);
+    traverseAffectedSubscriptions(subscriptionsRef.current.bubble, true);
+
+    const allMutations = [...mutations, ...newMutations];
+
+    if (preventedMutationsRef.current.size !== allMutations.length) {
+      const nextRange = toCustomRange(ref.current!)(range);
+
+      revertDomByMutations(
+        // We can optimize this if we move filtering inside the function
+        [...mutations, ...newMutations].filter(
+          (mutation) => !preventedMutationsRef.current.has(mutation),
+        ),
+      );
+
+      selection.apply('beforeMutation');
+      selection.storeRange(nextRange, 'afterMutation');
+    }
+
+    clear();
   }, [clear, commands, selection]);
 
   const subscribe = useCallback(
-    (element: Node, mutate: ComponentMutationsHandler) => {
-      subscriptionsRef.current.set(element, [
+    (
+      element: Node,
+      mutate: ComponentMutationsHandler,
+      phase: MutationPhase = 'bubble',
+    ) => {
+      subscriptionsRef.current[phase].set(element, [
         mutate,
-        ...subscriptionsRef.current.get(element) ?? [],
+        ...subscriptionsRef.current[phase].get(element) ?? [],
       ]);
 
       return () => {
-        const allMutations = subscriptionsRef.current.get(element)?.filter(
+        const allMutations = subscriptionsRef.current[phase].get(element)?.filter(
           (currentMutate) => currentMutate !== mutate,
         ) ?? [];
 
         if (allMutations.length) {
-          subscriptionsRef.current.set(element, allMutations);
+          subscriptionsRef.current[phase].set(element, allMutations);
         } else {
-          subscriptionsRef.current.delete(element);
+          subscriptionsRef.current[phase].delete(element);
         }
       };
     },
@@ -227,7 +229,7 @@ export const useMutationsPluginFactory = (
     return () => observer.disconnect();
   }, [changes, handle]);
 
-  useLayoutEffect(() => {
+  useBeforeRender(() => {
     renderingPhase.current = true;
   }, [value]);
   // When the value is updated we need to clear our MutationsArray.
@@ -245,10 +247,9 @@ export const useMutationsPluginFactory = (
   return {
     token,
     root: { ref },
-    handle,
     clear,
     subscribe,
-    markToRevert,
+    preventMutationRevert,
   };
 };
 

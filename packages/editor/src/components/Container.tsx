@@ -20,11 +20,10 @@ const Container: FC<Props> = ({ children, stored, onChange }) => {
   const ref = useRendererRegistry<HTMLDivElement>(stored);
   const labelRef = useRef<HTMLDivElement>(null);
   const { add } = useChangesPlugin();
-  const { markToRevert } = useMutation(
-    ref,
-    ({ range, removed, mutations, addedDescendants }) => {
-      markToRevert(mutations);
 
+  useMutation(
+    ref,
+    ({ range, removed, addedDescendants }) => {
       if (removed || ref.current?.firstChild === labelRef.current) {
         onChange?.(undefined);
       }

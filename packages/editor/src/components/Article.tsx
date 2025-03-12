@@ -22,9 +22,7 @@ type Props = PropsWithStoredValue<Value> & PropsWithChange<Value> & Value;
 export const Article: React.FC<Props> = ({ stored, title, description, onChange }) => {
   const ref = useRendererRegistry<HTMLElement>(stored);
 
-  const { markToRevert } = useMutation(ref, ({ removed, mutations, range }) => {
-    markToRevert(mutations);
-
+  useMutation(ref, ({ removed, range }) => {
     if (removed) {
       onChange?.(undefined);
     }

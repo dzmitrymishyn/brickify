@@ -109,9 +109,7 @@ const Table: React.FC<Props> = ({ stored, children, onChange }) => {
     },
   });
 
-  const { markToRevert } = useMutation(ref, ({ removed, mutations }) => {
-    markToRevert(mutations);
-
+  useMutation(ref, ({ removed }) => {
     if (removed) {
       onChange?.(undefined);
     }

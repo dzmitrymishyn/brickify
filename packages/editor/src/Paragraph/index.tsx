@@ -59,18 +59,11 @@ const Paragraph: React.FC<Props> = ({
   const oldNodes = useRef<ReactNode>(null);
   // const { editable } = useBrickContext();
   const editable = editableProp;
-
   const ref = useRendererRegistry<HTMLElement>(brickRecord ?? { value: {} });
 
-  const { markToRevert } = useMutation<ParagraphResults>(
+  useMutation<ParagraphResults>(
     ref,
-    ({ domNode, mutations, removed, range, results }) => {
-      markToRevert(mutations);
-
-      if (removed) {
-        return onChange?.(undefined);
-      }
-
+    ({ range, results, domNode }) => {
       if (range?.collapsed) {
         const lastNodeText = isText(range.startContainer)
           ? range.startContainer.textContent?.slice(0, range.startOffset + 1) ?? ''
@@ -103,6 +96,16 @@ const Paragraph: React.FC<Props> = ({
         );
 
         results({ paragraph });
+      }
+    },
+    'capture',
+  );
+
+  useMutation(
+    ref,
+    ({ domNode, removed }) => {
+      if (removed) {
+        return onChange?.(undefined);
       }
 
       return pipe(

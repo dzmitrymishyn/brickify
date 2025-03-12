@@ -41,11 +41,10 @@ const Editor = forwardRef<HTMLDivElement, Props>(({
   );
 
   const { add } = useChangesPlugin();
-  const { markToRevert } = useMutation(
-    rootRef,
-    ({ mutations, addedDescendants }) => {
-      markToRevert(mutations);
 
+  useMutation(
+    rootRef,
+    ({ addedDescendants }) => {
       handleAddedNodes({
         add: ({ node, index, component }) => hasNodeToBrick(component) && add(
           [...stored.pathRef.current(), 'value', `${index}`],
