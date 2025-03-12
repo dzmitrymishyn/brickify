@@ -42,9 +42,9 @@ export const useMutationsPluginFactory = (
   const changes = useChangesPlugin(deps.plugins);
   const commands = useCommandsPlugin(deps.plugins);
   const selection = useSelectionPlugin(deps.plugins);
-  const ref = useRef<Element>(null);
+  const ref = useRef<HTMLElement>(null);
   const observerRef = useRef<MutationObserver>(null);
-  const renderingPhase = useRef(false);
+  const phasesRef = useRef(new Set<'rendering' | 'composition'>());
   const preventedMutationsRef = useRef(new Set<MutationRecord>());
   const subscriptionsRef = useRef<SubscriptionsMap>({
     capture: new Map(),
@@ -206,12 +206,27 @@ export const useMutationsPluginFactory = (
         + 'DOM node. Ensure that the ref is properly assigned.',
     );
 
-    const observer = new MutationObserver((mutation) => {
-      if (renderingPhase.current) {
+    let lastMutations: MutationRecord[] = [];
+    const abortSignal = new AbortController();
+
+    ref.current.addEventListener('compositionstart', () => {
+      phasesRef.current.add('composition');
+    }, { signal: abortSignal.signal });
+
+    ref.current.addEventListener('compositionend', () => {
+      phasesRef.current.delete('composition');
+      handle(lastMutations);
+      changes.apply();
+    }, { signal: abortSignal.signal });
+
+    const observer = new MutationObserver((mutations) => {
+      lastMutations = mutations;
+
+      if (phasesRef.current.size !== 0) {
         return;
       }
 
-      handle(mutation);
+      handle(mutations);
       changes.apply();
     });
 
@@ -226,18 +241,21 @@ export const useMutationsPluginFactory = (
 
     observerRef.current = observer;
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      abortSignal.abort();
+    };
   }, [changes, handle]);
 
   useBeforeRender(() => {
-    renderingPhase.current = true;
+    phasesRef.current.add('rendering');
   }, [value]);
   // When the value is updated we need to clear our MutationsArray.
   // It will be performed after all the React's mutations in the DOM.
   useEffect(
     () => {
       clear();
-      renderingPhase.current = false;
+      phasesRef.current.delete('rendering');
     },
     [value, clear],
   );
